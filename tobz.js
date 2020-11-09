@@ -562,7 +562,7 @@ ${desc}`)
             break
         case '#tts':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#tts* [id, en, jp, ar, ru, ko] [teks], contoh *#tts* id halo semua')
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#tts* [bahasa] [teks], contoh *#tts* id halo semua\nUntuk melihat kode bahasa ketik *#bahasa*')
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
