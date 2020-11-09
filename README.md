@@ -42,7 +42,7 @@ Clone this project
 
 ```bash
 > git clone https://github.com/TobyG74/ElainaBOT
-> cd elainabot
+> cd ElainaBOT
 ```
 
 Install the dependencies:
