@@ -20,7 +20,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 
 - [Telegram](https://t.me/tobz2k19)
 - [Whatsapp](https://wa.me/6281311850715)
-- [BOT](wa.me/447723992261)
+- [BOT WA](wa.me/447723992261)
 - [GROUP WA](https://chat.whatsapp.com/FgjfgBnbpHrA2tntF1JsYB)
 
 ## APIKEY
@@ -41,7 +41,7 @@ This is a Bot Group Type, so you have to enter the bot into a group in order to 
 Clone this project
 
 ```bash
-> git clone https://github.com/ItzTobz/elainabot
+> git clone https://github.com/TobyG74/ElainaBOT
 > cd elainabot
 ```
 
@@ -141,6 +141,12 @@ after running it you need to scan the qr
 |       ✅        |   enable or disable welcome feature|
 |       ✅        |   enable or disable left feature|
 
+| Admin Bot Only  |              Feature                |
+| :------------: | :---------------------------------------------: |
+|       ✅        |   Banned                 |
+|       ✅        |   Unbanned                 |
+|       ✅        |   Mute                 |
+|       ✅        |   Unmute                 |
 
 | Owner Group Only  |              Feature                |
 | :------------: | :---------------------------------------------: |
