@@ -64,7 +64,7 @@ const {
 // LOAD FILE
 const banned = JSON.parse(fs.readFileSync('./lib/banned.json'))
 const nsfw_ = JSON.parse(fs.readFileSync('./lib/nsfwz.json'))
-// const simi_ = JSON.parse(fs.readFileSync('./lib/Simsimi.json')) // PREMIUM
+const simi_ = JSON.parse(fs.readFileSync('./lib/Simsimi.json'))
 const limit = JSON.parse(fs.readFileSync('./lib/limit.json'))
 const welkom = JSON.parse(fs.readFileSync('./lib/welcome.json'))
 const left = JSON.parse(fs.readFileSync('./lib/left.json'))
@@ -255,7 +255,7 @@ module.exports = tobz = async (tobz, message) => {
         const isBanned = banned.includes(sender.id)
         const isBlocked = blockNumber.includes(sender.id)
         const isNsfw = isGroupMsg ? nsfw_.includes(chat.id) : false
-        // const isSimi = isGroupMsg ? simi_.includes(chat.id) : false // PREMIUM
+        const isSimi = isGroupMsg ? simi_.includes(chat.id) : false
         const uaOverride = 'WhatsApp/2.2029.4 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'
         const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/gi)
         const url = args.length !== 0 ? args[0] : ''
@@ -537,7 +537,7 @@ module.exports = tobz = async (tobz, message) => {
             var welgrp = welkom.includes(chat.id)
             var leftgrp = left.includes(chat.id)
             var ngrp = nsfw_.includes(chat.id)
-            // var simu = simi_.includes(chat.id)
+            var simu = simi_.includes(chat.id)
             var grouppic = await tobz.getProfilePicFromServer(chat.id)
             if (grouppic == undefined) {
                  var pfp = errorurl
@@ -549,6 +549,7 @@ module.exports = tobz = async (tobz, message) => {
 *➸ Welcome : ${welgrp}*
 *➸ Left : ${leftgrp}*
 *➸ NSFW : ${ngrp}*
+*➸ Simsimi : ${simu}*
 *➸ Group Description* 
 ${desc}`)
             break
@@ -670,7 +671,20 @@ ${desc}`)
             }
             break
         case '#simi':
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin Elaina!', id) // Hanya Admin yang bisa mengaktifkan
+            if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
+            if (args[1].toLowerCase() === 'enable') {
+                simi_.push(chat.id)
+                fs.writeFileSync('./lib/Simsimi.json', JSON.stringify(simi_))
+                tobz.reply(from, 'Simsimi berhasil di aktifkan di group ini! Kirim perintah *# [teks]*\nContoh : *# halo*', id)
+            } else if (args[1].toLowerCase() === 'disable') {
+                simi_.splice(chat.id, 1)
+                fs.writeFileSync('./lib/Simsimi.json', JSON.stringify(simi_))
+                tobz.reply(from, 'Simsimi berhasil di nonaktifkan di group ini!', id)
+            } else {
+                tobz.reply(from, 'Pilih enable atau disable udin!', id)
+            }
             break
         case '#left':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1614,8 +1628,15 @@ Menunggu video...`
              tobz.sendText(ownerNumber, 'Error Smulestalk : '+ err)
             }
           break
-        case '#': // COMMAND SIMSIMI PREMIUM
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+        case '#':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (!isSimi) return tobz.reply(from, 'command/Perintah Simi belum di aktifkan di group ini!', id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *# [teks]*\nContoh : *# halo*')
+            const que = body.slice(2)
+            const sigo = await axios.get(`http://simsumi.herokuapp.com/api?text=${que}&lang=id`)
+            const sigot = sigo.data
+            tobz.reply(from, sigot.success, id)
+            console.log(sigot)
             break
         case '#ig':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
