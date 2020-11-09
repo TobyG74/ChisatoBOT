@@ -5,19 +5,20 @@
 <a href="#"><img title="ELAINA BOT" src="https://img.shields.io/badge/ELAINA BOT-green?colorA=%23ff0000&colorB=%23017e40&style=for-the-badge" width="200" height="50"></a>
 </p>
 <p align="center">
-<a href="https://github.com/ItzTobz"><img title="Author" src="https://img.shields.io/badge/Author-Tobz-orange.svg?style=for-the-badge&logo=github" width="250" height="50"></a>
+<a href="https://github.com/TobyG74"><img title="Author" src="https://img.shields.io/badge/Author-Tobz-orange.svg?style=for-the-badge&logo=github" width="250" height="50"></a>
 </p>
 <p align="center">
-<a href="https://github.com/ItzTobz/followers"><img title="Followers" src="https://img.shields.io/github/followers/ItzTobz?color=blue&style=flat-square"></a>
-<a href="https://github.com/ItzTobz/megumikato2/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/ItzTobz/megumikato2?color=red&style=flat-square"></a>
-<a href="https://github.com/ItzTobz/megumikato2/network/members"><img title="Forks" src="https://img.shields.io/github/forks/ItzTobz/megumikato2?color=red&style=flat-square"></a>
-<a href="https://github.com/ItzTobz/megumikato2/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/ItzTobz/megumikato2?label=Watchers&color=blue&style=flat-square"></a>
+<a href="https://github.com/TobyG74/followers"><img title="Followers" src="https://img.shields.io/github/followers/TobyG74?color=blue&style=flat-square"></a>
+<a href="https://github.com/TobyG74/megumikato2/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/TobyG74/ElainaBOT?color=red&style=flat-square"></a>
+<a href="https://github.com/TobyG74/megumikato2/network/members"><img title="Forks" src="https://img.shields.io/github/forks/TobyG74/ElainaBOT?color=red&style=flat-square"></a>
+<a href="https://github.com/TobyG74/megumikato2/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/ItzTobz/ElainaBOT?label=Watchers&color=blue&style=flat-square"></a>
 </p>
 
 ## Contact
 
 - [Telegram](https://t.me/tobz2k19)
 - [Whatsapp](https://wa.me/6281311850715)
+- [BOT](wa.me/447723992261)
 
 ## APIKEY
 Open msgHndlr then edit & paste it in YOUR_APIKEY
