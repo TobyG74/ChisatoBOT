@@ -57,8 +57,7 @@ const {
 
 const { 
     uploadImages, 
-    custom,
-    stikerburn
+    custom
     } = require('./lib/fetcher')
 
 // LOAD FILE
@@ -490,17 +489,6 @@ module.exports = tobz = async (tobz, message) => {
                 fs.writeFileSync('media/sticker/output.png', text2png(ttp, {color: 'white'}));
                 const gif = await fs.readFileSync('media/sticker/output.png', { encoding: "base64" })
                 await client.sendImageAsSticker(from, `data:image/gif;base64,${gif.toString('base64')}`)
-            break
-        case '#stickerburn':
-            if (isMedia || isQuotedImage) {
-            const encryptMedia = isQuotedImage ? quotedMsg : message
-            const mediaData = await decryptMedia(encryptMedia, uaOverride)
-            const Njay = await uploadImages(mediaData, false)
-            const ImageBase64 = await stikerburn(Njay) 
-            await tobz.sendStickerfromUrl(from, ImageBase64)
-            } else {
-            await tobz.reply(from, 'Wrong Format!', id)
-            }
             break
         case '#stickergif':
         case '#stikergif':
