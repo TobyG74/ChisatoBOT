@@ -14,6 +14,13 @@
 <a href="https://github.com/TobyG74/megumikato2/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/TobyG74/ElainaBOT?label=Watchers&color=blue&style=flat-square"></a>
 </p>
 
+## Information
+
+- Change ownerNumber in tobz.js to be your number
+ownerNumber = "6213xxxxxx"
+- Change adminNumber in admin.json to be your number
+[] -> ["62813xxxxxx@c.js"]
+
 ## Contact
 
 If you find some bugs please contact the WhatsApp number on Contact
