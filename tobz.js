@@ -1246,7 +1246,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ytmp4 [linkYt]*, untuk contoh silahkan kirim perintah *#readme*')
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ytmp4 [ Link Yt ]*, untuk contoh silahkan kirim perintah *#readme*')
             let isLin = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLin) return tobz.reply(from, mess.error.Iv, id)
             try {
@@ -1255,9 +1255,9 @@ ${desc}`)
                 if (ytv.data.error) {
                     tobz.reply(from, ytv.data.error, id)
                 } else {
-                    const { result, thumb, filesize, title } = await ytv.data
-                    if (Number(filesize.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
-                    tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
+                    if (Number(ytv.data.filesize.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
+                    const { result, thumb, filesize } = await ytv.data
+                    tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, result, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                 }
             } catch (err) {
@@ -1272,7 +1272,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#xnxx [linkXnxx]*, untuk contoh silahkan kirim perintah *#readme*')
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#xnxx [ Link Xnxx ]*, untuk contoh silahkan kirim perintah *#readme*')
             if (!args[1].match(isUrl) && !args[1].includes('xnxx.com')) return tobz.reply(from, mess.error.Iv, id)
             try {
                 tobz.reply(from, mess.wait, id)
@@ -1282,14 +1282,13 @@ ${desc}`)
                     tobz.reply(from, ytvv.error, id)
                 } else {
                     if (Number(resp.result.size.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
-                    tobz.sendFileFromUrl(from, resp.result.thumb, 'thumb.jpg', `➸ *Judul* : ${resp.result.judul}\n➸ *Deskripsi* : ${resp.result.desc}\n➸ *Filesize* : ${resp.result.size}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
+                    tobz.sendFileFromUrl(from, resp.result.thumb, 'thumb.jpg', `*「 XNXX 」*\n\n➸ *Judul* : ${resp.result.judul}\n➸ *Deskripsi* : ${resp.result.desc}\n➸ *Filesize* : ${resp.result.size}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, resp.result.vid, `${resp.result.title}.mp4`, '', id)}
             } catch (err) {
                 console.log(err)
                 await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
                 tobz.sendText(ownerNumber, 'Xnxx Error : ' + err)
             }
-            break
             break
         case '#ramalpasangan':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
