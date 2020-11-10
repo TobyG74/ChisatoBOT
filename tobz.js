@@ -1256,7 +1256,7 @@ ${desc}`)
                     tobz.reply(from, ytv.data.error, id)
                 } else {
                     if (Number(ytv.data.filesize.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
-                    const { result, thumb, filesize } = await ytv.data
+                    const { title, result, thumb, filesize } = await ytv.data
                     tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, result, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                 }
