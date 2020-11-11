@@ -31,7 +31,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [GROUP WA](https://chat.whatsapp.com/FgjfgBnbpHrA2tntF1JsYB)
 
 ## APIKEY
-Open msgHndlr then edit & paste it in YOUR_APIKEY
+Open tobz.js then edit & paste it in YOUR_APIKEY
 - [VHTEAR](https://api.vhtear.com)
 - [MHANKBARBAR](https://mhankbarbar.herokuapp.com/api)
 
@@ -76,7 +76,7 @@ after running it you need to scan the qr
 |       ✅       | Sticker With Image Url                        |
 |       ✅       | Sticker With Gif Url   |
 |       ✅       | Image To Sticker   |
-
+|       ✅       | Text To Picture   |
 
 | Downloader |                     Feature                |
 | :------------: | :---------------------------------------------: |
