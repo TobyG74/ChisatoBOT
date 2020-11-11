@@ -554,46 +554,23 @@ ${desc}`)
             break
         case '#tts':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#tts* [bahasa] [teks], contoh *#tts* id halo semua\nUntuk melihat kode bahasa ketik *#bahasa*')
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const ttsId = require('node-gtts')('id')
-            const ttsEn = require('node-gtts')('en')
-            const ttsJp = require('node-gtts')('ja')
-            const ttsAr = require('node-gtts')('ar')
-            const ttsRu = require('node-gtts')('ru')
-            const ttsKo = require('node-gtts')('ko')
-            const dataText = body.slice(8)
-            if (dataText === '') return tobz.reply(from, 'Kode Bahasa yang digunakan salah', id)
-            if (dataText.length > 500) return tobz.reply(from, 'Teks tidak boleh terlalu panjang', id)
-            var dataBhs = body.slice(5, 7)
-            if (dataBhs == 'id') {
-                ttsId.save('./media/tts/resId.mp3', dataText, function () {
-                    tobz.sendPtt(from, './media/tts/resId.mp3', message.id)
+            try {
+                if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#tts [ Bahasa ] [ Teks ]*, contoh *#tts id halo semua*')
+                var dataBhs = args[1]      
+                const ttsHZ = require('node-gtts')(dataBhs)
+                var dataText = body.slice(8)
+                if (dataText === '') return tobz.reply(from, 'Masukkan teksnya', id)
+                if (dataText.length > 500) return client.reply(from, 'Teks terlalu panjang!', id)
+                var dataBhs = body.slice(5, 7)
+                ttsHZ.save('./media/tts.mp3', dataText, function () {
+                tobz.sendPtt(from, './media/tts.mp3', id)
                 })
-            } else if (dataBhs == 'en') {
-                ttsEn.save('./media/tts/resEn.mp3', dataText, function () {
-                    tobz.sendPtt(from, './media/tts/resEn.mp3', message.id)
-                })
-            } else if (dataBhs == 'jp') {
-                ttsJp.save('./media/tts/resJp.mp3', dataText, function () {
-                    tobz.sendPtt(from, './media/tts/resJp.mp3', message.id)
-                })
-            } else if (dataBhs == 'ar') {
-                ttsAr.save('./media/tts/resAr.mp3', dataText, function () {
-                    tobz.sendPtt(from, './media/tts/resAr.mp3', message.id)
-                })
-            } else if (dataBhs == 'ru') {
-                ttsRu.save('./media/tts/resRu.mp3', dataText, function () {
-                    tobz.sendPtt(from, './media/tts/resRu.mp3', message.id)
-                })
-            } else if (dataBhs == 'ko') {
-                ttsKo.save('./media/tts/resKo.mp3', dataText, function () {
-                    tobz.sendPtt(from, './media/tts/resKo.mp3', message.id)
-                })
-            } else {
-                tobz.reply(from, 'Masukin kode bahasanya : [id] untuk indonesia, [en] untuk inggris, [jp] untuk jepang, [ar] untuk arab, [ru] untuk russia, dan [ko] untuk korea\n\nContoh : #tts id selamat pagi', id)
+            } catch (err){
+                console.log(err)
+                tobz.reply(from, bahasa_list, id)
             }
             break
         case '#koin':
