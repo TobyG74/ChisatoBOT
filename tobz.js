@@ -464,7 +464,7 @@ module.exports = tobz = async (tobz, message) => {
                             if(gasMake.status == true)
                             {
                                 try{
-                                    await tobz.sendImageAsSticker(from, gasMake.base64)
+                                    await tobz.sendImageAsSticker(from, gasMake.result)
                                 }catch(err) {
                                     await tobz.reply(from, 'Gagal membuat.', id)
                                 } 
@@ -476,7 +476,7 @@ module.exports = tobz = async (tobz, message) => {
                             if(gasMake.status == true)
                             {
                                 try{
-                                    await tobz.sendImageAsSticker(from, gasMake.base64)
+                                    await tobz.sendImageAsSticker(from, gasMake.result)
                                 }catch(err) {
                                     await tobz.reply(from, 'Gagal membuat.', id)
                                 } 
@@ -1184,42 +1184,43 @@ ${desc}`)
             break
         case '#video':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#getvideo':
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#music':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#getmusic':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#youtubesearch':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#jurnalotaku':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#brainlysearch':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#shopee':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#playstore':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#animesearch':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#ytmp4':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1784,7 +1785,7 @@ Menunggu video...`
           break
         case '#nhentai': // NHENTAI PREMIUM BY TOBZ
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply('PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715')
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
           break
         /*case '#nhentai':
         case '#nh':
