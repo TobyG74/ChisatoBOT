@@ -1136,7 +1136,7 @@ ${desc}`)
                 if (resp.data.error) {
                     tobz.reply(from, resp.data.error, id)
                 } else {
-                    if (Number(resp.data.filesize.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 10 menit!', id)
+                    if (Number(resp.data.filesize.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 10 MB!', id)
                     const { title, thumb, result, filesize } = await resp.data
                     tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, result, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt3, id))
@@ -1236,7 +1236,7 @@ ${desc}`)
                     tobz.reply(from, ytv.data.error, id)
                 } else {
                     const { result, thumb, filesize, title } = await ytv.data
-                    if (Number(filesize.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
+                    if (Number(filesize.split(' MB')[0]) > 30.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 30 MB!', id)
                     tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, result, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                 }
