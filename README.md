@@ -17,9 +17,9 @@
 ## Information
 
 - Change ownerNumber in tobz.js to be your number
-ownerNumber = "6213xxxxxx"
+ownerNumber = "6213xxxxxx@c.us"
 - Change adminNumber in admin.json to be your number
-[] -> ["62813xxxxxx@c.js"]
+[] -> ["62813xxxxxx@c.us"]
 
 ## Contact
 
