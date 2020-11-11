@@ -41,7 +41,7 @@ Open tobz.js then edit & paste it in YOUR_APIKEY
 
 ## Getting Started
 
-This project require NodeJS v12.
+# This project require NodeJS v14.
 This is a Bot Group Type, so you have to enter the bot into a group in order to fully use the command!
 
 ### Install
