@@ -17,7 +17,7 @@ const translatte = require('translatte')
 const { stdout } = require('process')
 const quotedd = require('./lib/quote')
 const translate = require('translatte')
-const text2png = require('text2png')
+const getStickerMaker = require('./lib/ttp')
 const imageToBase64 = require('image-to-base64')
 const bent = require('bent')
 const request = require('request')
@@ -347,56 +347,7 @@ module.exports = tobz = async (tobz, message) => {
                     }
                 }
                 // END HELPER FUNCTION
-                if(body === '#banchat enable' && banChats == true){
-                    if(isGroupMsg) {
-                        if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner Elaina!', id)
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
-                        if(setting.banChats === true) return
-                        setting.banChats = true
-                        banChats = true
-                        fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
-                        tobz.reply(from,'Global chat has been enable!', id)
-                    }else{
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
-                        if(setting.banChats === false) return
-                        setting.banChats = true
-                        banChats = true
-                        fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
-                        tobz.reply(from, 'Global chat has been disable!', id)
-                    }
-                }
-                if(body === '#banchat disable' && banChats == false){
-                    if(isGroupMsg) {
-                        if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner Elaina!', id)
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
-                        setting.banChats = false
-                        banChats = false
-                        fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
-                        tobz.reply(from, 'Global chat has been disable!', id)
-                    }else{
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
-                        setting.banChats = false
-                        banChats = false
-                        fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
-                        tobz.reply(from, 'Global chat has been disable!', id)
-                    }
-                }
+                
                 if(body === '#mute' && isMuted(chatId) == true){
                     if(isGroupMsg) {
                         if (!isAdmin) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin Elaina!', id)
@@ -443,6 +394,14 @@ module.exports = tobz = async (tobz, message) => {
                         tobz.reply(from, 'Bot telah di unmute!', id)                   
                     }
                 }
+                if (body === '#unbanchat') {
+                    if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner Elaina!', id)
+                    if(setting.banChats === false) return
+                    setting.banChats = false
+                    banChats = false
+                    fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
+                    tobz.reply('Global chat has been disable!')
+                }
 
         if (!isGroupMsg && command.startsWith('#')) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;32mEXEC\x1b[1;37m]', time, color(msgs(command)), 'from', color(pushname))
         if (isGroupMsg && command.startsWith('#')) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;32mEXEC\x1b[1;37m]', time, color(msgs(command)), 'from', color(pushname), 'in', color(formattedTitle))
@@ -453,11 +412,20 @@ module.exports = tobz = async (tobz, message) => {
         if (isBlocked) return
         switch(command) {
 
+        case '#banchat':
+            if (setting.banChats === true) return
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            setting.banChats = true
+            banChats = true
+            fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
+            tobz.reply('Global chat has been enable!')
+            break
+
         case '#unmute':
             console.log(`Unmuted ${name}!`)
             await tobz.sendSeen(from)
             break
-        case '#banchat disable':
+        case '#unbanchat':
             console.log(`Banchat ${name}!`)
             await tobz.sendSeen(from)
             break
@@ -483,13 +451,48 @@ module.exports = tobz = async (tobz, message) => {
                     tobz.reply(from, mess.error.St, id)
             }
             break
-        case '#stickertext':
-            if (args.length === 1) return client.reply(from, 'Kirim perintah *#ttp [teks]*, Contoh : *#sticker Elaina*', id)
-                const ttp = body.slice()
-                fs.writeFileSync('media/sticker/output.png', text2png(ttp, {color: 'white'}));
-                const gif = await fs.readFileSync('media/sticker/output.png', { encoding: "base64" })
-                await client.sendImageAsSticker(from, `data:image/gif;base64,${gif.toString('base64')}`)
-            break
+        case '#ttp':
+                if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', message.id)
+                try
+                {
+                    const string = body.toLowerCase().includes('#ttp') ? body.slice(5) : body.slice(5)
+                    if(args)
+                    {
+                        if(quotedMsgObj == null)
+                        {
+                            const gasMake = await getStickerMaker(string)
+                            if(gasMake.status == true)
+                            {
+                                try{
+                                    await tobz.sendImageAsSticker(from, gasMake.base64)
+                                }catch(err) {
+                                    await tobz.reply(from, 'Gagal membuat.', id)
+                                } 
+                            }else{
+                                await tobz.reply(from, gasMake.reason, id)
+                            }
+                        }else if(quotedMsgObj != null){
+                            const gasMake = await getStickerMaker(quotedMsgObj.body)
+                            if(gasMake.status == true)
+                            {
+                                try{
+                                    await tobz.sendImageAsSticker(from, gasMake.base64)
+                                }catch(err) {
+                                    await tobz.reply(from, 'Gagal membuat.', id)
+                                } 
+                            }else{
+                                await tobz.reply(from, gasMake.reason, id)
+                            }
+                        }
+                       
+                    }else{
+                        await tobz.reply(from, 'Tidak boleh kosong.', id)
+                    }
+                }catch(error)
+                {
+                    console.log(error)
+                }
+            break;
         case '#stickergif':
         case '#stikergif':
         case '#sgif':
@@ -497,10 +500,10 @@ module.exports = tobz = async (tobz, message) => {
                 if (mimetype === 'video/mp4' && message.duration < 10 || mimetype === 'image/gif' && message.duration < 10) {
                     const mediaData = await decryptMedia(message, uaOverride)
                     tobz.reply(from, '[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!', id)
-                    const filename = `./media/img/aswu.${mimetype.split('/')[1]}`
+                    const filename = `./media/sticker/aswu.${mimetype.split('/')[1]}`
                     await fs.writeFileSync(filename, mediaData)
-                    await exec(`gify ${filename} ./media/img/output.gif --fps=60 --scale=240:240`, async function (error, stdout, stderr) {
-                        const gif = await fs.readFileSync('./media/img/output.gif', { encoding: "base64" })
+                    await exec(`gify ${filename} ./media/sticker/output.gif --fps=60 --scale=240:240`, async function (error, stdout, stderr) {
+                        const gif = await fs.readFileSync('./media/sticker/output.gif', { encoding: "base64" })
                         await tobz.sendImageAsSticker(from, `data:image/gif;base64,${gif.toString('base64')}`)
                     })
                 } else (
@@ -1246,7 +1249,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ytmp4 [ Link Yt ]*, untuk contoh silahkan kirim perintah *#readme*')
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ytmp4 [linkYt]*, untuk contoh silahkan kirim perintah *#readme*')
             let isLin = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLin) return tobz.reply(from, mess.error.Iv, id)
             try {
@@ -1255,9 +1258,9 @@ ${desc}`)
                 if (ytv.data.error) {
                     tobz.reply(from, ytv.data.error, id)
                 } else {
-                    if (Number(ytv.data.filesize.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
-                    const { title, result, thumb, filesize } = await ytv.data
-                    tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
+                    const { result, thumb, filesize, title } = await ytv.data
+                    if (Number(filesize.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
+                    tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, result, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                 }
             } catch (err) {
@@ -1272,7 +1275,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#xnxx [ Link Xnxx ]*, untuk contoh silahkan kirim perintah *#readme*')
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#xnxx [linkXnxx]*, untuk contoh silahkan kirim perintah *#readme*')
             if (!args[1].match(isUrl) && !args[1].includes('xnxx.com')) return tobz.reply(from, mess.error.Iv, id)
             try {
                 tobz.reply(from, mess.wait, id)
@@ -1282,13 +1285,14 @@ ${desc}`)
                     tobz.reply(from, ytvv.error, id)
                 } else {
                     if (Number(resp.result.size.split(' MB')[0]) > 20.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 20 menit!', id)
-                    tobz.sendFileFromUrl(from, resp.result.thumb, 'thumb.jpg', `*「 XNXX 」*\n\n➸ *Judul* : ${resp.result.judul}\n➸ *Deskripsi* : ${resp.result.desc}\n➸ *Filesize* : ${resp.result.size}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
+                    tobz.sendFileFromUrl(from, resp.result.thumb, 'thumb.jpg', `➸ *Judul* : ${resp.result.judul}\n➸ *Deskripsi* : ${resp.result.desc}\n➸ *Filesize* : ${resp.result.size}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
                     await tobz.sendFileFromUrl(from, resp.result.vid, `${resp.result.title}.mp4`, '', id)}
             } catch (err) {
                 console.log(err)
                 await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
                 tobz.sendText(ownerNumber, 'Xnxx Error : ' + err)
             }
+            break
             break
         case '#ramalpasangan':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -2058,8 +2062,8 @@ Menunggu video...`
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const quotes = await axios.get('https://mhankbarbar.herokuapp.com/api/randomquotes')
-            tobz.reply(from, `➸ *Quotes* : ${quotes.data.quotes}\n➸ *Author* : ${quotes.data.author}`, id)
+            const quotez2 = await axios.get('https://mhankbarbar.herokuapp.com/api/randomquotes')
+            tobz.reply(from, `➸ *Quotes* : ${quotez2.data.quotes}\n➸ *Author* : ${quotez2.data.author}`, id)
             break
         case '#lirik':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
