@@ -27,6 +27,7 @@
     "image-size": "^0.9.1",
     "image-to-pdf": "^1.0.0",
     "image-to-base64": "^2.1.1",
+    "mathjs": "^8.0.1",
     "moment-timezone": "^0.5.31",
     "nana-api": "^1.1.2",
     "needle": "^2.5.2",
