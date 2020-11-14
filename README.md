@@ -28,7 +28,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [Telegram](https://t.me/tobz2k19)
 - [Whatsapp](https://wa.me/6281311850715)
 - [BOT WA](wa.me/447723992261)
-- [GROUP WA](https://chat.whatsapp.com/FgjfgBnbpHrA2tntF1JsYB)
+- [GROUP WA](https://chat.whatsapp.com/InZrGpgBBNB4hnS7Q6sVJG)
 
 ## APIKEY
 Open tobz.js then edit & paste it in YOUR_APIKEY
