@@ -1074,7 +1074,7 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#shorturl [linkWeb]*\nContoh : *#shorturl https://neonime.vip*', id)
-            const surl = await axios.get('https://api.vhtear.com/shortener?link=' + body.slice(10) + '&apikey==' + barbarkey)
+            const surl = await axios.get('https://api.vhtear.com/shortener?link=' + body.slice(10) + '&apikey=' + vhtearkey)
             const surll = surl.data
             if (surll.error) return tobz.reply(from, ssww.error, id)
             const surl2 = `Link : ${surll.result.Url}\nShort URL : ${surll.result.Short}`
