@@ -2353,20 +2353,40 @@ Menunggu video...`
                 tobz.reply(from, `Sisa limit request anda tersisa : *${limitCount}*\n\n_Note : Limit akan direset setiap jam 21:00!_`, id)
             }
             break
-        case '#restartlimit':
         case '#restart':
-        case '#reset':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id) 
-            tobz.reply(from, '⚠️*[INFO]* Reseting ...', id)
-            //setting.restartState = true
-            //setting.restartId = chat.id
-            let obj = []
-            fs.writeFileSync('./lib/limit.json', JSON.stringify(obj, 1));
-            fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2));
-            //fs.writeFileSync('./lib/muted.json', JSON.stringify(muted, null,2));
-            fs.writeFileSync('./lib/msgLimit.json', JSON.stringify(obj));
-            //fs.writeFileSync('./lib/banned.json', JSON.stringify(banned));
-            await sleep(5000).then(() => tobz.reply(from, `_*RESTART SUCCESS*_`, id))
+            if(isOwner){
+                tobz.sendText(from, '*[WARN]* Restarting ...')
+                setting.restartState = true
+                setting.restartId = chatId
+                var obj = []
+                //fs.writeFileSync('./lib/setting.json', JSON.stringify(obj, null,2));
+                fs.writeFileSync('./lib/limit.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/muted.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/msgLimit.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/banned.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/welcome.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/left.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/Simsimi.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/nsfwz.json', JSON.stringify(obj));
+                const spawn = require('child_process').exec;
+                function os_func() {
+                    this.execCommand = function (command) {
+                        return new Promise((resolve, reject)=> {
+                        spawn(command, (error, stdout, stderr) => {
+                            if (error) {
+                                reject(error);
+                                return;
+                            }
+                            resolve(stdout)
+                        });
+                    })
+                }}
+                var oz = new os_func();
+                oz.execCommand('pm2 restart index').then(res=> {
+                }).catch(err=> {
+                    console.log("os >>>", err);
+                })
+            }
             break
         case '#addadmin':
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
