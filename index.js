@@ -4,6 +4,7 @@ const left = require('./lib/left')
 const msgHandler = require('./tobz')
 const options = require('./options')
 const fs = require('fs-extra')
+const figlet = require('figlet')
 
 const adminNumber = JSON.parse(fs.readFileSync('./lib/admin.json'))
 const setting = JSON.parse(fs.readFileSync('./lib/setting.json'))
@@ -18,8 +19,21 @@ let {
     restartState: isRestart
     } = setting
 
+function restartAwal(tobz){
+    setting.restartState = false
+    isRestart = false
+    tobz.sendText(setting.restartId, 'Restart Succesfull!')
+    setting.restartId = 'undefined'
+    //fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null,2));
+}
+
 const start = async (tobz = new Client()) => {
+        console.log('------------------------------------------------')
+        console.log(color(figlet.textSync('ELAINA BOT', { horizontalLayout: 'full' })))
+        console.log('------------------------------------------------')
+        console.log('[DEV] TOBZ')
         console.log('[SERVER] Server Started!')
+        if(isRestart){restartAwal(tobz);}
         // Force it to keep the current session
         tobz.onStateChanged((state) => {
             console.log('[Client State]', state)
@@ -27,14 +41,16 @@ const start = async (tobz = new Client()) => {
         })
         // listening on message
         tobz.onMessage((async (message) => {
-            tobz.getAmountOfLoadedMessages()
+
+            tobz.getAllChats()
             .then((msg) => {
-                if (msg >= 3000) {
-                    tobz.cutMsgCache()
+                if (msg >= 200) {
+                    tobz.deleteChat()
                 }
             })
             msgHandler(tobz, message)
         }))
+           
 
         tobz.onGlobalParicipantsChanged((async (heuh) => {
             await welcome(tobz, heuh) 
