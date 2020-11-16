@@ -62,7 +62,13 @@ Install the dependencies:
 1. run the Whatsapp bot
 
 ```bash
-> npm start
+> pm2 start run.js
+> pm2 monit
+```
+2. stop the Whatsapp bot
+
+```bash
+> pm2 stop run.js
 ```
 
 after running it you need to scan the qr
