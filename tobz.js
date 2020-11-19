@@ -514,7 +514,7 @@ module.exports = tobz = async (tobz, message) => {
                 )
             }
             break
-         case '#stickerfire'
+        case '#stickerfire':
                 if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
                 tobz.reply(from, '[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!', id)
                 if (isMedia && type === 'image') {
