@@ -58,7 +58,8 @@ const {
 
 const { 
     uploadImages, 
-    custom
+    custom,
+    stickerburn
     } = require('./lib/fetcher')
 
 // LOAD FILE
@@ -512,6 +513,19 @@ module.exports = tobz = async (tobz, message) => {
                 )
             }
             break
+         case '#stickerfire'
+                if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+                tobz.reply(from, '[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!', id)
+                if (isMedia && type === 'image') {
+                const mediaData = await decryptMedia(message, uaOverride)
+                const getUrli = await uploadImages(mediaData, false)
+                const imgnya = await stickerburn(getUrli)
+                const Sfire = imgnya.result.imgUrl
+                await tobz.sendStickerfromUrl(from, Sfire)
+                } else {
+                await tobz.reply(from, 'Wrong Format!\n⚠️ Harap Kirim Gambar Dengan #stickerfire', id)
+                }
+                break
         case '#stickertoimg':
             if (quotedMsg && quotedMsg.type == 'sticker') {
                 const mediaData = await decryptMedia(quotedMsg)
