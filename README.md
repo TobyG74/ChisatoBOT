@@ -63,11 +63,21 @@ Install the dependencies:
 1. run the Whatsapp bot
 
 ```bash
+> npm start
+```
+or
+```bash
 > pm2 start run.js
 > pm2 monit
 ```
+
 2. stop the Whatsapp bot
 
+for npm :
+```bash
+> ctrl + c
+```
+for pm2 :
 ```bash
 > pm2 stop run.js
 ```
