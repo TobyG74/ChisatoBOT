@@ -97,6 +97,6 @@ const start = async (tobz = new Client()) => {
         }))
     }
 
-create('Elaina', options(true, start))
+create(options(true, start))
     .then(tobz => start(tobz))
     .catch((error) => console.log(error))
