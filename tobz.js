@@ -467,7 +467,7 @@ module.exports = tobz = async (tobz, message) => {
                             if(gasMake.status == true)
                             {
                                 try{
-                                    await tobz.sendImageAsSticker(from, gasMake.result)
+                                    await tobz.sendImageAsSticker(from, gasMake.base64)
                                 }catch(err) {
                                     await tobz.reply(from, 'Gagal membuat.', id)
                                 } 
@@ -479,7 +479,7 @@ module.exports = tobz = async (tobz, message) => {
                             if(gasMake.status == true)
                             {
                                 try{
-                                    await tobz.sendImageAsSticker(from, gasMake.result)
+                                    await tobz.sendImageAsSticker(from, gasMake.base64)
                                 }catch(err) {
                                     await tobz.reply(from, 'Gagal membuat.', id)
                                 } 
