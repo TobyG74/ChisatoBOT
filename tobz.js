@@ -670,6 +670,21 @@ ${desc}`)
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
             }
             break
+        case '#group':
+            if (!isGroupMsg) return tobz.reply(from, 'Fitur ini hanya bisa di gunakan dalam group', id)
+            if (!isGroupAdmins) return tobz.reply(from, 'Fitur ini hanya bisa di gunakan oleh admin group', id)
+            if (!isBotGroupAdmins) return tobz.reply(from, 'Fitur ini hanya bisa di gunakan ketika bot menjadi admin', id)
+            if (args.length === 1) return tobz.reply(from, 'Pilih open atau close!', id)
+            if (args[1].toLowerCase() === 'open') {
+                tobz.setGroupToAdminsOnly(groupId, true)
+                tobz.sendTextWithMentions(from, `Group telah ditutup oleh admin @${sender.id.replace('@c.us','')}\nSekarang *hanya admin* yang dapat mengirim pesan`)
+            } else if (args[1].toLowerCase() === 'close') {
+                tobz.setGroupToAdminsOnly(groupId, false)
+                tobz.sendTextWithMentions(from, `Group telah dibuka oleh admin @${sender.id.replace('@c.us','')}\nSekarang *semua member* dapat mengirim pesan`)
+            } else {
+                tobz.reply(from, 'Pilih open atau disable close!', id)
+            }
+            break   
         case '#left':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin group!', id)
