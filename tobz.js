@@ -241,7 +241,7 @@ module.exports = tobz = async (tobz, message) => {
         const serial = sender.id
 
         const isAdmin = adminNumber.includes(sender.id)
-        const ownerNumber = '6281311850715@c.us'
+        const ownerNumber = '6281220595591@c.us'
         const isOwner = ownerNumber.includes(sender.id)
         
         const isWhite = (chatId) => adminNumber.includes(chatId) ? true : false
@@ -263,8 +263,8 @@ module.exports = tobz = async (tobz, message) => {
         const url = args.length !== 0 ? args[0] : ''
         const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
 
-        const vhtearkey = 'YOUR_APIKEY' // https://api.vhtear.com
-        const barbarkey = 'YOUR_APIKEY' // https://mhankbarbar.herokuapp.com/api
+        const vhtearkey = 'a836qyk7ZYhgKyjtaBBDW7Vp' // https://api.vhtear.com
+        const barbarkey = 'upgRmcT0AKDWLTA5q7sZ' // https://mhankbarbar.herokuapp.com/api
 
         const tutor = 'https://i.ibb.co/Hp1XGbL/a4dec92b8922.jpg'
         const errorurl = 'https://steamuserimages-a.akamaihd.net/ugc/954087817129084207/5B7E46EE484181A676C02DFCAD48ECB1C74BC423/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false'
@@ -353,7 +353,7 @@ module.exports = tobz = async (tobz, message) => {
                 
                 if(body === '#mute' && isMuted(chatId) == true){
                     if(isGroupMsg) {
-                        if (!isAdmin) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin Elaina!', id)
+                        if (!isAdmin) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin Odading!', id)
                         if(isMsgLimit(serial)){
                             return
                         }else{
@@ -375,7 +375,7 @@ module.exports = tobz = async (tobz, message) => {
                 }
                 if(body === '#unmute' && isMuted(chatId) == false){
                     if(isGroupMsg) {
-                        if (!isAdmin) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin Elaina!', id)
+                        if (!isAdmin) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin Odading!', id)
                         if(isMsgLimit(serial)){
                             return
                         }else{
@@ -398,7 +398,7 @@ module.exports = tobz = async (tobz, message) => {
                     }
                 }
                 if (body === '#unbanchat') {
-                    if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner Elaina!', id)
+                    if (!isOwner) return tobz.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh Owner Odading!', id)
                     if(setting.banChats === false) return
                     setting.banChats = false
                     banChats = false
@@ -417,7 +417,7 @@ module.exports = tobz = async (tobz, message) => {
 
         case '#banchat':
             if (setting.banChats === true) return
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Odading!', id)
             setting.banChats = true
             banChats = true
             fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
@@ -634,7 +634,7 @@ ${desc}`)
             break
         case '#owner':
         case '#creator':
-            tobz.sendContact(chatId, `6281311850715@c.us`)
+            tobz.sendContact(chatId, `62811220595591@c.us`)
             tobz.reply(from, 'Itu nomor Pacar ku, eh maksudnya Owner ku', id)
             break
         // ON OFF
@@ -656,7 +656,7 @@ ${desc}`)
             break
         case '#simi':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin Elaina!', id) // Hanya Admin yang bisa mengaktifkan
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin Odading!', id) // Hanya Admin yang bisa mengaktifkan
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 simi_.push(chat.id)
@@ -767,7 +767,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#pinterest [query]*\nContoh : *#pinterest Elaina*', id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#pinterest [query]*\nContoh : *#pinterest Odading*', id)
             const ptrsq = body.slice(11)
             const ptrs = await axios.get('https://api.fdci.se/rep.php?gambar='+ptrsq)
             const b = JSON.parse(JSON.stringify(ptrs.data))
@@ -1215,43 +1215,43 @@ ${desc}`)
             break
         case '#video':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#getvideo':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#music':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#getmusic':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#youtubesearch':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#jurnalotaku':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#brainlysearch':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#shopee':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#playstore':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#animesearch':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
             break
         case '#ytmp4':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1308,7 +1308,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ramalpasangan [kamu|pasangan]*\nContoh : *#ramalpasangan Tobz|Elaina*', id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ramalpasangan [kamu|pasangan]*\nContoh : *#ramalpasangan Tobz|Odading*', id)
             arg = body.trim().split('|')
             if (arg.length >= 2) {
             tobz.reply(from, mess.wait, id)
@@ -1424,7 +1424,7 @@ Menunggu video...`
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#googleimage [query]*\nContoh : *#googleimage Elaina*', id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#googleimage [query]*\nContoh : *#googleimage Odading*', id)
             try{
                 tobz.reply(from, mess.wait, id)
                 const gimgg = body.slice(13)
@@ -1816,7 +1816,7 @@ Menunggu video...`
           break
         case '#nhentai': // NHENTAI PREMIUM BY TOBZ
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281220595591', id)
           break
         /*case '#nhentai':
         case '#nh':
@@ -2112,12 +2112,12 @@ Menunggu video...`
             break
         // ADMIN & OWNER
         case '#bc':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina!', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading!', id)
             let msg = body.slice(4)
             const chatz = await tobz.getAllChatIds()
             for (let ids of chatz) {
                 var cvk = await tobz.getChatById(ids)
-                if (!cvk.isReadOnly) await tobz.sendText(ids, `[ ELAINA BROADCAST ]\n\n${msg}`)
+                if (!cvk.isReadOnly) await tobz.sendText(ids, `[ Odading BROADCAST ]\n\n${msg}`)
             }
             tobz.reply(from, 'Broadcast Success!', id)
             break
@@ -2138,14 +2138,14 @@ Menunggu video...`
         case '#otagall':
         case '#omentionall':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             const groupMek = await tobz.getGroupMembers(groupId)
             let heho = '╔══✪〘 Mention All 〙✪══\n'
             for (let i = 0; i < groupMek.length; i++) {
                 heho += '╠➥'
                 heho += ` @${groupMek[i].id.replace(/@c.us/g, '')}\n`
             }
-            heho += '╚═〘 ELAINA BOT 〙'
+            heho += '╚═〘 Odading BOT 〙'
             await sleep(2000)
             await tobz.sendTextWithMentions(from, heho)
             break
@@ -2159,13 +2159,13 @@ Menunggu video...`
                 hehe += '╠➥'
                 hehe += ` @${groupMem[i].id.replace(/@c.us/g, '')}\n`
             }
-            hehe += '╚═〘 ELAINA KATO BOT 〙'
+            hehe += '╚═〘 Odading KATO BOT 〙'
             await sleep(2000)
             await tobz.sendTextWithMentions(from, hehe)
             break
         case '#ekickall':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             if (!isBotGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan ketika bot menjadi admin', id)
             const allMem = await tobz.getGroupMembers(groupId)
             for (let i = 0; i < allMem.length; i++) {
@@ -2179,7 +2179,7 @@ Menunggu video...`
             break
         case '#okickall':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
             if (!isBotGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan ketika bot menjadi admin', id)
             const allMeq = await tobz.getGroupMembers(groupId)
             for (let i = 0; i < allMeq.length; i++) {
@@ -2207,7 +2207,7 @@ Menunggu video...`
             tobz.reply(from, 'Success kick all member', id)
             break
         case '#leaveall':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             const allChats = await tobz.getAllChatIds()
             const allGroups = await tobz.getAllGroups()
             for (let gclist of allGroups) {
@@ -2217,7 +2217,7 @@ Menunggu video...`
             tobz.reply(from, 'Succes leave all group!', id)
             break
         case '#clearall':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             const allChatz = await tobz.getAllChats()
             for (let dchat of allChatz) {
                 await tobz.deleteChat(dchat.id)
@@ -2228,7 +2228,7 @@ Menunggu video...`
             const orang = args[1]
             if (!isGroupMsg) return tobz.reply(from, 'Fitur ini hanya bisa di gunakan dalam group', id)
             if (args.length === 1) return tobz.reply(from, 'Untuk menggunakan fitur ini, kirim perintah *#add* 628xxxxx', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
             if (!isBotGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan ketika bot menjadi admin', id)
             try {
                 await tobz.addParticipant(from,`${orang}@c.us`)
@@ -2250,7 +2250,7 @@ Menunggu video...`
             break
         case '#okick':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             if (!isBotGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan ketika bot menjadi admin', id)
             if (mentionedJidList.length === 0) return tobz.reply(from, 'Untuk menggunakan Perintah ini, kirim perintah *#okick* @tagmember', id)
             await tobz.sendText(from, `Perintah Owner diterima, mengeluarkan:\n${mentionedJidList.join('\n')}`)
@@ -2272,8 +2272,8 @@ Menunggu video...`
             break
         case '#oleave':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
-            await tobz.sendText(from,'ELAINA DIPERINTAHKAN KELUAR OLEH OWNER!!').then(() => tobz.leaveGroup(groupId))
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
+            await tobz.sendText(from,'Odading DIPERINTAHKAN KELUAR OLEH OWNER!!').then(() => tobz.leaveGroup(groupId))
             break
         case '#leave':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
@@ -2282,7 +2282,7 @@ Menunggu video...`
             break
         case '#opromote':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
             if (!isBotGroupAdmins) return tobz.reply(from, 'Fitur ini hanya bisa di gunakan ketika bot menjadi admin', id)
             if (mentionedJidList.length === 0) return tobz.reply(from, 'Untuk menggunakan fitur ini, kirim perintah *#promote* @tagmember', id)
             if (mentionedJidList.length >= 2) return tobz.reply(from, 'Maaf, perintah ini hanya dapat digunakan kepada 1 user.', id)
@@ -2302,7 +2302,7 @@ Menunggu video...`
             break
         case '#odemote':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
             if (!isBotGroupAdmins) return tobz.reply(from, 'Fitur ini hanya bisa di gunakan ketika bot menjadi admin', id)
             if (mentionedJidList.length === 0) return tobz.reply(from, 'Untuk menggunakan fitur ini, kirim perintah *#demote* @tagadmin', id)
             if (mentionedJidList.length >= 2) return tobz.reply(from, 'Maaf, perintah ini hanya dapat digunakan kepada 1 orang.', id)
@@ -2322,7 +2322,7 @@ Menunggu video...`
             break
         case '#join':
             if (args.length === 1) return tobz.reply(from, 'Hanya Owner yang bisa memasukan Bot ke dalam Grup!', id)
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             const link = body.slice(6)
             const tGr = await tobz.getAllGroups()
             const minMem = 5
@@ -2339,7 +2339,7 @@ Menunggu video...`
             break
         case '#odelete':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
             if (!quotedMsg) return tobz.reply(from, 'Salah!!, kirim perintah *#delete [tagpesanbot]*', id)
             if (!quotedMsgObj.fromMe) return tobz.reply(from, 'Salah!!, Bot tidak bisa mengahpus chat user lain!', id)
             tobz.deleteMessage(quotedMsgObj.chatId, quotedMsgObj.id, false)
@@ -2352,12 +2352,12 @@ Menunggu video...`
             tobz.deleteMessage(quotedMsgObj.chatId, quotedMsgObj.id, false)
             break
         case '#getses':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)            
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)            
             const sesPic = await tobz.getSnapshot()
             tobz.sendFile(from, sesPic, 'session.png', 'Nih boss', id)
             break
-        case '#elainaadmin':
-            let admn = `This is list of Elaina Admin\nTotal : ${adminNumber.length}\n`
+        case '#odadingadmin':
+            let admn = `This is list of Odading Admin\nTotal : ${adminNumber.length}\n`
             for (let i of adminNumber) {
                 admn += `➸ ${i.replace(/@c.us/g,'')}\n`
             }
@@ -2419,22 +2419,22 @@ Menunggu video...`
             }
             break
         case '#addadmin':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Odading!', id)
                 for (let i = 0; i < mentionedJidList.length; i++) {
                 adminNumber.push(mentionedJidList[i])
                 fs.writeFileSync('./lib/admin.json', JSON.stringify(adminNumber))
-                tobz.reply(from, 'Success Menambahkan Admin Elaina!', id)
+                tobz.reply(from, 'Success Menambahkan Admin Odading!', id)
                 }
             break
         case '#deladmin':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Odading!', id)
                 let inq = adminNumber.indexOf(mentionedJidList[0])
                 adminNumber.splice(inq, 1)
                 fs.writeFileSync('./lib/admin.json', JSON.stringify(adminNumber))
-                tobz.reply(from, 'Success Menghapus Admin Elaina!', id)
+                tobz.reply(from, 'Success Menghapus Admin Odading!', id)
             break
         case '#block':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Odading!', id)
             for (let i = 0; i < mentionedJidList.length; i++) {
                 let unblock = `${mentionedJidList[i]}`
                 await tobz.contactBlock(unblock).then((a)=>{
@@ -2444,7 +2444,7 @@ Menunggu video...`
             }
             break
         case '#unblock':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Odading!', id)
             for (let i = 0; i < mentionedJidList.length; i++) {
                 let unblock = `${mentionedJidList[i]}`
                 await tobz.contactUnblock(unblock).then((a)=>{
@@ -2454,7 +2454,7 @@ Menunggu video...`
             } 
             break
         case '#ban':
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Odading!', id)
                 for (let i = 0; i < mentionedJidList.length; i++) {
                 banned.push(mentionedJidList[i])
                 fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
@@ -2462,7 +2462,7 @@ Menunggu video...`
             }
             break
         case '#unban':
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Odading!', id)
                 let inz = banned.indexOf(mentionedJidList[0])
                 banned.splice(inz, 1)
                 fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
@@ -2529,7 +2529,7 @@ Menunggu video...`
                 } else {
                     var pfp = pic
                 } 
-                await tobz.sendFileFromUrl(from, pfp, 'pfp.jpg', `*User Profile* ✨️ \n\n➸ *Username: ${namae}*\n\n➸ *User Info: ${status}*\n\n*➸ Block : ${block}*\n\n*➸ Banned : ${bend}*\n\n➸ *Admin Group: ${adm}*\n\n➸ *Admin Elaina: ${donate}*`)
+                await tobz.sendFileFromUrl(from, pfp, 'pfp.jpg', `*User Profile* ✨️ \n\n➸ *Username: ${namae}*\n\n➸ *User Info: ${status}*\n\n*➸ Block : ${block}*\n\n*➸ Banned : ${bend}*\n\n➸ *Admin Group: ${adm}*\n\n➸ *Admin Odading: ${donate}*`)
              } else if (quotedMsg) {
              var qmid = quotedMsgObj.sender.id
              var block = blockNumber.includes(qmid)
@@ -2545,7 +2545,7 @@ Menunggu video...`
               } else {
               var pfp = pic
               } 
-              await tobz.sendFileFromUrl(from, pfp, 'pfp.jpg', `*User Profile* ✨️ \n\n➸ *Username: ${namae}*\n\n➸ *User Info: ${status}*\n\n*➸ Block : ${block}*\n\n*➸ Banned : ${bend}*\n\n➸ *Admin Group: ${adm}*\n\n➸ *Admin Elaina: ${donate}*`)
+              await tobz.sendFileFromUrl(from, pfp, 'pfp.jpg', `*User Profile* ✨️ \n\n➸ *Username: ${namae}*\n\n➸ *User Info: ${status}*\n\n*➸ Block : ${block}*\n\n*➸ Banned : ${bend}*\n\n➸ *Admin Group: ${adm}*\n\n➸ *Admin Odading: ${donate}*`)
              }
             }
             break
@@ -2554,8 +2554,8 @@ Menunggu video...`
         case '#help':
             tobz.sendText(from, help)
             break
-        case '#elainagroup':
-            tobz.reply(from, `Link Group Elaina : https://chat.whatsapp.com/By906EiJBGBCZGURDadOat\nJangan Lupa Join Ya Kak ${pushname}`, id)
+        case '#odaddinggroup':
+            tobz.reply(from, `Link Group Odading : https://chat.whatsapp.com/DsgXccfAg5r1uMRa33ZQaK\nJangan Lupa Join Ya Kak ${pushname}`, id)
             break
         case '#groupmenu':
             tobz.sendText(from, groupcmd)
@@ -2579,11 +2579,11 @@ Menunggu video...`
             tobz.sendText(from, sewa)
             break
         case '#adminmenu':
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Odading', id)
             tobz.sendText(from, admincmd)
             break
         case '#ownermenu':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Odading', id)
             tobz.sendText(from, ownercmd)
             break
         case '#nsfwmenu':
@@ -2608,7 +2608,7 @@ Menunggu video...`
             tobz.reply(from, snk, id)
             break
         default:
-            if (!isGroupMsg) return tobz.reply(from, 'Jika Ingin Menggunakan Bot Harap Masuk Ke Dalam Grup Elaina, Link Ada Di Bio atau Bisa Mengetik #elainagroup!\nJika Ingin Sewa Bot atau Bikin Bot Harap Ketik *#iklan*', id)
+            if (!isGroupMsg) return tobz.reply(from, 'Jika Ingin Menggunakan Bot Harap Masuk Ke Dalam Grup Odading, Link Ada Di Bio atau Bisa Mengetik #Odadinggroup!\nJika Ingin Sewa Bot atau Bikin Bot Harap Ketik *#iklan*', id)
             if (command.startsWith('#')) {
                 tobz.reply(from, `Maaf ${pushname}, Command *${args[0]}* Tidak Terdaftar Di Dalam *#menu*!`, id)
             }
