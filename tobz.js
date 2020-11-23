@@ -1213,43 +1213,47 @@ ${desc}`)
                 });
             }
             break
-        case '#video':
+        case '#nhentai': // SEARCH NHENTAI
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+          break
+        case '#getnhentai': // DOWNLOADER NHENTAI PDF FROM #NHENTAI
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+          break
+        case '#video': // SEARCH VIDEO FROM YOUTUBE
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#getvideo':
+        case '#getvideo': // DOWNLOADER VIDEO FROM #VIDEO
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#music':
+        case '#music': // SEARCH MUSIC FROM YOUTUBE
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#getmusic':
+        case '#getmusic': // DOWNLOADER MUSIC FROM #MUSIC
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#youtubesearch':
+        case '#youtubesearch': // SEARCH YOUTUBE
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#jurnalotaku':
+        case '#brainlysearch': // SEARCH BRAINLY
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#brainlysearch':
+        case '#shopee': // SEARCH SHOPEE PRODUCT
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#shopee':
+        case '#playstore': // SEARCH PLAYSTORE
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#playstore':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
-            break
-        case '#animesearch':
+        case '#animesearch': // SEARCH ANIME
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
@@ -1466,6 +1470,28 @@ Menunggu video...`
              console.error(err.message)
              await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Music tidak ditemukan')
              tobz.sendText(ownerNumber, 'Smule Error : ' + err)
+           }
+          break
+        case '#sandwriting':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1)  return tobz.reply(from, 'Kirim perintah *#sandwriting [ Teks ]*\nContoh *#sandwriting Elaina Cantik*', id)
+            const swrt = body.slice(13)
+            try {
+            const swrt2 = await axios.get('https://api.vhtear.com/sand_writing?text1=' + swrt + '&apikey=' + vhtearkey)
+            const { imgUrl } = swrt2.data.result
+            const swrt3 = `*「 SAND WRITING 」*
+
+*Text : ${swrt}*`
+            const pictk = await bent("buffer")(imgUrl)
+            const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
+            tobz.sendImage(from, base64, swrt3)
+            } catch (err) {
+             console.error(err.message)
+             await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+             tobz.sendText(ownerNumber, 'Sand Writing Error : ' + err)
            }
           break
         case '#resepmasakan':
@@ -1813,10 +1839,6 @@ Menunggu video...`
              await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
              tobz.sendText(ownerNumber, 'Error Check IP : '+ err)
            }
-          break
-        case '#nhentai': // NHENTAI PREMIUM BY TOBZ
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
           break
         /*case '#nhentai':
         case '#nh':
