@@ -1,10 +1,16 @@
 const { create, Client } = require('@open-wa/wa-automate')
 const welcome = require('./lib/welcome')
 const left = require('./lib/left')
-const msgHandler = require('./tobz')
-const options = require('./options')
-const fs = require('fs-extra')
+const cron = require('node-cron')
+const fs = require('fs')
 const figlet = require('figlet')
+const options = require('./options')
+
+// AUTO UPDATE BY NURUTOMO
+// THX FOR NURUTOMO
+// Cache handler and check for file change
+require('./tobz.js')
+nocache('./tobz.js', module => console.log(`'${module}' Updated!`))
 
 const adminNumber = JSON.parse(fs.readFileSync('./lib/admin.json'))
 const setting = JSON.parse(fs.readFileSync('./lib/setting.json'))
@@ -33,7 +39,7 @@ const start = async (tobz = new Client()) => {
         console.log('------------------------------------------------')
         console.log('[DEV] TOBZ')
         console.log('[SERVER] Server Started!')
-        if(isRestart){restartAwal(tobz);}
+        tobz.onAnyMessage((fn) => messageLog(fn.fromMe, fn.type))
         // Force it to keep the current session
         tobz.onStateChanged((state) => {
             console.log('[Client State]', state)
@@ -42,14 +48,17 @@ const start = async (tobz = new Client()) => {
         // listening on message
         tobz.onMessage((async (message) => {
 
-            tobz.getAllChats()
+        tobz.getAmountOfLoadedMessages() // Cut message Cache if cache more than 3K
             .then((msg) => {
-                if (msg >= 200) {
-                    tobz.deleteChat()
+                if (msg >= 1000) {
+                    console.log('[CLIENT]', color(`Loaded Message Reach ${msg}, cuting message cache...`, 'yellow'))
+                    tobz.cutMsgCache()
                 }
             })
-            msgHandler(tobz, message)
-        }))
+        // Message Handler (Loaded from recent cache)
+        require('./tobz.js')(tobz, message)
+        require('./lib/help.js')(tobz, message)
+    }))
            
 
         tobz.onGlobalParicipantsChanged((async (heuh) => {
@@ -96,6 +105,34 @@ const start = async (tobz = new Client()) => {
             .then(() => tobz.contactBlock(call.peerJid))
         }))
     }
+
+/**
+ * Uncache if there is file change
+ * @param {string} module Module name or path
+ * @param {function} cb <optional> 
+ */
+function nocache(module, cb = () => { }) {
+    console.log('Module', `'${module}'`, 'is now being watched for changes')
+    fs.watchFile(require.resolve(module), async () => {
+        await uncache(require.resolve(module))
+        cb(module)
+    })
+}
+
+/**
+ * Uncache a module
+ * @param {string} module Module name or path
+ */
+function uncache(module = '.') {
+    return new Promise((resolve, reject) => {
+        try {
+            delete require.cache[require.resolve(module)]
+            resolve()
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
 
 create(options(true, start))
     .then(tobz => start(tobz))
