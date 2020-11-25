@@ -56,10 +56,10 @@ const start = async (tobz = new Client()) => {
                     tobz.cutMsgCache()
                 }
             })
-         msgHndlr(tobz, message)
+        // msgHndlr(tobz, message)
         // Message Handler (Loaded from recent cache)
-        // require('./tobz.js')(tobz, message)
-        // require('./lib/help.js')(tobz, message)
+        require('./tobz.js')(tobz, message)
+        require('./lib/help.js')(tobz, message)
     }))
            
 
@@ -113,19 +113,19 @@ const start = async (tobz = new Client()) => {
  * @param {string} module Module name or path
  * @param {function} cb <optional> 
  */
-/*function nocache(module, cb = () => { }) {
+function nocache(module, cb = () => { }) {
     console.log('Module', `'${module}'`, 'is now being watched for changes')
     fs.watchFile(require.resolve(module), async () => {
         await uncache(require.resolve(module))
         cb(module)
     })
-}*/
+}
 
 /**
  * Uncache a module
  * @param {string} module Module name or path
  */
-/*function uncache(module = '.') {
+function uncache(module = '.') {
     return new Promise((resolve, reject) => {
         try {
             delete require.cache[require.resolve(module)]
@@ -134,7 +134,7 @@ const start = async (tobz = new Client()) => {
             reject(e)
         }
     })
-}*/
+}
 
 create(options(true, start))
     .then(tobz => start(tobz))
