@@ -80,6 +80,8 @@ let {
     memberLimit, 
     groupLimit,
     banChats,
+    barbarkey,
+    vhtearkey,
     restartState: isRestart,
     mtc: mtcState
     } = setting
@@ -262,9 +264,6 @@ module.exports = tobz = async (tobz, message) => {
         const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/gi)
         const url = args.length !== 0 ? args[0] : ''
         const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
-
-        const vhtearkey = 'YOUR_APIKEY' // https://api.vhtear.com
-        const barbarkey = 'YOUR_APIKEY' // https://mhankbarbar.herokuapp.com/api
 
         const tutor = 'https://i.ibb.co/Hp1XGbL/a4dec92b8922.jpg'
         const errorurl = 'https://steamuserimages-a.akamaihd.net/ugc/954087817129084207/5B7E46EE484181A676C02DFCAD48ECB1C74BC423/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false'
