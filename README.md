@@ -101,8 +101,8 @@ after running it you need to scan the qr
 |       ✅        |   YouTube Video/Audio Downloader                    |
 |       ✅        |   Doujin Downloader         |
 |       ✅        |   Instagram Video/Image Downloader                  |
-|       ✅        |   Facebook Video Downloader                  |
-|       ✅        |  Tiktok Downloader                    |
+|       ❌        |   Facebook Video Downloader                  |
+|       ❌        |  Tiktok Downloader                    |
 |       ✅        |   Twitter Downloader         |
 |       ✅        |   Smule Mp3 Downloader                  |
 |       ✅        |   Starmaker Video Downloader                  |
@@ -137,7 +137,7 @@ after running it you need to scan the qr
 |       ✅        |   Lyrics    |
 |       ✅        |   Textmaker    |
 |       ✅        |   Instagram Stalk    |
-|       ✅        |   Tiktok Stalk    |
+|       ❌        |   Tiktok Stalk    |
 |       ✅        |   Smule Stalk    |
 |       ✅        |   Write in Image    |
 |       ✅        |   Weather Information    |
