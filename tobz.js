@@ -2106,15 +2106,15 @@ Menunggu video...`
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, '[❗] Kirim perintah *#jadwalShalat [daerah]*\ncontoh : *#jadwalShalat Tangerang*\nUntuk list daerah kirim perintah *#listDaerah*')
-            const daerah = body.slice(14)
-            const jadwalShalat = await axios.get(`https://mhankbarbar.herokuapp.com/api/jadwalshalat?daerah=${daerah}&apiKey=` + barbarkey)
+            const daerahb = body.slice(14)
+            const jadwalShalat = await axios.get(`https://mhankbarbar.herokuapp.com/api/jadwalshalat?daerah=${daerahb}&apiKey=` + barbarkey)
             if (jadwalShalat.data.error) return tobz.reply(from, jadwalShalat.data.error, id)
             const { Imsyak, Subuh, Dhuha, Dzuhur, Ashar, Maghrib, Isya } = await jadwalShalat.data
             arrbulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
             tgl = new Date().getDate()
             bln = new Date().getMonth()
             thn = new Date().getFullYear()
-            const resultJadwal = `Jadwal shalat di ${daerah}, ${tgl}-${arrbulan[bln]}-${thn}\n\nImsyak : ${Imsyak}\nSubuh : ${Subuh}\nDhuha : ${Dhuha}\nDzuhur : ${Dzuhur}\nAshar : ${Ashar}\nMaghrib : ${Maghrib}\nIsya : ${Isya}`
+            const resultJadwal = `Jadwal shalat di ${daerahb}, ${tgl}-${arrbulan[bln]}-${thn}\n\nImsyak : ${Imsyak}\nSubuh : ${Subuh}\nDhuha : ${Dhuha}\nDzuhur : ${Dzuhur}\nAshar : ${Ashar}\nMaghrib : ${Maghrib}\nIsya : ${Isya}`
             tobz.reply(from, resultJadwal, id)
             break
         case '#listchannel':
