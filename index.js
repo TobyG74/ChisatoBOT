@@ -3,7 +3,7 @@ const welcome = require('./lib/welcome')
 const left = require('./lib/left')
 const cron = require('node-cron')
 const fs = require('fs')
-const msgHndlr = require ('./tobz')
+// const msgHndlr = require ('./tobz')
 const figlet = require('figlet')
 const options = require('./options')
 
