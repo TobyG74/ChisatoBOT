@@ -13,8 +13,8 @@ const options = require('./options')
 require('./tobz.js')
 nocache('./tobz.js', module => console.log(`'${module}' Updated!`))
 
-const adminNumber = JSON.parse(fs.readFileSync('./lib/admin.json'))
-const setting = JSON.parse(fs.readFileSync('./lib/setting.json'))
+const adminNumber = JSON.parse(fs.readFileSync('./lib/database/admin.json'))
+const setting = JSON.parse(fs.readFileSync('./lib/database/setting.json'))
 const isWhite = (chatId) => adminNumber.includes(chatId) ? true : false
 
 let { 
