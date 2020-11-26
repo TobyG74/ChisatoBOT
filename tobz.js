@@ -64,16 +64,16 @@ const {
     } = require('./lib/fetcher')
 
 // LOAD FILE
-const banned = JSON.parse(fs.readFileSync('./lib/banned.json'))
-const nsfw_ = JSON.parse(fs.readFileSync('./lib/nsfwz.json'))
-const simi_ = JSON.parse(fs.readFileSync('./lib/Simsimi.json'))
-const limit = JSON.parse(fs.readFileSync('./lib/limit.json'))
-const welkom = JSON.parse(fs.readFileSync('./lib/welcome.json'))
-const left = JSON.parse(fs.readFileSync('./lib/left.json'))
-const muted = JSON.parse(fs.readFileSync('./lib/muted.json'))
-const setting = JSON.parse(fs.readFileSync('./lib/setting.json'))
-const msgLimit = JSON.parse(fs.readFileSync('./lib/msgLimit.json'))
-const adminNumber = JSON.parse(fs.readFileSync('./lib/admin.json'))
+const banned = JSON.parse(fs.readFileSync('./lib/database/banned.json'))
+const nsfw_ = JSON.parse(fs.readFileSync('./lib/database/nsfwz.json'))
+const simi_ = JSON.parse(fs.readFileSync('./lib/database/Simsimi.json'))
+const limit = JSON.parse(fs.readFileSync('./lib/database/limit.json'))
+const welkom = JSON.parse(fs.readFileSync('./lib/database/welcome.json'))
+const left = JSON.parse(fs.readFileSync('./lib/database/left.json'))
+const muted = JSON.parse(fs.readFileSync('./lib/database/muted.json'))
+const setting = JSON.parse(fs.readFileSync('./lib/database/setting.json'))
+const msgLimit = JSON.parse(fs.readFileSync('./lib/database/msgLimit.json'))
+const adminNumber = JSON.parse(fs.readFileSync('./lib/database/admin.json'))
 
 let { 
     limitCount,
@@ -280,7 +280,7 @@ module.exports = tobz = async (tobz, message) => {
                                 tobz.reply(from, '*[ANTI-SPAM]*\nMaaf, akun anda kami blok karena SPAM, dan tidak bisa di UNBLOK!', id)
                                 tobz.contactBlock(id)
                                 banned.push(id)
-                                fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
+                                fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
                                 return true;
                             }else if(i.msg >= 7){
                                 found === true
@@ -295,7 +295,7 @@ module.exports = tobz = async (tobz, message) => {
                     if (found === false){
                         let obj = {id: `${id}`, msg:1};
                         msgLimit.push(obj);
-                        fs.writeFileSync('./lib/msgLimit.json',JSON.stringify(msgLimit));
+                        fs.writeFileSync('./lib/database/msgLimit.json',JSON.stringify(msgLimit));
                         return false;
                     }  
                 }
@@ -309,7 +309,7 @@ module.exports = tobz = async (tobz, message) => {
                     })
                     if (found !== false) {
                         msgLimit[found].msg += 1;
-                        fs.writeFileSync('./lib/msgLimit.json',JSON.stringify(msgLimit));
+                        fs.writeFileSync('./lib/database/msgLimit.json',JSON.stringify(msgLimit));
                     }
                 }
                 function isLimit(id){
@@ -332,7 +332,7 @@ module.exports = tobz = async (tobz, message) => {
                     if (found === false){
                         let obj = {id: `${id}`, limit:1};
                         limit.push(obj);
-                        fs.writeFileSync('./lib/limit.json',JSON.stringify(limit));
+                        fs.writeFileSync('./lib/database/limit.json',JSON.stringify(limit));
                         return false;
                     }  
                 }
@@ -346,7 +346,7 @@ module.exports = tobz = async (tobz, message) => {
                     })
                     if (found !== false) {
                         limit[found].limit += 1;
-                        fs.writeFileSync('./lib/limit.json',JSON.stringify(limit));
+                        fs.writeFileSync('./lib/database/limit.json',JSON.stringify(limit));
                     }
                 }
                 // END HELPER FUNCTION
@@ -360,7 +360,7 @@ module.exports = tobz = async (tobz, message) => {
                             addMsgLimit(serial)
                         }
                         muted.push(chatId)
-                        fs.writeFileSync('./lib/muted.json', JSON.stringify(muted, null, 2))
+                        fs.writeFileSync('./lib/database/muted.json', JSON.stringify(muted, null, 2))
                         tobz.reply(from, 'Bot telah di mute pada chat ini! #unmute untuk unmute!', id)
                     }else{
                         if(isMsgLimit(serial)){
@@ -369,7 +369,7 @@ module.exports = tobz = async (tobz, message) => {
                             addMsgLimit(serial)
                         }
                         muted.push(chatId)
-                        fs.writeFileSync('./lib/muted.json', JSON.stringify(muted, null, 2))
+                        fs.writeFileSync('./lib/database/muted.json', JSON.stringify(muted, null, 2))
                         reply(from, 'Bot telah di mute pada chat ini! #unmute untuk unmute!', id)
                     }
                 }
@@ -383,7 +383,7 @@ module.exports = tobz = async (tobz, message) => {
                         }
                         let index = muted.indexOf(chatId);
                         muted.splice(index,1)
-                        fs.writeFileSync('./lib/muted.json', JSON.stringify(muted, null, 2))
+                        fs.writeFileSync('./lib/database/muted.json', JSON.stringify(muted, null, 2))
                         tobz.reply(from, 'Bot telah di unmute!', id)         
                     }else{
                         if(isMsgLimit(serial)){
@@ -393,7 +393,7 @@ module.exports = tobz = async (tobz, message) => {
                         }
                         let index = muted.indexOf(chatId);
                         muted.splice(index,1)
-                        fs.writeFileSync('./lib/muted.json', JSON.stringify(muted, null, 2))
+                        fs.writeFileSync('./lib/database/muted.json', JSON.stringify(muted, null, 2))
                         tobz.reply(from, 'Bot telah di unmute!', id)                   
                     }
                 }
@@ -402,7 +402,7 @@ module.exports = tobz = async (tobz, message) => {
                     if(setting.banChats === false) return
                     setting.banChats = false
                     banChats = false
-                    fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
+                    fs.writeFileSync('./lib/database/setting.json', JSON.stringify(setting, null, 2))
                     tobz.reply('Global chat has been disable!')
                 }
 
@@ -420,7 +420,7 @@ module.exports = tobz = async (tobz, message) => {
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
             setting.banChats = true
             banChats = true
-            fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null, 2))
+            fs.writeFileSync('./lib/database/setting.json', JSON.stringify(setting, null, 2))
             tobz.reply('Global chat has been enable!')
             break
 
@@ -644,11 +644,11 @@ ${desc}`)
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 nsfw_.push(chat.id)
-                fs.writeFileSync('./lib/nsfwz.json', JSON.stringify(nsfw_))
+                fs.writeFileSync('./lib/database/nsfwz.json', JSON.stringify(nsfw_))
                 tobz.reply(from, 'NSFW berhasil di aktifkan di group ini! kirim perintah *#nsfwMenu* untuk mengetahui menu', id)
             } else if (args[1].toLowerCase() === 'disable') {
                 nsfw_.splice(chat.id, 1)
-                fs.writeFileSync('./lib/nsfwz.json', JSON.stringify(nsfw_))
+                fs.writeFileSync('./lib/database/nsfwz.json', JSON.stringify(nsfw_))
                 tobz.reply(from, 'NSFW berhasil di nonaktifkan di group ini!', id)
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
@@ -660,11 +660,11 @@ ${desc}`)
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 simi_.push(chat.id)
-                fs.writeFileSync('./lib/Simsimi.json', JSON.stringify(simi_))
+                fs.writeFileSync('./lib/database/Simsimi.json', JSON.stringify(simi_))
                 tobz.reply(from, 'Simsimi berhasil di aktifkan di group ini! Kirim perintah *# [teks]*\nContoh : *# halo*', id)
             } else if (args[1].toLowerCase() === 'disable') {
                 simi_.splice(chat.id, 1)
-                fs.writeFileSync('./lib/Simsimi.json', JSON.stringify(simi_))
+                fs.writeFileSync('./lib/database/Simsimi.json', JSON.stringify(simi_))
                 tobz.reply(from, 'Simsimi berhasil di nonaktifkan di group ini!', id)
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
@@ -691,11 +691,11 @@ ${desc}`)
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 left.push(chat.id)
-                fs.writeFileSync('./lib/left.json', JSON.stringify(left))
+                fs.writeFileSync('./lib/database/left.json', JSON.stringify(left))
                 tobz.reply(from, 'Fitur left berhasil di aktifkan di group ini!', id)
             } else if (args[1].toLowerCase() === 'disable') {
                 left.splice(chat.id, 1)
-                fs.writeFileSync('./lib/left.json', JSON.stringify(left))
+                fs.writeFileSync('./lib/database/left.json', JSON.stringify(left))
                 tobz.reply(from, 'Fitur left berhasil di nonaktifkan di group ini!', id)
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
@@ -707,11 +707,11 @@ ${desc}`)
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 welkom.push(chat.id)
-                fs.writeFileSync('./lib/welcome.json', JSON.stringify(welkom))
+                fs.writeFileSync('./lib/database/welcome.json', JSON.stringify(welkom))
                 tobz.reply(from, 'Fitur welcome berhasil di aktifkan di group ini!', id)
             } else if (args[1].toLowerCase() === 'disable') {
                 welkom.splice(chat.id, 1)
-                fs.writeFileSync('./lib/welcome.json', JSON.stringify(welkom))
+                fs.writeFileSync('./lib/database/welcome.json', JSON.stringify(welkom))
                 tobz.reply(from, 'Fitur welcome berhasil di nonaktifkan di group ini!', id)
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
@@ -832,7 +832,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const diti = fs.readFileSync('./lib/husbu.json')
+            const diti = fs.readFileSync('./lib/database/husbu.json')
             const ditiJsin = JSON.parse(diti)
             const rindIndix = Math.floor(Math.random() * ditiJsin.length)
             const rindKiy = ditiJsin[rindIndix]
@@ -2157,7 +2157,7 @@ Menunggu video...`
             const Owner_ = chat.groupMetadata.owner
             await tobz.sendTextWithMentions(from, `Owner Group : @${Owner_}`)
             break
-        case '#otagall':
+        case '#otagall': // FOR OWNER & ADMIN ELAINA
         case '#omentionall':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
@@ -2171,7 +2171,7 @@ Menunggu video...`
             await sleep(2000)
             await tobz.sendTextWithMentions(from, heho)
             break
-        case '#tagall':
+        case '#tagall': // FOR GROUP ADMINS
         case '#mentionall':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin group', id)
@@ -2387,7 +2387,7 @@ Menunggu video...`
             break
         case '#limit':
             var found = false
-            const limidat = JSON.parse(fs.readFileSync('./lib/limit.json'))
+            const limidat = JSON.parse(fs.readFileSync('./lib/database/limit.json'))
             for(let lmt of limidat){
                 if(lmt.id === serial){
                     let limitCounts = limitCount-lmt.limit
@@ -2401,25 +2401,25 @@ Menunggu video...`
             if (found === false){
                 let obj = {id: `${serial}`, limit:1};
                 limit.push(obj);
-                fs.writeFileSync('./lib/limit.json',JSON.stringify(limit, 1));
+                fs.writeFileSync('./lib/database/limit.json',JSON.stringify(limit, 1));
                 tobz.reply(from, `Sisa limit request anda tersisa : *${limitCount}*\n\n_Note : Limit akan direset setiap jam 21:00!_`, id)
             }
             break
-        case '#restart':
+        case '#restart': // WORK IF YOU RUN USING PM2
             if(isOwner){
                 tobz.sendText(from, '*[WARN]* Restarting ...')
                 setting.restartState = true
                 setting.restartId = chatId
                 var obj = []
                 //fs.writeFileSync('./lib/setting.json', JSON.stringify(obj, null,2));
-                fs.writeFileSync('./lib/limit.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/muted.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/msgLimit.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/banned.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/welcome.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/left.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/Simsimi.json', JSON.stringify(obj));
-                fs.writeFileSync('./lib/nsfwz.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/limit.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/muted.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/msgLimit.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/banned.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/welcome.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/left.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/Simsimi.json', JSON.stringify(obj));
+                fs.writeFileSync('./lib/database/nsfwz.json', JSON.stringify(obj));
                 const spawn = require('child_process').exec;
                 function os_func() {
                     this.execCommand = function (command) {
@@ -2444,7 +2444,7 @@ Menunggu video...`
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
                 for (let i = 0; i < mentionedJidList.length; i++) {
                 adminNumber.push(mentionedJidList[i])
-                fs.writeFileSync('./lib/admin.json', JSON.stringify(adminNumber))
+                fs.writeFileSync('./lib/database/admin.json', JSON.stringify(adminNumber))
                 tobz.reply(from, 'Success Menambahkan Admin Elaina!', id)
                 }
             break
@@ -2452,7 +2452,7 @@ Menunggu video...`
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
                 let inq = adminNumber.indexOf(mentionedJidList[0])
                 adminNumber.splice(inq, 1)
-                fs.writeFileSync('./lib/admin.json', JSON.stringify(adminNumber))
+                fs.writeFileSync('./lib/database/admin.json', JSON.stringify(adminNumber))
                 tobz.reply(from, 'Success Menghapus Admin Elaina!', id)
             break
         case '#block':
@@ -2479,7 +2479,7 @@ Menunggu video...`
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
                 for (let i = 0; i < mentionedJidList.length; i++) {
                 banned.push(mentionedJidList[i])
-                fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
+                fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
                 tobz.reply(from, 'Succes ban target!',id)
             }
             break
@@ -2487,7 +2487,7 @@ Menunggu video...`
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
                 let inz = banned.indexOf(mentionedJidList[0])
                 banned.splice(inz, 1)
-                fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
+                fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
                 tobz.reply(from, 'Unbanned User!', id)
             break
         case '#listgroup':
