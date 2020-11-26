@@ -112,6 +112,15 @@ after running it you need to scan the qr
 |       ✅        |   Xnxx Video Downloader                  |
 |       ✅        |  Joox Downloader                  |
 
+| Prayer  |                     Feature                     |
+| :------------: | :---------------------------------------------: |
+|       ✅        |   Jadwalsholat             |
+|       ✅        |   List Daerah             |
+|       ✅        |   Al-Quran                |
+|       ✅        |   Infosurah             |
+|       ✅        |   List Surah             |
+|       ✅        |   Tafsir Ayat           |
+
 | Kerang Ajaib  |                     Feature                     |
 | :------------: | :---------------------------------------------: |
 |       ✅        |   Apakah             |
