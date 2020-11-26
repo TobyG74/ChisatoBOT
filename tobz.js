@@ -47,6 +47,7 @@ const {
     animecmd,
     othercmd,
     downloadcmd,
+    praycmd,
     groupcmd,
     bahasalist,
     sewa,
@@ -1075,6 +1076,112 @@ ${desc}`)
              await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Anime tidak ditemukan')
            }
           break
+        // PRAY //
+        case '#jadwalshalat':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `[❗] Kirim perintah *#jadwalShalat [ Daerah ]*\ncontoh : *#jadwalShalat Tangerang*\nUntuk list daerah kirim perintah *#listDaerah*`)
+            const daerah = body.slice(14)
+            const jadwalShalat = await axios.get(`https://mhankbarbar.herokuapp.com/api/jadwalshalat?daerah=${daerah}&apiKey=` + barbarkey)
+            if (jadwalShalat.data.error) return tobz.reply(from, jadwalShalat.data.error, id)
+            const { Imsyak, Subuh, Dhuha, Dzuhur, Ashar, Maghrib, Isya } = await jadwalShalat.data
+            arrbulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            tgl = new Date().getDate()
+            bln = new Date().getMonth()
+            thn = new Date().getFullYear()
+            const resultJadwal = `「 JADWAL SHALAT 」\n\nJadwal shalat di ${daerah}, ${tgl}-${arrbulan[bln]}-${thn}\n\nImsyak : ${Imsyak}\nSubuh : ${Subuh}\nDhuha : ${Dhuha}\nDzuhur : ${Dzuhur}\nAshar : ${Ashar}\nMaghrib : ${Maghrib}\nIsya : ${Isya}`
+            await limitAdd(serial)
+            break
+        case '#quran':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah Surah Quran kamu dengan cara ketik perintah :\n*#quran* [ Urutan Surat ]\nContoh :\n*#quran 1*`, id)
+            const qura = `https://api.i-tech.id/tools/quran?key=${techidkey}&surat=${args[1]}`
+            const quraan = await axios.get(qura)
+            const quraann = quraan.data
+            let hasqu = `*「 AL-QURAN 」*\n\n*Quran Surat : ${args[1]}*\n\n___________________________`
+            if (quraann.code === '404') return tobz.reply(from, `*Terdapat kesalahan saat mencari surat ${args[1]}*`)
+            for (let i = 0; i < quraann.result.length; i++) {
+                hasqu += `\n➸ *Ayat* : ${quraann.result[i].nomor}\n${quraann.result[i].ar}\n${quraann.result[i].id}\n___________________________`
+            }
+            await tobz.reply(from, `${hasqu}`, id).catch((e) => tobz.reply(from, `*Terdapat kesalahan saat mencari surat ${args[1]}*`, id))
+            await limitAdd(serial)
+            break
+        case '#listsurah':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            try {
+                axios.get('https://raw.githubusercontent.com/ArugaZ/scraper-results/main/islam/surah.json')
+                .then((response) => {
+                    let hehex = '*「 DAFTAR SURAH 」*\n\n___________________________\n'
+                    let nmr = 1
+                    for (let i = 0; i < response.data.data.length; i++) {
+                        hehex += nmr + '. ' +  monospace(response.data.data[i].name.transliteration.id.toLowerCase()) + '\n'
+                        nmr++
+                            }
+                        hehex += '___________________________'
+                    tobz.reply(from, hehex, id)
+                })
+            } catch(err) {
+                tobz.reply(from, err, id)
+            }
+            break
+        case '#infosurah':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length == 1) return tobz.reply(from, `Kirim perintah *#infosurah [ Nama Surah ]*\nContoh : *#infosurah al-fatihah*`, message.id)
+                var responseh = await axios.get('https://raw.githubusercontent.com/ArugaZ/scraper-results/main/islam/surah.json')
+                var { data } = responseh.data
+                var idx = data.findIndex(function(post, index) {
+                if((post.name.transliteration.id.toLowerCase() == args[1].toLowerCase())||(post.name.transliteration.en.toLowerCase() == args[1].toLowerCase()))
+                    return true;
+                });
+                try {
+                    var pesan = "*「 INFORMASI SURAH 」*\n\n___________________________\n\n"
+                    pesan = pesan + "➸ *Nama* : "+ data[idx].name.transliteration.id + "\n" + "➸ *Asma* : " +data[idx].name.short+"\n"+"➸ *Arti* : "+data[idx].name.translation.id+"\n"+"➸ *Jumlah ayat* : "+data[idx].numberOfVerses+"\n"+"➸ *Nomor surah* : "+data[idx].number+"\n"+"Jenis : "+data[idx].revelation.id+"\n"+"➸ *Keterangan* : "+data[idx].tafsir.id
+                    pesan += '\n\n___________________________'
+                    tobz.reply(from, pesan, message.id)
+                    limitAdd(serial)
+                }catch{
+                    tobz.reply(from, 'Data tidak ditemukan, atau nama surah salah', id)
+                }
+            break
+        case '#tafsir':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length == 1) return tobz.reply(from, `Kirim perintah *#tafsir [ Nama Surah ] [ Ayat ]*\nContoh : *#tafsir al-fatihah 2*`, message.id)
+                var responsh = await axios.get('https://raw.githubusercontent.com/ArugaZ/scraper-results/main/islam/surah.json')
+                var {data} = responsh.data
+                var idx = data.findIndex(function(post, index) {
+                if((post.name.transliteration.id.toLowerCase() == args[1].toLowerCase())||(post.name.transliteration.en.toLowerCase() == args[1].toLowerCase()))
+                    return true;
+                });
+            try{
+                nmr = data[idx].number
+                if(!isNaN(nmr)) {
+                var responsih = await axios.get('https://api.quran.sutanlab.id/surah/'+nmr+"/"+args[2])
+                    var {data} = responsih.data
+                    pesan = ""
+                    pesan = pesan + "*「 TAFSIR 」*\n\nTafsir Q.S. "+data.surah.name.transliteration.id+":"+args[2]+"\n\n"
+                    pesan = pesan + data.text.arab + "\n\n"
+                    pesan = pesan + "_" + data.translation.id + "_" + "\n\n" +data.tafsir.id.long
+                    pesan += '\n\n___________________________'
+                    tobz.reply(from, pesan, message.id)
+                    limitAdd(serial)
+                }
+            }catch{
+                tobz.reply(from, 'Data tidak ditemukan, mungkin nama surah/ayat salah', id)
+            }
+            break
         // MEDIA //
         case '#infogempa':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1668,8 +1775,8 @@ Menunggu video...`
         case '#instagram':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ig [ Link Instagram ]* untuk contoh silahkan kirim perintah *${prefix}readme*`)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#ig [ Link Instagram ]* untuk contoh silahkan kirim perintah *#readme*`)
             if (!args[1].match(isUrl) && !args[1].includes('instagram.com')) return tobz.reply(from, `Maaf, link yang kamu kirim tidak valid. [Invalid Link]`, id)
             await tobz.reply(from, mess.wait, id);
             instagram(args[1]).then(async(res) => {
@@ -2609,6 +2716,9 @@ Menunggu video...`
         case '#ownermenu':
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
             tobz.sendText(from, ownercmd)
+            break
+        case '#praymenu':
+            tobz.reply(from, praycmd)
             break
         case '#nsfwmenu':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
