@@ -350,6 +350,10 @@ module.exports = tobz = async (tobz, message) => {
                         fs.writeFileSync('./lib/database/limit.json',JSON.stringify(limit));
                     }
                 }
+        
+                function monospace(string) {
+                    return '```' + string + '```'
+                }
                 // END HELPER FUNCTION
                 
                 if(body === '#mute' && isMuted(chatId) == true){
