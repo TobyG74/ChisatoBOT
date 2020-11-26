@@ -32,7 +32,8 @@ const {
     sleep,
     jadwalTv,
     msgFilter, 
-    processTime, 
+    processTime,
+    instagram,
     nulis
     } = require('./lib/functions')
 
@@ -1663,28 +1664,30 @@ Menunggu video...`
             tobz.reply(from, sigot.success, id)
             console.log(sigot)
             break
-        case '#ig':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            
-            await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ig [linkIg]* untuk contoh silahkan kirim perintah *#readme*')
-            if (!args[1].match(isUrl) && !args[1].includes('instagram.com')) return tobz.reply(from, mess.error.Iv, id)
-            try {
-                tobz.reply(from, mess.wait, id)
-                const resp = await axios.get('https://mhankbarbar.herokuapp.com/api/ig?url='+ args[1] +'&apiKey='+ barbarkey)
-                if (resp.data.result.includes('.mp4')) {
-                    var ext = '.mp4'
-                } else {
-                    var ext = '.jpg'
+        case prefix+'ig': 
+        case prefix+'instagram':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ig [ Link Instagram ]* untuk contoh silahkan kirim perintah *${prefix}readme*`)
+            if (!args[1].match(isUrl) && !args[1].includes('instagram.com')) return tobz.reply(from, `Maaf, link yang kamu kirim tidak valid. [Invalid Link]`, id)
+            await tobz.reply(from, mess.wait, id);
+            instagram(args[1]).then(async(res) => {
+                let username = res.owner_username;
+                for (let i = 0; i < res.post.length; i++) {
+                if (res.post[i].type == "image") {
+                        await tobz.sendFileFromUrl(from, res.post[i].urlDownload, "ig.jpg", `*「 INSTAGRAM 」*\n\n➸ *Username* : ${username}\n➸ *Tipe* : Image/Jpg`, id);
+                        limitAdd(serial)
+                    } else if (res.post[i].type == "video") {
+                        await tobz.sendFileFromUrl(from, res.post[i].urlDownload, "ig.mp4", `*「 INSTAGRAM 」*\n\n➸ *Username* : ${username}\n➸ *Tipe* : Video/MP4`);
+                        limitAdd(serial)
+                    }
                 }
-                await tobz.sendFileFromUrl(from, resp.data.result, `igeh${ext}`, '', id)
-            } catch (err) {
-             console.error(err.message)
-             await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
-             tobz.sendText(ownerNumber, 'Error Instagram : '+ err)
-            }
-            break
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
+            })
+            break       
         case '#starmaker':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
