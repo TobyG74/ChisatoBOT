@@ -2100,23 +2100,6 @@ Menunggu video...`
                 tobz.reply(from, 'Usage: \n#quotemaker |teks|watermark|theme\n\nEx :\n#quotemaker |ini contoh|bicit|random', id)
             }
             break
-        case '#jadwalshalat':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            
-            await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, '[❗] Kirim perintah *#jadwalShalat [daerah]*\ncontoh : *#jadwalShalat Tangerang*\nUntuk list daerah kirim perintah *#listDaerah*')
-            const daerahb = body.slice(14)
-            const jadwalShalat = await axios.get(`https://mhankbarbar.herokuapp.com/api/jadwalshalat?daerah=${daerahb}&apiKey=` + barbarkey)
-            if (jadwalShalat.data.error) return tobz.reply(from, jadwalShalat.data.error, id)
-            const { Imsyak, Subuh, Dhuha, Dzuhur, Ashar, Maghrib, Isya } = await jadwalShalat.data
-            arrbulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-            tgl = new Date().getDate()
-            bln = new Date().getMonth()
-            thn = new Date().getFullYear()
-            const resultJadwal = `Jadwal shalat di ${daerahb}, ${tgl}-${arrbulan[bln]}-${thn}\n\nImsyak : ${Imsyak}\nSubuh : ${Subuh}\nDhuha : ${Dhuha}\nDzuhur : ${Dzuhur}\nAshar : ${Ashar}\nMaghrib : ${Maghrib}\nIsya : ${Isya}`
-            tobz.reply(from, resultJadwal, id)
-            break
         case '#listchannel':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, listChannel, id)
