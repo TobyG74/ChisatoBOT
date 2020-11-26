@@ -220,4 +220,5 @@ Fix Stuck on linux, install google chrome stable:
 <li>https://github.com/YogaSakti/imageToSticker<br>
 <li>https://github.com/MhankBarBar/whatsapp-bot<br>
 <li>https://github.com/ItzNgga/wa-bot<br>
+<li>https://github.com/ArugaZ/whatsapp-bot<br>
 </li>
