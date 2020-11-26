@@ -1664,8 +1664,8 @@ Menunggu video...`
             tobz.reply(from, sigot.success, id)
             console.log(sigot)
             break
-        case prefix+'ig': 
-        case prefix+'instagram':
+        case '#ig': 
+        case '#instagram':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
