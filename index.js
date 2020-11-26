@@ -59,7 +59,6 @@ const start = async (tobz = new Client()) => {
         // msgHndlr(tobz, message)
         // Message Handler (Loaded from recent cache)
         require('./tobz.js')(tobz, message)
-        require('./lib/help.js')(tobz, message)
     }))
            
 
