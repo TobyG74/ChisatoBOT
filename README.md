@@ -27,7 +27,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 
 - [Telegram](https://t.me/tobz2k19)
 - [Whatsapp](https://wa.me/6281311850715)
-- [BOT WA](wa.me/447723992261)
+- [MY BOT](wa.me/447418349954)
 - [GROUP WA](https://chat.whatsapp.com/InZrGpgBBNB4hnS7Q6sVJG)
 
 ## APIKEY
