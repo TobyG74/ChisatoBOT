@@ -36,7 +36,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [GROUP WA](https://chat.whatsapp.com/InZrGpgBBNB4hnS7Q6sVJG)
 
 ## APIKEY
-Open [setting.js](https://github.com/TobyG74/ElainaBOT/blob/cdd61100ba02de47dbcb5f5122fbc128b1bf4403/lib/database/setting.json#L5) then edit & paste it in YOUR_APIKEY
+Open setting.js then edit & paste it in [YOUR_APIKEY](https://github.com/TobyG74/ElainaBOT/blob/cdd61100ba02de47dbcb5f5122fbc128b1bf4403/lib/database/setting.json#L5)
 - [VHTEAR](https://api.vhtear.com)
 - [MHANKBARBAR](https://mhankbarbar.herokuapp.com/api)
 
