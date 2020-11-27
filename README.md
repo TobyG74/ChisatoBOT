@@ -30,10 +30,10 @@ ownerNumber = "6213xxxxxx@c.us"
 
 If you find some bugs please contact the WhatsApp number on Contact
 
-- [Telegram](https://t.me/tobz2k19)
-- [Whatsapp](https://wa.me/6281311850715)
+- [TELEGRAM](https://t.me/tobz2k19)
+- [WHATSAPP](https://wa.me/6281311850715)
 - [MY BOT](wa.me/447418349954)
-- [GROUP WA](https://chat.whatsapp.com/InZrGpgBBNB4hnS7Q6sVJG)
+- [WHATSAPP GROUP](https://chat.whatsapp.com/InZrGpgBBNB4hnS7Q6sVJG)
 
 ## APIKEY
 Open setting.js then edit & paste it in [YOUR_APIKEY](https://github.com/TobyG74/ElainaBOT/blob/cdd61100ba02de47dbcb5f5122fbc128b1bf4403/lib/database/setting.json#L5)
