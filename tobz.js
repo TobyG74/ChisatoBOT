@@ -413,11 +413,7 @@ module.exports = tobz = async (tobz, message) => {
 
         if (!isGroupMsg && command.startsWith('#')) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;32mEXEC\x1b[1;37m]', time, color(msgs(command)), 'from', color(pushname))
         if (isGroupMsg && command.startsWith('#')) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;32mEXEC\x1b[1;37m]', time, color(msgs(command)), 'from', color(pushname), 'in', color(formattedTitle))
-        if (isBanned) return
-        if (mtcState) return
-        if (!banChat()) return
-        if (!isMuted(chatId)) return
-        if (isBlocked) return
+        if (isMuted(chatId) && banChat() && !isBlocked && !isBanned || isOwner ) {
         switch(command) {
 
         case '#banchat':
@@ -2722,8 +2718,8 @@ Menunggu video...`
                 tobz.reply(from, `Maaf ${pushname}, Command *${args[0]}* Tidak Terdaftar Di Dalam *#menu*!`, id)
             }
             await tobz.sendSeen(from) 
+            }
         }
-
     } catch (err) {
         console.log(color('[ERROR]', 'red'), err)
         //tobz.kill().then(a => console.log(a))
