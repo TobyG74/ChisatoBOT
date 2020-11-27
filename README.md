@@ -13,6 +13,11 @@
 <a href="https://github.com/TobyG74/megumikato2/network/members"><img title="Forks" src="https://img.shields.io/github/forks/TobyG74/ElainaBOT?color=red&style=flat-square"></a>
 <a href="https://github.com/TobyG74/megumikato2/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/TobyG74/ElainaBOT?label=Watchers&color=blue&style=flat-square"></a>
 </p>
+<p align='center'>
+   <a href="https://twitter.com/tobz2k19"><img height="30" src="https://github.com/TobyG74/TobyG74/blob/main/twitter.png?raw=true"></a>&nbsp;&nbsp;
+   <a href="https://instagram.com/tobz2k19"><img height="30" src="https://github.com/TobyG74/TobyG74/blob/main/instagram.jpg?raw=true"></a>&nbsp;&nbsp;
+   <a href="https://www.facebook.com/tobz2k19"><img height="30" src="https://github.com/TobyG74/TobyG74/blob/main/facebook.png?raw=true"></a>
+</P>
 
 ## Information
 
