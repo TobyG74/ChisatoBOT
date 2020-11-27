@@ -1457,8 +1457,8 @@ ${desc}`)
             try {
             tobz.reply(from, mess.wait, id)
             const resp = await axios.get('https://mhankbarbar.herokuapp.com/api/epbe?url=' + body.slice(4) + '&apiKey=' + barbarkey)
-            const epbe2 = `*Video Ditemukan!*\n➸ Judul : ${resp.data.title}\n➸ Filesize : ${resp.data.filesize}`
-            tobz.sendFileFromUrl(from, resp.data.result, `${resp.data.titparsed}.mp4`, epbe2, id)
+            const epbe2 = `*Video Ditemukan!*\n➸ Title : ${resp.data.title}\n➸ Filesize : ${resp.data.filesize}\n➸ Published : ${resp.data.published}`
+            tobz.sendFileFromUrl(from, resp.data.result, `${resp.data.title}.mp4`, epbe2, id)
             } catch (err) {
              console.error(err.message)
              await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
