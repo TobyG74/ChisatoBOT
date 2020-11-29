@@ -499,8 +499,6 @@ module.exports = tobz = async (tobz, message) => {
                 }
             break;
         case '#ttg':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             try {
