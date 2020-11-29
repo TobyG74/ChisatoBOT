@@ -1250,15 +1250,10 @@ ${desc}`)
             const { logs } = call2.data
                 await tobz.sendText(from, `Logs : ${logs}` + '.')
             break
-        case prefix+'ytmp4':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
+        case '#ytmp4':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ytmp4 [ Link Yt ]*, untuk contoh silahkan kirim perintah *${prefix}readme*`)
-            if (isExp(serial)) return
-
-            await ExpAdd(serial)
             let isLin = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLin) return tobz.reply(from, mess.error.Iv, id)
             try {
@@ -1281,15 +1276,10 @@ ${desc}`)
                 console.log(err)
             }
             break
-        case prefix+'play':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
+        case '#play':
             if (!isAdmin) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin Elaina!`, id)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #ceklimit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (isExp(serial)) return
-
-            await ExpAdd(serial)
             if (args.length == 1) return tobz.reply(from, `Untuk mencari lagu dari youtube\n\nPenggunaan: #play judul lagu`, id)
             try {
                 tobz.reply(from, mess.wait, id)
@@ -1312,14 +1302,9 @@ ${desc}`)
                 tobz.reply(from, mess.error.Yt3, id)
             }
             break   
-        case prefix+'ytmp3':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
+        case '#ytmp3':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (isExp(serial)) return
-
-            await ExpAdd(serial)
             if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ytmp3 [ Link Yt ]*, untuk contoh silahkan kirim perintah *${prefix}readme*`, id)
             let isLinks = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLinks) return tobz.reply(from, mess.error.Iv, id)
