@@ -1114,7 +1114,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, `Kirim perintah Surah Quran kamu dengan cara ketik perintah :\n*#quran* [ Urutan Surat ]\nContoh :\n*#quran 1*`, id)
-            const qura = `https://api.i-tech.id/tools/quran?key=${techidkey}&surat=${args[1]}`
+            const qura = `https://api.vhtear.com/quran?no=${args[1]}&apikey=${vhtearkey}`
             const quraan = await axios.get(qura)
             const quraann = quraan.data
             let hasqu = `*「 AL-QURAN 」*\n\n*Quran Surat : ${args[1]}*\n\n___________________________`
