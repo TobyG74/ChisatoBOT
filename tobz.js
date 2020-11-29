@@ -498,6 +498,25 @@ module.exports = tobz = async (tobz, message) => {
                     console.log(error)
                 }
             break;
+        case '#ttg':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            try {
+                if (quotedMsgObj == null) {
+                    if (args.length === 1) return tobz.reply(from, `Kirim perintah *#ttg [ Teks ]*, contoh *#ttg aku bukan boneka*`, id)
+                        await tobz.sendStickerfromUrl(from, `https://api.vhtear.com/textxgif?text=${body.slice(5)}&apikey=${vhtearkey}`)
+                        limitAdd(serial)
+                } else {
+                    await tobz.sendStickerfromUrl(from, `https://api.vhtear.com/textxgif?text=${quotedMsgObj}&apikey=${vhtearkey}`)
+                    limitAdd(serial)
+                }
+            } catch(e) {
+                console.log(e)
+                tobz.reply(from, 'Maaf, Server sedang Error')
+            }
+            break
         case '#stickergif':
         case '#stikergif':
         case '#sgif':
@@ -532,7 +551,7 @@ module.exports = tobz = async (tobz, message) => {
                 const Slight = imgnye.result.imgUrl
                 await tobz.sendStickerfromUrl(from, Slight)
             } else {
-                await tobz.reply(from, `Wrong Format!\n⚠️ Harap Kirim Gambar Dengan ${prefix}stickerlightning`, id)
+                await tobz.reply(from, `Wrong Format!\n⚠️ Harap Kirim Gambar Dengan #stickerlightning`, id)
             }
             break
         case '#stickerfire':
@@ -551,7 +570,7 @@ module.exports = tobz = async (tobz, message) => {
                 const Sfire = imgnya.result.imgUrl
                 await tobz.sendStickerfromUrl(from, Sfire)
             } else {
-                await tobz.reply(from, `Wrong Format!\n⚠️ Harap Kirim Gambar Dengan ${prefix}stickerfire`, id)
+                await tobz.reply(from, `Wrong Format!\n⚠️ Harap Kirim Gambar Dengan #stickerfire`, id)
             }
             break
         case '#groupinfo' :
@@ -1096,18 +1115,19 @@ ${desc}`)
           break
         // PRAY //
         case '#jadwalshalat':
+        case '#jadwalsholat':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, `[❗] Kirim perintah *#jadwalShalat [ Daerah ]*\ncontoh : *#jadwalShalat Tangerang*\nUntuk list daerah kirim perintah *#listDaerah*`)
             const daerah = body.slice(14)
-            const jadwalShalat = await axios.get(`https://mhankbarbar.herokuapp.com/api/jadwalshalat?daerah=${daerah}&apiKey=${barbarkey}`)
+            const jadwalShalat = await axios.get(`https://api.vhtear.com/jadwalsholat?query=${daerah}&apiKey=${vhtearkey}`)
             if (jadwalShalat.data.error) return tobz.reply(from, jadwalShalat.data.error, id)
-            const { Imsyak, Subuh, Dhuha, Dzuhur, Ashar, Maghrib, Isya } = await jadwalShalat.data
+            const { Shubuh, Zduhur, Ashr, Magrib, Isya, kota } = await jadwalShalat.data
             arrbulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
             tgl = new Date().getDate()
             bln = new Date().getMonth()
             thn = new Date().getFullYear()
-            const resultJadwal = `「 JADWAL SHALAT 」\n\nJadwal shalat di ${daerah}, ${tgl}-${arrbulan[bln]}-${thn}\n\nImsyak : ${Imsyak}\nSubuh : ${Subuh}\nDhuha : ${Dhuha}\nDzuhur : ${Dzuhur}\nAshar : ${Ashar}\nMaghrib : ${Maghrib}\nIsya : ${Isya}`
+            const resultJadwal = `「 JADWAL SHALAT 」\n\nJadwal shalat di ${kota}, ${tgl}-${arrbulan[bln]}-${thn}\n\nSubuh : ${Shubuh}\nDzuhur : ${Zduhur}\nAshar : ${Ashr}\nMaghrib : ${Magrib}\nIsya : ${Isya}`
             await limitAdd(serial)
             break
         case '#quran':
@@ -1266,8 +1286,8 @@ ${desc}`)
             break
         case '#ytmp4':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ytmp4 [ Link Yt ]*, untuk contoh silahkan kirim perintah *${prefix}readme*`)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#ytmp4 [ Link Yt ]*, untuk contoh silahkan kirim perintah *#readme*`)
             let isLin = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLin) return tobz.reply(from, mess.error.Iv, id)
             try {
@@ -1318,8 +1338,8 @@ ${desc}`)
             break   
         case '#ytmp3':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ytmp3 [ Link Yt ]*, untuk contoh silahkan kirim perintah *${prefix}readme*`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#ytmp3 [ Link Yt ]*, untuk contoh silahkan kirim perintah *#readme*`, id)
             let isLinks = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLinks) return tobz.reply(from, mess.error.Iv, id)
             try {
