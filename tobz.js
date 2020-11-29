@@ -1117,11 +1117,7 @@ ${desc}`)
             const qura = `https://api.vhtear.com/quran?no=${args[1]}&apikey=${vhtearkey}`
             const quraan = await axios.get(qura)
             const quraann = quraan.data
-            let hasqu = `*「 AL-QURAN 」*\n\n*Quran Surat : ${args[1]}*\n\n___________________________`
-            if (quraann.code === '404') return tobz.reply(from, `*Terdapat kesalahan saat mencari surat ${args[1]}*`)
-            for (let i = 0; i < quraann.result.length; i++) {
-                hasqu += `\n➸ *Ayat* : ${quraann.result[i].nomor}\n${quraann.result[i].ar}\n${quraann.result[i].id}\n___________________________`
-            }
+            let hasqu = `*「 AL-QURAN 」*\n\n*Surah : ${quraann.result.surah}*\n*Quran* : ${quraann.result.quran}*`
             await tobz.reply(from, `${hasqu}`, id).catch((e) => tobz.reply(from, `*Terdapat kesalahan saat mencari surat ${args[1]}*`, id))
             await limitAdd(serial)
             break
