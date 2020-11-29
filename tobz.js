@@ -1250,30 +1250,102 @@ ${desc}`)
             const { logs } = call2.data
                 await tobz.sendText(from, `Logs : ${logs}` + '.')
             break
-        case '#ytmp3':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            
-            await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ytmp3 [linkYt]*, untuk contoh silahkan kirim perintah *#readme*')
+        case prefix+'ytmp4':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ytmp4 [ Link Yt ]*, untuk contoh silahkan kirim perintah *${prefix}readme*`)
+            if (isExp(serial)) return
+
+            await ExpAdd(serial)
+            let isLin = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
+            if (!isLin) return tobz.reply(from, mess.error.Iv, id)
+            try {
+                tobz.reply(from, mess.wait, id)
+                const ytvh = await fetch(`http://api.vhtear.com/ytdl?link=${args[1]}&apikey=${vhtearkey}`)
+                if (!ytvh.ok) throw new Error(`Error Get Video : ${ytvh.statusText}`)
+                const ytvh2 = await ytvh.json()
+                 if (ytvh2.status == false) {
+                    tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
+                } else {
+                    const { title, UrlVideo, imgUrl, size } = await ytvh2.result
+                    if (Number(size.split(' MB')[0]) > 30.00) return tobz.reply(from, `Maaf durasi video sudah melebihi batas maksimal 30 MB!`, id)
+                    tobz.sendFileFromUrl(from, imgUrl, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_Silahkan download video melalui link dibawah_.\n${UrlVideo}`, id)
+                    // await tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                    await limitAdd(serial)
+                }
+            } catch (err) {
+                tobz.sendText(ownerNumber, 'Error ytmp4 : '+ err)
+                tobz.reply(from, mess.error.Yt4, id)
+                console.log(err)
+            }
+            break
+        case prefix+'play':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isAdmin) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin Elaina!`, id)
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #ceklimit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (isExp(serial)) return
+
+            await ExpAdd(serial)
+            if (args.length == 1) return tobz.reply(from, `Untuk mencari lagu dari youtube\n\nPenggunaan: #play judul lagu`, id)
+            try {
+                tobz.reply(from, mess.wait, id)
+                const serplay = body.slice(6)
+                const webplay = await fetch(`https://api.vhtear.com/ytmp3?query=${serplay}&apikey=${vhtearkey}`)
+                if (!webplay.ok) throw new Error(`Error Get Video : ${webplay.statusText}`)
+                const webplay2 = await webplay.json()
+                 if (webplay2.status == false) {
+                    tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
+                } else {
+                    if (Number(webplay2.result.size.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi music sudah melebihi batas maksimal 10 MB!', id)
+                    const { image, mp3, size, ext, title, duration } = await webplay2.result
+                    const captplay = `*「 PLAY 」*\n\n➸ *Judul* : ${title}\n➸ *Durasi* : ${duration}\n➸ *Filesize* : ${size}\n➸ *Exp* : ${ext}\n\n_*Music Sedang Dikirim*_`
+                    tobz.sendFileFromUrl(from, image, `thumb.jpg`, captplay, id)
+                    await tobz.sendFileFromUrl(from, mp3, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                    await limitAdd(serial)
+                }
+            } catch (err) {
+                tobz.sendText(ownerNumber, 'Error Play : '+ err)
+                tobz.reply(from, mess.error.Yt3, id)
+            }
+            break   
+            break
+        case prefix+'ytmp3':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (isExp(serial)) return
+
+            await ExpAdd(serial)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ytmp3 [ Link Yt ]*, untuk contoh silahkan kirim perintah *${prefix}readme*`, id)
             let isLinks = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
             if (!isLinks) return tobz.reply(from, mess.error.Iv, id)
             try {
                 tobz.reply(from, mess.wait, id)
-                const resp = await axios.get('https://mhankbarbar.herokuapp.com/api/yta?url='+ args[1] +'&apiKey='+ barbarkey)
-                if (resp.data.error) {
-                    tobz.reply(from, resp.data.error, id)
+                const vhtearyt3 = await fetch(`https://api.vhtear.com/ytdl?link=${args[1]}&apikey=${vhtearkey}`)
+                if (!vhtearyt3.ok) throw new Error(`Error ytmp3 3 : ${vhtearyt3.statusText}`)
+                const vhtearyt33 = await vhtearyt3.json()
+                 if (vhtearyt33.status == false) {
+                    tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
-                    if (Number(resp.data.filesize.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 10 MB!', id)
-                    const { title, thumb, result, filesize } = await resp.data
-                    tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
-                    await tobz.sendFileFromUrl(from, result, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt3, id))
+                    const { title, ext, size, UrlMp3, status, imgUrl } = await vhtearyt33.result
+                    if (Number(size.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 10 MB!', id)
+                    console.log(`VhTear Giliran ${ext}\n${size}\n${status}`)
+                    const captions = `*「 YOUTUBE MP3 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_Silahkan download audio melalui link dibawah_.\n${UrlMp3}`
+                    tobz.sendFileFromUrl(from, imgUrl, `thumb.jpg`, captions, id)
+                    //await tobz.sendFile(from, UrlMp3, `${title}.mp3`, '', id)
+                    //await tobz.sendFileFromUrl(from, UrlMp3, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                    await limitAdd(serial)
                 }
             } catch (err) {
                 tobz.sendText(ownerNumber, 'Error ytmp3 : '+ err)
                 tobz.reply(from, mess.error.Yt3, id)
             }
-            break
+            break   
         case '#google':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
@@ -1353,31 +1425,6 @@ ${desc}`)
         case '#animesearch': // SEARCH ANIME
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
-            break
-        case '#ytmp4':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            
-            await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ytmp4 [linkYt]*, untuk contoh silahkan kirim perintah *#readme*')
-            let isLin = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
-            if (!isLin) return tobz.reply(from, mess.error.Iv, id)
-            try {
-                tobz.reply(from, mess.wait, id)
-                const ytv = await axios.get('https://mhankbarbar.herokuapp.com/api/ytv?url='+ args[1] +'&apiKey='+ barbarkey)
-                if (ytv.data.error) {
-                    tobz.reply(from, ytv.data.error, id)
-                } else {
-                    const { result, thumb, filesize, title } = await ytv.data
-                    if (Number(filesize.split(' MB')[0]) > 30.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 30 MB!', id)
-                    tobz.sendFileFromUrl(from, thumb, 'thumb.jpg', `➸ *Judul* : ${title}\n➸ *Filesize* : ${filesize}\n\nSilahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit.`, id)
-                    await tobz.sendFileFromUrl(from, result, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
-                }
-            } catch (err) {
-                tobz.sendText(ownerNumber, 'Error ytmp4 : '+ err)
-                tobz.reply(from, mess.error.Yt4, id)
-                console.log(err)
-            }
             break
         case '#xnxx':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
