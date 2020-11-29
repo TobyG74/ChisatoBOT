@@ -116,6 +116,7 @@ after running it you need to scan the qr
 |       ✅        |   Starmaker Video Downloader                  |
 |       ✅        |   Xnxx Video Downloader                  |
 |       ✅        |  Joox Downloader                  |
+|       ✅        |  Play Music                  |
 
 | Prayer  |                     Feature                     |
 | :------------: | :---------------------------------------------: |
