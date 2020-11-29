@@ -62,7 +62,8 @@ const {
 const { 
     uploadImages, 
     custom,
-    stickerburn
+    stickerburn,
+    stickerlight
     } = require('./lib/fetcher')
 
 // LOAD FILE
@@ -515,26 +516,43 @@ module.exports = tobz = async (tobz, message) => {
                 )
             }
             break
+        case '#stickerlightning':
+        case '#slightning':
+             tobz.reply(from, `[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!`, id)
+            if (isMedia && type === 'image') {
+                const mediaData = await decryptMedia(message, uaOverride)
+                const getUrle = await uploadImages(mediaData, false)
+                const imgnye = await stickerlight(getUrle)
+                const Slight = imgnye.result.imgUrl
+                await tobz.sendStickerfromUrl(from, Slight)
+            } else if (quotedMsg && quotedMsg.type == 'image') {
+                const mediaData = await decryptMedia(quotedMsg, uaOverride)
+                const getUrle = await uploadImages(mediaData, false)
+                const imgnye = await stickerlight(getUrle)
+                const Slight = imgnye.result.imgUrl
+                await tobz.sendStickerfromUrl(from, Slight)
+            } else {
+                await tobz.reply(from, `Wrong Format!\n⚠️ Harap Kirim Gambar Dengan ${prefix}stickerlightning`, id)
+            }
+            break
         case '#stickerfire':
-                if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-                tobz.reply(from, '[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!', id)
-                if (isMedia && type === 'image') {
+        case '#sfire':
+            tobz.reply(from, `[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!`, id)
+            if (isMedia && type === 'image') {
                 const mediaData = await decryptMedia(message, uaOverride)
                 const getUrli = await uploadImages(mediaData, false)
                 const imgnya = await stickerburn(getUrli)
                 const Sfire = imgnya.result.imgUrl
                 await tobz.sendStickerfromUrl(from, Sfire)
-                } else {
-                await tobz.reply(from, 'Wrong Format!\n⚠️ Harap Kirim Gambar Dengan #stickerfire', id)
-                }
-                break
-        case '#stickertoimg':
-            if (quotedMsg && quotedMsg.type == 'sticker') {
-                const mediaData = await decryptMedia(quotedMsg)
-                tobz.reply(from, '[WAIT] Sedang di proses⏳ silahkan tunggu!', id)
-                const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
-                await tobz.sendFile(from, imageBase64, 'imagesticker.jpg', 'Success Convert Sticker to Image!', id)
-            } else if (!quotedMsg) return tobz.reply(from, 'Mohon tag sticker yang ingin dijadikan gambar!', id)
+            } else if (quotedMsg && quotedMsg.type == 'image') {
+                const mediaData = await decryptMedia(quotedMsg, uaOverride)
+                const getUrli = await uploadImages(mediaData, false)
+                const imgnya = await stickerburn(getUrli)
+                const Sfire = imgnya.result.imgUrl
+                await tobz.sendStickerfromUrl(from, Sfire)
+            } else {
+                await tobz.reply(from, `Wrong Format!\n⚠️ Harap Kirim Gambar Dengan ${prefix}stickerfire`, id)
+            }
             break
         case '#groupinfo' :
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', message.id)
