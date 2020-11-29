@@ -826,8 +826,9 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const loli = await axios.get('https://mhankbarbar.herokuapp.com/api/randomloli')
-            tobz.sendFileFromUrl(from, loli.data.result, 'loli.jpeg', '*LOLI*', id)
+            const loli = await axios.get(`https://api.vhtear.com/randomloli&apikey=${vhtearkey}`)
+            const loly = loli.data.result
+            tobz.sendFileFromUrl(from, loly.result, 'loli.jpeg', '*LOLI*', id)
             break
         case '#shota':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -879,7 +880,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const nekonime = await axios.get('https://mhankbarbar.herokuapp.com/api/nekonime')
+            const nekonime = await axios.get(`https://api.vhtear.com/randomnekonime&apikey=${vhtearkey}`)
             const nekon = nekonime.data
             if (nekon.result.endsWith('.png')) {
                 var ext = '.png'
@@ -895,7 +896,7 @@ ${desc}`)
             
             await limitAdd(serial)
             const trapnime = await axios.get('https://mhankbarbar.herokuapp.com/api/random/trap')
-            const trapn = trapnime.data
+            const trapn = trapnime.data.result
             if (trapn.result.endsWith('.png')) {
                 var ext = '.png'
             } else {
@@ -909,9 +910,9 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const hentai = await axios.get('https://mhankbarbar.herokuapp.com/api/random/hentai')
-            const henta = hentai.data
-            if (henta.result.endsWith('.png')) {
+            const hentai = await axios.get(`https://api.vhtear.com/randomhentai?apikey=${vhtearkey}`)
+            const henta = hentai.data.result
+            if (henta.url.endsWith('.png')) {
                 var ext = '.png'
             } else {
                 var ext = '.jpg'
