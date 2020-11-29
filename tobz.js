@@ -1312,7 +1312,6 @@ ${desc}`)
                 tobz.reply(from, mess.error.Yt3, id)
             }
             break   
-            break
         case prefix+'ytmp3':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
