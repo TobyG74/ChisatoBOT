@@ -372,7 +372,7 @@ module.exports = tobz = async (tobz, message) => {
                             .then(() => {
                                 if (!isBotGroupAdmins) return tobz.sendText(from, 'UNTUNG ELAINA GA JADI ADMIN!\nKALO JADI ADMIN UDH AKU KICK TUH', id)
                                 tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu telah berkata kasar, maaf kamu di kick dari grup :(`, id)
-                            })
+                            }))
                         } else {
                             return tobz.reply(from, `TOLONG JAGA UCAPAN YA MINN ^_^`)
                         }
