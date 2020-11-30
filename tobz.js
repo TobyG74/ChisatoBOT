@@ -352,7 +352,8 @@ module.exports = tobz = async (tobz, message) => {
                     return '```' + string + '```'
                 }
                 // END HELPER FUNCTION
-                if (chats.match(/(https:\/\/chat.whatsapp.com)/gi)) {
+                if (isGroupMsg && !isGroupAdmins && !isAdmin && !isOwner){
+                    if (chats.match(/(https:\/\/chat.whatsapp.com)/gi)) {
                         const check = await tobz.inviteInfo(chats);
                         if (!check) {
                             return
@@ -362,6 +363,7 @@ module.exports = tobz = async (tobz, message) => {
                             })
                         }
                     }
+                }
                 // MRHRTZ
                 if (chats.match("anjing") || chats.match("gblk") || chats.match("tolol") || chats.match("kntl")) {
                         if (!isGroupAdmins) {
