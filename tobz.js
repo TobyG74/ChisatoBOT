@@ -365,10 +365,10 @@ module.exports = tobz = async (tobz, message) => {
                 // MRHRTZ
                 if (chats.match("anjing") || chats.match("gblk") || chats.match("tolol") || chats.match("kntl")) {
                         if (!isGroupAdmins) {
-                            return tobz.reply('TOLONG MULUTNYA DIJAGA!')
+                            return tobz.reply(from, 'TOLONG MULUTNYA DIJAGA!')
                             .then(() => tobz.removeParticipant(groupId, sender.id)
                             .then(() => {
-                                if (!isBotGroupAdmins) return tobz.sendText('UNTUNG ELAINA GA JADI AMIN!\nKALO JADI ADMIN UDH AKU KICK TUH')
+                                if (!isBotGroupAdmins) return tobz.sendText(from, 'UNTUNG ELAINA GA JADI ADMIN!\nKALO JADI ADMIN UDH AKU KICK TUH', id)
                                 tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu telah berkata kasar, maaf kamu di kick dari grup :(`, id)
                             })
                         } else {
