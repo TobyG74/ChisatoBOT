@@ -971,6 +971,25 @@ ${desc}`)
             }
             tobz.sendFileFromUrl(from, ranime.url, `RandomAnime${ext}`, 'Random Anime!', id)
             break
+        case '#subreddit':
+            arg = body.trim().split(' ')
+            const sr = arg[1]
+            try {
+            const response1 = await axios.get('https://meme-api.herokuapp.com/gimme/' + sr + '/');
+            const { postLink, title, subreddit, url, nsfw, spoiler } = response1.data
+                if (nsfw == true) {
+                    if ((isGroupMsg) && (isNsfw)) {
+                        await tobz.sendFileFromUrl(from, `${url}`, 'Reddit.jpg', `*Title*: ${title}` + '\n\n*Postlink*:' + `${postLink}`)
+                    } else if ((isGroupMsg) && (!isNsfw)) {
+                        await tobz.reply(from, `Nsfw belum diaktifkan di Grup *${name}*`, id)
+                    }
+                } else { 
+                    await tobz.sendFileFromUrl(from, `${url}`, 'Reddit.jpg', `*Title*: ${title}` + '\n\n*Postlink*:' + `${postLink}`)
+                }
+            } catch(err) {
+                await tobz.sendFileFromUrl(from, errorurl, id) 
+            }
+            break
         case '#nhder':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
@@ -1487,7 +1506,6 @@ ${desc}`)
                 await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
                 tobz.sendText(ownerNumber, 'Xnxx Error : ' + err)
             }
-            break
             break
         case '#ramalpasangan':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
