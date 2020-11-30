@@ -132,16 +132,13 @@ module.exports = tobz = async (tobz, message) => {
         const commands = caption || body || ''
         const command = commands.toLowerCase().split(' ')[0] || ''
         const args =  commands.split(' ')
+        
+        const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
+        const isQuotedVideo = quotedMsg && quotedMsg.type === 'video'
+        const isQuotedAudio = quotedMsg && (quotedMsg.type === 'audio' || quotedMsg.type === 'ptt' || quotedMsg.type === 'ppt')
+        const isQuotedFile = quotedMsg && quotedMsg.type === 'document'
 
-        const msgs = (message) => {
-            if (command.startsWith('#')) {
-                if (message.length >= 10){
-                    return `${message.substr(0, 15)}`
-                }else{
-                    return `${message}`
-                }
-            }
-        }
+        const chats = (type === 'chat') ? body : (type === 'image' || type === 'video') ? caption : ''
 
         function restartAwal(client){
             setting.restartState = false
@@ -266,7 +263,6 @@ module.exports = tobz = async (tobz, message) => {
         const uaOverride = 'WhatsApp/2.2029.4 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'
         const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/gi)
         const url = args.length !== 0 ? args[0] : ''
-        const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
 
         const tutor = 'https://i.ibb.co/Hp1XGbL/a4dec92b8922.jpg'
         const errorurl = 'https://steamuserimages-a.akamaihd.net/ugc/954087817129084207/5B7E46EE484181A676C02DFCAD48ECB1C74BC423/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false'
@@ -356,6 +352,29 @@ module.exports = tobz = async (tobz, message) => {
                     return '```' + string + '```'
                 }
                 // END HELPER FUNCTION
+                if (chats.match(/(https:\/\/chat.whatsapp.com)/gi)) {
+                        const check = await tobz.inviteInfo(chats);
+                        if (!check) {
+                            return
+                        } else {
+                            tobz.reply(from, `*「 GROUP LINK DETECTOR 」*\nKamu mengirimkan link grup chat, maaf kamu di kick dari grup :(`, id).then(() => {
+                                tobz.removeParticipant(groupId, sender.id)
+                            })
+                        }
+                    }
+                // MRHRTZ
+                if (chats.match("anjing") || chats.match("gblk") || chats.match("tolol") || chats.match("kntl")) {
+                        if (!isGroupAdmins) {
+                            return tobz.reply('TOLONG MULUTNYA DIJAGA!')
+                            .then(() => tobz.removeParticipant(groupId, sender.id)
+                            .then(() => {
+                                if (!isBotGroupAdmins) return tobz.sendText('UNTUNG ELAINA GA JADI AMIN!\nKALO JADI ADMIN UDH AKU KICK TUH')
+                                tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu telah berkata kasar, maaf kamu di kick dari grup :(`, id)
+                            })
+                        } else {
+                            return tobz.reply(from, `TOLONG JAGA UCAPAN YA MINN ^_^`)
+                        }
+                    }
                 
                 if(body === '#mute' && isMuted(chatId) == true){
                     if(isGroupMsg) {
