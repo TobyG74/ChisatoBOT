@@ -1297,10 +1297,10 @@ ${desc}`)
                  if (ytvh2.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
+                    if (Number(ytvh2.result.size.split(' MB')[0]) > 30.00) return tobz.reply(from, `Maaf durasi video sudah melebihi batas maksimal 30 MB!`, id)
                     const { title, UrlVideo, imgUrl, size } = await ytvh2.result
-                    if (Number(size.split(' MB')[0]) > 30.00) return tobz.reply(from, `Maaf durasi video sudah melebihi batas maksimal 30 MB!`, id)
-                    tobz.sendFileFromUrl(from, imgUrl, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_Silahkan download video melalui link dibawah_.\n${UrlVideo}`, id)
-                    // await tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                    tobz.sendFileFromUrl(from, imgUrl, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_*Untuk durasi lebih dari batas disajikan dalam bentuk link*._\n${UrlVideo}`, id)
+                    await tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                     await limitAdd(serial)
                 }
             } catch (err) {
@@ -1349,13 +1349,11 @@ ${desc}`)
                  if (vhtearyt33.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
+                    if (Number(vhtearyt33.result.size.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi audio sudah melebihi batas maksimal 10 MB!', id)
                     const { title, ext, size, UrlMp3, status, imgUrl } = await vhtearyt33.result
-                    if (Number(size.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi video sudah melebihi batas maksimal 10 MB!', id)
-                    console.log(`VhTear Giliran ${ext}\n${size}\n${status}`)
-                    const captions = `*「 YOUTUBE MP3 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_Silahkan download audio melalui link dibawah_.\n${UrlMp3}`
+                    const captions = `*「 YOUTUBE MP3 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_*Untuk durasi lebih dari batas disajikan dalam bentuk link*._\n${UrlMp3}`
                     tobz.sendFileFromUrl(from, imgUrl, `thumb.jpg`, captions, id)
-                    //await tobz.sendFile(from, UrlMp3, `${title}.mp3`, '', id)
-                    //await tobz.sendFileFromUrl(from, UrlMp3, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                    await tobz.sendFileFromUrl(from, UrlMp3, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                     await limitAdd(serial)
                 }
             } catch (err) {
