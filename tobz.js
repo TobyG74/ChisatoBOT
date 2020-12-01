@@ -2322,16 +2322,27 @@ Menunggu video...`
             tobz.reply(from, listDaerah.data.result, id)
             break
         // ADMIN & OWNER
-        case '#bc':
-            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina!', id)
-            let msg = body.slice(4)
-            const chatz = await tobz.getAllChatIds()
-            for (let ids of chatz) {
-                var cvk = await tobz.getChatById(ids)
-                if (!cvk.isReadOnly) await tobz.sendText(ids, `[ ELAINA BROADCAST ]\n\n${msg}`)
-            }
-            tobz.reply(from, 'Broadcast Success!', id)
-            break
+        case '#bc': // KASIH CREDIT DONG KALO COPAS
+            if (!isOwner) return tobz.reply(from, `Perintah ini hanya untuk Owner Elaina`, id)
+                bctxt = body.slice(4)
+                txtbc = `*「 ELAINA BROADCAST 」*\n\n${bctxt}`
+                const semuagrup = await tobz.getAllChatIds();
+                if(quotedMsg && quotedMsg.type == 'image'){
+                    const mediaData = await decryptMedia(quotedMsg)
+                    const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
+                    for(let grupnya of semuagrup){
+                        var cekgrup = await tobz.getChatById(grupnya)
+                        if(!cekgrup.isReadOnly) tobz.sendImage(grupnya, imageBase64, 'gambar.jpeg', txtbc)
+                    }
+                    tobz.reply('Broadcast sukses!')
+                }else{
+                    for(let grupnya of semuagrup){
+                        var cekgrup = await tobz.getChatById(grupnya)
+                        if(!cekgrup.isReadOnly && isMuted(grupnya)) tobz.sendText(grupnya, txtbc)
+                    }
+                            tobz.reply('Broadcast Success!')
+                }
+                break
         case '#adminlist':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             let mimin = ''
