@@ -131,6 +131,8 @@ module.exports = tobz = async (tobz, message) => {
         let { pushname, verifiedName } = sender
         pushname = pushname || verifiedName
         const commands = caption || body || ''
+        const prefix = '#'
+        const isCmd = command.startsWith(prefix)
         body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : ''
         const command = commands.toLowerCase().split(' ')[0] || ''
         const args =  commands.split(' ')
@@ -243,8 +245,6 @@ module.exports = tobz = async (tobz, message) => {
         const isGroupAdmins = isGroupMsg ? groupAdmins.includes(sender.id) : false
         const isBotGroupAdmins = isGroupMsg ? groupAdmins.includes(botNumber + '@c.us') : false
         const serial = sender.id
-        const prefix = '#'
-        const isCmd = command.startsWith(prefix)
 
         const isAdmin = adminNumber.includes(sender.id)
         const ownerNumber = '6281311850715@c.us'
