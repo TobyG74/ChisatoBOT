@@ -370,17 +370,16 @@ module.exports = tobz = async (tobz, message) => {
                 }
                 // MRHRTZ
                 if (chats.match("anjing") || chats.match("gblk") || chats.match("tolol") || chats.match("kntl")) {
-                        if (!isGroupAdmins) {
-                            return tobz.reply(from, 'TOLONG MULUTNYA DIJAGA!')
-                            .then(() => tobz.removeParticipant(groupId, sender.id)
-                            .then(() => {
-                                if (!isBotGroupAdmins) return tobz.sendText(from, 'UNTUNG ELAINA GA JADI ADMIN!\nKALO JADI ADMIN UDH AKU KICK TUH', id)
-                                tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu telah berkata kasar, maaf kamu di kick dari grup :(`, id)
-                            }))
-                        } else {
-                            return tobz.reply(from, `TOLONG JAGA UCAPAN YA MINN ^_^`)
-                        }
+                    if (!isGroupAdmins) {
+                        return tobz.reply(from, "JAGA UCAPAN DONG!! 😠", id)
+                        .then(() => tobz.removeParticipant(groupId, sender.id))
+                        .then(() => {
+                            tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu mengirimkan link grup chat, maaf kamu di kick dari grup 🙁`)
+                        }).catch(() => tobz.sendText(from, `Untung Elaina Bukan Admin, Kalo Jadi Admin Udah Aku Kick Tuh! 😑`))
+                    } else {
+                        return tobz.reply(from, "Tolong Jaga Ucapan Min 😇", id)
                     }
+                }
                 
                 if(body === '#mute' && isMuted(chatId) == true){
                     if(isGroupMsg) {
