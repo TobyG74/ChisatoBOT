@@ -1447,6 +1447,14 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
           break
+        case '#xvideos': // SEARCH VIDEO FROM YOUTUBE
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            break
+        case '#getxvideos': // DOWNLOADER VIDEO FROM #VIDEO
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
+            break
         case '#video': // SEARCH VIDEO FROM YOUTUBE
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
@@ -1464,10 +1472,6 @@ ${desc}`)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
         case '#youtubesearch': // SEARCH YOUTUBE
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
-            break
-        case '#brainlysearch': // SEARCH BRAINLY
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
