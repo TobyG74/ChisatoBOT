@@ -1,5 +1,7 @@
+require('dotenv').config()
 const { decryptMedia } = require('@open-wa/wa-decrypt')
 const fs = require('fs-extra')
+const ffmpeg = require('fluent-ffmpeg')
 const axios = require('axios')
 const moment = require('moment-timezone')
 const getYouTubeID = require('get-youtube-id')
@@ -538,23 +540,23 @@ module.exports = tobz = async (tobz, message) => {
                 tobz.reply(from, 'Maaf, Server sedang Error')
             }
             break
-        case '#stickergif':
-        case '#stikergif':
-        case '#sgif':
-            if (isMedia) {
-                if (mimetype === 'video/mp4' && message.duration < 10 || mimetype === 'image/gif' && message.duration < 10) {
+        case '#stickergif': // INSTALL FFMPEG, IF YOU WANT THIS COMMAND WORK!
+        case '#stikergif': // TUTORIAL IN README, PLEASE READ!
+        case '#sgif': // MRHRTZ
+            tobz.reply(from, `[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!`, id)
+            if (isMedia && type === 'video' || mimetype === 'image/gif') {
+                try {
                     const mediaData = await decryptMedia(message, uaOverride)
-                    tobz.reply(from, '[WAIT] Sedang di proses⏳ silahkan tunggu ± 1 min!', id)
-                    const filename = `./media/aswu.${mimetype.split('/')[1]}`
-                    await fs.writeFileSync(filename, mediaData)
-                    await exec(`gify ${filename} ./media/output.gif --fps=60 --scale=240:240`, async function (error, stdout, stderr) {
-                        const gif = await fs.readFileSync('./media/output.gif', { encoding: "base64" })
-                        await tobz.sendImageAsSticker(from, `data:image/gif;base64,${gif.toString('base64')}`)
-                    })
-                } else (
-                    tobz.reply(from, '[❗] Kirim video dengan caption *#stickerGif* max 10 sec!', id)
-                )
-            }
+                    await tobz.sendMp4AsSticker(from, mediaData, {fps: 10, startTime: `00:00:00.0`, endTime : `00:00:05.0`,loop: 0})
+                } catch (e) {
+                    tobz.reply(from, `Size media terlalu besar! mohon kurangi durasi video.`)
+                }
+            } else if (quotedMsg && quotedMsg.type == 'video' || quotedMsg && quotedMsg.mimetype == 'image/gif') {
+                const mediaData = await decryptMedia(quotedMsg, uaOverride)
+                await tobz.sendMp4AsSticker(from, mediaData, {fps: 10, startTime: `00:00:00.0`, endTime : `00:00:05.0`,loop: 0})
+            } else {
+                tobz.reply(from, `Kesalahan ⚠️ Hanya bisa video/gif apabila file media berbentuk gambar ketik #sticker`, id)
+            } 
             break
         case '#stickerlightning':
         case '#slightning':
