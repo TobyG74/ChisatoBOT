@@ -52,6 +52,10 @@ Apikey Location
 ### This project require NodeJS v14.
 This is a Bot Group Type, so you have to enter the bot into a group in order to fully use the command!
 
+### FFMPEG
+- [DOWNLOAD](https://ffmpeg.org/)
+- [TUTORIAL](https://www.youtube.com/watch?v=zwWUJ2hqHBE)
+
 ### Install
 Clone this project
 
