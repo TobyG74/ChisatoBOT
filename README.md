@@ -110,6 +110,7 @@ after running it you need to scan the qr
 | :------------: | :---------------------------------------------: |
 |       ✅        |   YouTube Video/Audio Downloader                    |
 |       ✅        |   Doujin Downloader         |
+|       ✅        |   XVideos Downloader         |
 |       ✅        |   Instagram Video/Image Downloader                  |
 |       ✅        |   Facebook Video Downloader                  |
 |       ✅        |  Tiktok Downloader                    |
@@ -141,6 +142,10 @@ after running it you need to scan the qr
 |       ✅        |   Get a random meme             |
 |       ✅        |   Text to speech                |
 |       ✅        |   Get a random waifu images     |
+|       ✅        |   Get a random loli images     |
+|       ✅        |   Get a random neko images     |
+|       ✅        |   Get a random hentai images     |
+|       ✅        |   Get a random nsfw images     |
 |       ✅        |   Get a random quotes           |
 |       ✅        |   Get a random anime quotes     |
 |       ✅        |   Get info gempa from BMKG      |
@@ -153,7 +158,7 @@ after running it you need to scan the qr
 |       ✅        |   Google Image               |
 |       ✅        |   Couple Fortune Telling    |
 |       ✅        |   Chord    |
-|       ✅        |   Prayer Times    |
+|       ✅        |   Subreddit    |
 |       ✅        |   Lyrics    |
 |       ✅        |   Textmaker    |
 |       ✅        |   Instagram Stalk    |
