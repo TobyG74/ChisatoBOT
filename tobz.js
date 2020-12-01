@@ -33,7 +33,6 @@ const {
     randomNimek,
     sleep,
     jadwalTv,
-    msgFilter, 
     processTime,
     instagram,
     nulis
