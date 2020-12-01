@@ -16,6 +16,7 @@
     "brainly-scraper": "^1.0.2",
     "bent": "^7.3.10",
     "download-file": "^0.1.5",
+    "dotenv": "^8.2.0",
     "emoji-regex": "^9.0.0",
     "fs-extra": "^9.0.1",
     "file-type": "^15.0.1",
