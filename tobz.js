@@ -132,6 +132,7 @@ module.exports = tobz = async (tobz, message) => {
         let { pushname, verifiedName } = sender
         pushname = pushname || verifiedName
         const commands = caption || body || ''
+        body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : ''
         const command = commands.toLowerCase().split(' ')[0] || ''
         const args =  commands.split(' ')
         
