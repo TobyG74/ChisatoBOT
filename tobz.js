@@ -143,7 +143,6 @@ module.exports = tobz = async (tobz, message) => {
         const isQuotedAudio = quotedMsg && (quotedMsg.type === 'audio' || quotedMsg.type === 'ptt' || quotedMsg.type === 'ppt')
         const isQuotedFile = quotedMsg && quotedMsg.type === 'document'
 
-        const chats = (type === 'chat') ? body : (type === 'image' || type === 'video') ? caption : ''
         body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : '
 
         function restartAwal(client){
