@@ -132,10 +132,11 @@ module.exports = tobz = async (tobz, message) => {
         pushname = pushname || verifiedName
         const commands = caption || body || ''
         const prefix = '#'
-        const isCmd = command.startsWith(prefix)
-        body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : ''
+        const chats = (type === 'chat') ? body : (type === 'image' || type === 'video') ? caption : ''
         const command = commands.toLowerCase().split(' ')[0] || ''
         const args =  commands.split(' ')
+        const argx = commands.toLowerCase()
+        const isCmd = command.startsWith(prefix)
         
         const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
         const isQuotedVideo = quotedMsg && quotedMsg.type === 'video'
@@ -143,6 +144,7 @@ module.exports = tobz = async (tobz, message) => {
         const isQuotedFile = quotedMsg && quotedMsg.type === 'document'
 
         const chats = (type === 'chat') ? body : (type === 'image' || type === 'video') ? caption : ''
+        body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : '
 
         function restartAwal(client){
             setting.restartState = false
