@@ -36,12 +36,14 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [WHATSAPP GROUP](https://chat.whatsapp.com/InZrGpgBBNB4hnS7Q6sVJG)
 
 ## APIKEY
-Open setting.js then edit & paste it in [YOUR_APIKEY](https://github.com/TobyG74/ElainaBOT/blob/cdd61100ba02de47dbcb5f5122fbc128b1bf4403/lib/database/setting.json#L5)
+Open setting.js then edit & paste it in YOUR_APIKEY
 - [VHTEAR](https://api.vhtear.com)
 - [MHANKBARBAR](https://mhankbarbar.herokuapp.com/api)
 
 Apikey Location
-- [APIKEY](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
+- [SETTING.JSON](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
+- [FETCHER](https://github.com/TobyG74/ElainaBOT/blob/8ea2130f24132647feea3ff61dc09466fe91b19e/lib/fetcher.js#L6)
+- [FUNCTION]()
 
 ## Donate
 - [Saweria](https://saweria.co/ItzTobz)
