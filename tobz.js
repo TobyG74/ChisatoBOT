@@ -26,6 +26,17 @@ const bent = require('bent')
 const request = require('request')
 const { addFilter, isFiltered } = require('./lib/msgFilter')
 
+/*
+THX BUAT YANG UDAH GUNAIN SCRIPT INI
+JANGAN LUPA JOIN GRUP WHATSAPP
+AGAR BISA MENGEMBANGKAN BOT BUKAN COPY DOANG
+
+BAGI YANG NANYA2 MASANG APIKEY DIMANA??
+BACA README NYA, PERCUMA W BUAT README
+
+ELAINA BOT V3
+*/
+
 const { 
     downloader,
     liriklagu,
