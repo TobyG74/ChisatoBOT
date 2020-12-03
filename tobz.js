@@ -92,8 +92,8 @@ let muted = JSON.parse(fs.readFileSync('./lib/database/muted.json'))
 let setting = JSON.parse(fs.readFileSync('./lib/database/setting.json'))
 let msgLimit = JSON.parse(fs.readFileSync('./lib/database/msgLimit.json'))
 let adminNumber = JSON.parse(fs.readFileSync('./lib/database/admin.json'))
-let antilink = JSON.parse(fs.readFileSync('./lib/antilink.json'))
-let antibadword = JSON.parse(fs.readFileSync('./lib/antibadword.json'))
+let antilink = JSON.parse(fs.readFileSync('./lib/database/antilink.json'))
+let antibadword = JSON.parse(fs.readFileSync('./lib/database/antibadword.json'))
 
 let { 
     limitCount,
