@@ -34,6 +34,9 @@ AGAR BISA MENGEMBANGKAN BOT BUKAN COPY DOANG
 BAGI YANG NANYA2 MASANG APIKEY DIMANA??
 BACA README NYA, PERCUMA W BUAT README
 
+INGAT JANGAN JUAL SCRIPT ELAINA KEPADA ORANG LAIN!
+INGIN PREMIUM? CHAT TOBZ!
+
 ELAINA BOT V3
 */
 
@@ -79,16 +82,18 @@ const {
     } = require('./lib/fetcher')
 
 // LOAD FILE
-const banned = JSON.parse(fs.readFileSync('./lib/database/banned.json'))
-const nsfw_ = JSON.parse(fs.readFileSync('./lib/database/nsfwz.json'))
-const simi_ = JSON.parse(fs.readFileSync('./lib/database/Simsimi.json'))
-const limit = JSON.parse(fs.readFileSync('./lib/database/limit.json'))
-const welkom = JSON.parse(fs.readFileSync('./lib/database/welcome.json'))
-const left = JSON.parse(fs.readFileSync('./lib/database/left.json'))
-const muted = JSON.parse(fs.readFileSync('./lib/database/muted.json'))
-const setting = JSON.parse(fs.readFileSync('./lib/database/setting.json'))
-const msgLimit = JSON.parse(fs.readFileSync('./lib/database/msgLimit.json'))
-const adminNumber = JSON.parse(fs.readFileSync('./lib/database/admin.json'))
+let banned = JSON.parse(fs.readFileSync('./lib/database/banned.json'))
+let nsfw_ = JSON.parse(fs.readFileSync('./lib/database/nsfwz.json'))
+let simi_ = JSON.parse(fs.readFileSync('./lib/database/Simsimi.json'))
+let limit = JSON.parse(fs.readFileSync('./lib/database/limit.json'))
+let welkom = JSON.parse(fs.readFileSync('./lib/database/welcome.json'))
+let left = JSON.parse(fs.readFileSync('./lib/database/left.json'))
+let muted = JSON.parse(fs.readFileSync('./lib/database/muted.json'))
+let setting = JSON.parse(fs.readFileSync('./lib/database/setting.json'))
+let msgLimit = JSON.parse(fs.readFileSync('./lib/database/msgLimit.json'))
+let adminNumber = JSON.parse(fs.readFileSync('./lib/database/admin.json'))
+let antilink = JSON.parse(fs.readFileSync('./lib/antilink.json'))
+let antibadword = JSON.parse(fs.readFileSync('./lib/antibadword.json'))
 
 let { 
     limitCount,
@@ -271,6 +276,9 @@ module.exports = tobz = async (tobz, message) => {
                 return false
             }
         }
+        // PROTECT
+        const isDetectorLink = antilink.includes(chatId)
+        const isDetectorBadword = antibadword.includes(chatId)
         
         const isBanned = banned.includes(sender.id)
         const isBlocked = blockNumber.includes(sender.id)
@@ -368,7 +376,7 @@ module.exports = tobz = async (tobz, message) => {
                     return '```' + string + '```'
                 }
                 // END HELPER FUNCTION
-                if (isGroupMsg && !isGroupAdmins && !isAdmin && !isOwner){
+                if (isGroupMsg && isDetectorLink && !isGroupAdmins && !isAdmin && !isOwner){
                     if (chats.match(/(https:\/\/chat.whatsapp.com)/gi)) {
                         const check = await tobz.inviteInfo(chats);
                         if (!check) {
@@ -381,15 +389,17 @@ module.exports = tobz = async (tobz, message) => {
                     }
                 }
                 // MRHRTZ
-                if (chats.match("anjing") || chats.match("gblk") || chats.match("tolol") || chats.match("kntl")) {
-                    if (!isGroupAdmins) {
-                        return tobz.reply(from, "JAGA UCAPAN DONG!! 😠", id)
-                        .then(() => tobz.removeParticipant(groupId, sender.id))
-                        .then(() => {
-                            tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu mengirimkan link grup chat, maaf kamu di kick dari grup 🙁`)
-                        }).catch(() => tobz.sendText(from, `Untung Elaina Bukan Admin, Kalo Jadi Admin Udah Aku Kick Tuh! 😑`))
-                    } else {
-                        return tobz.reply(from, "Tolong Jaga Ucapan Min 😇", id)
+                if (isGroupMsg && isDetectorBadword && !isGroupAdmins && !isAdmin && !isOwner){
+                    if (chats.match("anjing") || chats.match("gblk") || chats.match("tolol") || chats.match("kntl")) {
+                        if (!isGroupAdmins) {
+                            return tobz.reply(from, "JAGA UCAPAN DONG!! 😠", id)
+                            .then(() => tobz.removeParticipant(groupId, sender.id))
+                            .then(() => {
+                                tobz.sendText(from, `*「 ANTI BADWORD 」*\nKamu mengirimkan link grup chat, maaf kamu di kick dari grup 🙁`)
+                            }).catch(() => tobz.sendText(from, `Untung Elaina Bukan Admin, Kalo Jadi Admin Udah Aku Kick Tuh! 😑`))
+                        } else {
+                            return tobz.reply(from, "Tolong Jaga Ucapan Min 😇", id)
+                        }
                     }
                 }
                 
@@ -623,19 +633,24 @@ module.exports = tobz = async (tobz, message) => {
             var welgrp = welkom.includes(chat.id)
             var leftgrp = left.includes(chat.id)
             var ngrp = nsfw_.includes(chat.id)
+            var antlink = antilink.includes(chat.id)
             var simu = simi_.includes(chat.id)
+            var antbad = antibadword.includes(chat.id)
             var grouppic = await tobz.getProfilePicFromServer(chat.id)
             if (grouppic == undefined) {
                  var pfp = errorurl
             } else {
                  var pfp = grouppic 
             }
-            await tobz.sendFileFromUrl(from, pfp, 'group.png', `➸ *Name : ${groupname}* 
+            await tobz.sendFileFromUrl(from, pfp, 'group.png', `*「 GROUP INFO 」*
+*➸ *Name : ${groupname}* 
 *➸ Members : ${totalMem}*
-*➸ Welcome : ${welgrp}*
-*➸ Left : ${leftgrp}*
-*➸ NSFW : ${ngrp}*
-*➸ Simsimi : ${simu}*
+*➸ Welcome : ${welgrp ? 'Aktif' : 'Tidak Aktif'}*
+*➸ Left : ${leftgrp ? 'Aktif' : 'Tidak Aktif'}*
+*➸ NSFW : ${ngrp ? 'Aktif' : 'Tidak Aktif'}*
+*➸ Simsimi : ${simu ? 'Aktif' : 'Tidak Aktif'}*
+*➸ Anti Link : ${antlink ? 'Aktif' : 'Tidak Aktif'}*
+*➸ Anti Badword : ${antbad ? 'Aktif' : 'Tidak Aktif'}*
 *➸ Group Description* 
 ${desc}`)
             break
@@ -717,6 +732,60 @@ ${desc}`)
             tobz.reply(from, 'Itu nomor Pacar ku, eh maksudnya Owner ku', id)
             break
         // ON OFF
+        case '#antibadword':
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (!isGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin group!`, id)
+            if (!isBotGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan jika Bot menjadi Admin!`, id)
+            if (args[1] == 'enable') {
+                var cek = antibadword.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
+                } else {
+                    antibadword.push(chatId)
+                    fs.writeFileSync('./lib/antibadword.json', JSON.stringify(antibadword))
+                    tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
+                }
+            } else if (args[1] == 'disable') {
+                var cek = antibadword.includes(chatId);
+                if(!cek){
+                    return tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
+                } else {
+                    let nixx = antibadword.indexOf(chatId)
+                    antibadword.splice(nixx, 1)
+                    fs.writeFileSync('./lib/antibadword.json', JSON.stringify(antibadword))
+                    tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
+                }
+            } else {
+                tobz.reply(from, `Pilih enable atau disable udin!`, id)
+            } 
+            break   
+        case '#antilink':
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (!isGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin group!`, id)
+            if (!isBotGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan jika Bot menjadi Admin!`, id)
+            if (args[1] == 'enable') {
+                var cek = antilink.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
+                } else {
+                    antilink.push(chatId)
+                    fs.writeFileSync('./lib/antilink.json', JSON.stringify(antilink))
+                    tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
+                }
+            } else if (args[1] == 'disable') {
+                var cek = antilink.includes(chatId);
+                if(!cek){
+                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
+                } else {
+                    let nixx = antilink.indexOf(chatId)
+                    antilink.splice(nixx, 1)
+                    fs.writeFileSync('./lib/antilink.json', JSON.stringify(antilink))
+                    tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
+                }
+            } else {
+                tobz.reply(from, `Pilih enable atau disable udin!`, id)
+            } 
+            break   
         case '#nsfw':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin group!', id)
