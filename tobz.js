@@ -742,7 +742,7 @@ ${desc}`)
                     return tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
                 } else {
                     antibadword.push(chatId)
-                    fs.writeFileSync('./lib/antibadword.json', JSON.stringify(antibadword))
+                    fs.writeFileSync('./lib/database/antibadword.json', JSON.stringify(antibadword))
                     tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
                 }
             } else if (args[1] == 'disable') {
@@ -752,7 +752,7 @@ ${desc}`)
                 } else {
                     let nixx = antibadword.indexOf(chatId)
                     antibadword.splice(nixx, 1)
-                    fs.writeFileSync('./lib/antibadword.json', JSON.stringify(antibadword))
+                    fs.writeFileSync('./lib/database/antibadword.json', JSON.stringify(antibadword))
                     tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
                 }
             } else {
@@ -769,7 +769,7 @@ ${desc}`)
                     return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
                 } else {
                     antilink.push(chatId)
-                    fs.writeFileSync('./lib/antilink.json', JSON.stringify(antilink))
+                    fs.writeFileSync('./lib/database/antilink.json', JSON.stringify(antilink))
                     tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
                 }
             } else if (args[1] == 'disable') {
@@ -779,7 +779,7 @@ ${desc}`)
                 } else {
                     let nixx = antilink.indexOf(chatId)
                     antilink.splice(nixx, 1)
-                    fs.writeFileSync('./lib/antilink.json', JSON.stringify(antilink))
+                    fs.writeFileSync('./lib/database/antilink.json', JSON.stringify(antilink))
                     tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
                 }
             } else {
