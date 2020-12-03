@@ -2458,6 +2458,25 @@ Menunggu video...`
             await sleep(2000)
             await tobz.sendTextWithMentions(from, heho)
             break
+            case 'seticon'://change group icon
+            if (!isGroupMsg) return tobz.reply(from, 'This cmd can only be use in a group!', id)
+            if (!isGroupAdmins) return tobz.reply(from, 'Admins oonly!', id)
+            if (!isBotGroupAdmins) return tobz.reply(from, 'Failed, please add bot as group admin!', id)
+            if (isMedia && type == 'image' || quotedMsg) {
+                const dataMedia = quotedMsg ? quotedMsg : message
+                const _mimetype = dataMedia.mimetype
+                const mediaData = await decryptMedia(dataMedia, uaOverride)
+                const imageBase64 = `data:${_mimetype};base64,${mediaData.toString('base64')}`
+                await tobz.setGroupIcon(groupId, imageBase64)
+            } else if (args.length === 1) {
+                if (!isUrl(url)) { await tobz.reply(from, 'Sorry, the link you sent is invalid.', id) }
+                tobz.setGroupIconByUrl(groupId, url).then((r) => (!r && r !== undefined)
+                ? tobz.reply(from, 'Sorry, the link you sent does not contain pictures.', id)
+                : tobz.reply(from, 'Successfully changed group profile', id))
+            } else {
+                tobz.reply(from, `This cmd is use to change a group icon/profile \n\n To use send :seticon<tag pic or send a picture using :seticon as the caption>`, id)
+            }
+            break
         case '#tagall': // FOR GROUP ADMINS
         case '#mentionall':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
