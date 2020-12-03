@@ -235,6 +235,7 @@ Fix Stuck on linux, install google chrome stable:
 
 ## 🙏Special Thanks To
 <ul>
+<li>https://github.com/MRHRTZ<br>
 <li>https://github.com/open-wa/wa-automate-nodejs<br>
 <li>https://github.com/YogaSakti/imageToSticker<br>
 <li>https://github.com/MhankBarBar/whatsapp-bot<br>
