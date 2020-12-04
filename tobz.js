@@ -568,6 +568,14 @@ module.exports = tobz = async (tobz, message) => {
                 tobz.reply(from, 'Maaf, Server sedang Error')
             }
             break
+        case '#stickertoimg':
+            if (quotedMsg && quotedMsg.type == 'sticker') {
+                const mediaData = await decryptMedia(quotedMsg)
+                tobz.reply(from, `[WAIT] Sedang di proses⏳ silahkan tunggu!`, id)
+                const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
+                await tobz.sendFile(from, imageBase64, 'imagesticker.jpg', 'Success Convert Sticker to Image!', id)
+            } else if (!quotedMsg) return tobz.reply(from, `Mohon tag sticker yang ingin dijadikan gambar!`, id)
+            break
         case '#stickergif': // INSTALL FFMPEG, IF YOU WANT THIS COMMAND WORK!
         case '#stikergif': // TUTORIAL IN README, PLEASE READ!
         case '#sgif': // MRHRTZ
