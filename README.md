@@ -56,7 +56,7 @@ This is a Bot Group Type, so you have to enter the bot into a group in order to 
 
 ### FFMPEG
 - [DOWNLOAD](https://ffmpeg.org/)
-- [TUTORIAL](https://youtu.be/FVXi1U4I8uY)
+- [TUTORIAL](https://youtu.be/04Gf6TEnmjk)
 
 ### Install
 Clone this project
