@@ -1045,7 +1045,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const nsfwneko = await axios.get('https://mhankbarbar.herokuapp.com/api/random/nsfwneko')
+            const nsfwneko = await axios.get('https://mhankbarbar.herokuapp.com/api/random/nsfwneko?apiKey='+barbarkey)
             const nsfwn = nsfwneko.data
             if (nsfwn.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1646,6 +1646,106 @@ ${desc}`)
                 console.error(err.message)
                 await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
                 tobz.sendText(ownerNumber, 'Artinama Error : ' + err)
+           }
+            break
+        case '#zodiak':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#zodiak [zodiak kamu]*\nContoh : *#zodiak scorpio*', id)
+            try {
+            const resp = await axios.get('https://api.vhtear.com/zodiak?query=' + body.slice(8) + '&apikey=' + vhtearkey)
+            if (resp.data.error) return tobz.reply(from, resp.data.error, id)
+            const anm2 = `➸ Zodiak : ${resp.data.result.zodiak}\n➸ Ramalan : ${resp.data.result.ramalan}\n➸ Nomor Keberuntungan : ${resp.data.result.nomorKeberuntungan}\n➸ Motivasi : ${resp.data.result.motivasi}\n➸ Inspirasi : ${resp.data.result.inspirasi}`
+            tobz.reply(from, anm2, id)
+            } catch (err) {
+                console.error(err.message)
+                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+                tobz.sendText(ownerNumber, 'Zodiak Error : ' + err)
+           }
+           break
+        case '#caklontong':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            try {
+            const resp = await axios.get('https://api.vhtear.com/funkuis&apikey=' + vhtearkey)
+            if (resp.data.error) return tobz.reply(from, resp.data.error, id)
+            const anm2 = `➸ Soal : ${resp.data.result.soal}\n➸ Jawaban : ${resp.data.result.jawaban}\n➸ Deskripsi : ${resp.data.result.desk}\n➸ Poin : ${resp.data.result.poin}`
+            tobz.reply(from, anm2, id)
+            } catch (err) {
+                console.error(err.message)
+                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+                tobz.sendText(ownerNumber, 'Zodiak Error : ' + err)
+           }
+           break
+         case '#family100':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            try {
+            const resp = await axios.get('https://api.vhtear.com/family100&apikey=' + vhtearkey)
+            if (resp.data.error) return tobz.reply(from, resp.data.error, id)
+            const anm2 = `➸ Soal : ${resp.data.result.soal}\n➸ Jawaban : ${resp.data.result.jawaban}`
+            tobz.reply(from, anm2, id)
+            } catch (err) {
+                console.error(err.message)
+                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+                tobz.sendText(ownerNumber, 'Family100 Error : ' + err)
+           }
+           break
+        case '#heroml':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#heroml [nama hero]*\nContoh : *#heroml akai*', id)
+            try {
+            const resp = await axios.get('https://api.vhtear.com/herodetail?query=' + body.slice(8) + '&apikey=' + vhtearkey)
+            if (resp.data.error) return tobz.reply(from, resp.data.error, id)
+            const anm2 = `➸ Title : ${resp.data.result.title}\n➸ Quotes : ${resp.data.result.quotes}\n➸ Info : ${resp.data.result.info}\n➸ Atribut : ${resp.data.result.attributes}`
+            tobz.reply(from, anm2, id)
+            } catch (err) {
+                console.error(err.message)
+                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+                tobz.sendText(ownerNumber, 'Heroml Error : ' + err)
+           }
+            break
+        case '#nomorhoki':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#nomorhoki [no hp kamu]*\nContoh : *#nomorhoki 0895384009405*', id)
+            try {
+            const resp = await axios.get('https://api.vhtear.com/nomerhoki?no=' + body.slice(11) + '&apikey=' + vhtearkey)
+            if (resp.data.error) return tobz.reply(from, resp.data.error, id)
+            const anm2 = `➸ Hasil :\n ${resp.data.result.hasil}`
+            tobz.reply(from, anm2, id)
+            } catch (err) {
+                console.error(err.message)
+                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+                tobz.sendText(ownerNumber, 'Nomorhoki Error : ' + err)
+           }
+            break
+        case '#artimimpi':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#artimimpi [mimpi]*\nContoh : *#artinama ular*', id)
+            try {
+            const resp = await axios.get('https://api.vhtear.com/artimimpi?query=' + body.slice(10) + '&apikey=' + vhtearkey)
+            if (resp.data.error) return tobz.reply(from, resp.data.error, id)
+            const anm2 = `➸ Artimimpi : ${resp.data.result.hasil}`
+            tobz.reply(from, anm2, id)
+            } catch (err) {
+                console.error(err.message)
+                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
+                tobz.sendText(ownerNumber, 'Artimimpi Error : ' + err)
            }
             break
         case '#fb':
