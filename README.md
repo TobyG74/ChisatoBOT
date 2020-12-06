@@ -103,7 +103,7 @@ after running it you need to scan the qr
 - [Apache License 2.0](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
 
 
-| Sticker Creator |                Feature           |
+| Sticker Creator |                Feature           | Sticker Creator |                Feature           |
 | :-----------: | :--------------------------------: |
 |       ✅       | Sticker With Image          |
 |       ✅       | Sticker With Gif                    |
