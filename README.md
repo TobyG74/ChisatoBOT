@@ -100,7 +100,7 @@ after running it you need to scan the qr
 
 ### License
 
-- [MIT](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
+- [Apache License 2.0](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
 
 
 | Sticker Creator |                Feature           |
