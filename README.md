@@ -102,6 +102,8 @@ after running it you need to scan the qr
 
 - [Apache License 2.0](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
 
+---
+## 120+ Feature
 
 | Sticker Creator |                Feature           |
 | :-----------: | :--------------------------------: |
