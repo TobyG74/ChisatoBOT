@@ -103,7 +103,7 @@ after running it you need to scan the qr
 - [Apache License 2.0](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
 
 
-| Sticker Creator |                Feature           | Sticker Creator |                Feature           |
+| Sticker Creator |                Feature           |
 | :-----------: | :--------------------------------: |
 |       ✅       | Sticker With Image          |
 |       ✅       | Sticker With Gif                    |
@@ -146,6 +146,12 @@ after running it you need to scan the qr
 |       ✅        |   Rate             |
 |       ✅        |   Kapankah           |
 
+| Tebak-Tebakan  |                     Feature                     |
+| :------------: | :---------------------------------------------: |
+|       ✅        |   Family100             |
+|       ✅        |   Tebak Gambar                |
+|       ✅        |   Cak Lontong             |
+
 | Media  |                     Feature                     |
 | :------------: | :---------------------------------------------: |
 |       ✅        |   Get a random meme             |
@@ -175,6 +181,9 @@ after running it you need to scan the qr
 |       ✅        |   Smule Stalk    |
 |       ✅        |   Write in Image    |
 |       ✅        |   Weather Information    |
+|       ✅        |   Hero Mobile Legends    |
+|       ✅        |   Zodiac Information    |
+|       ✅        |   Nomor Hoki    |
 |       ✅        |   Get a random cat images       |
 |       ✅        |   Get a random dog images       |
 |      And        |   Others...                     |
@@ -199,6 +208,8 @@ after running it you need to scan the qr
 |       ✅        |   enable or disable simi command|
 |       ✅        |   enable or disable welcome feature|
 |       ✅        |   enable or disable left feature|
+|       ✅        |   enable or disable antilink|
+|       ✅        |   enable or disable antibadword|
 
 | Admin Bot Only  |              Feature                |
 | :------------: | :---------------------------------------------: |
