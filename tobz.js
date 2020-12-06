@@ -1673,8 +1673,16 @@ ${desc}`)
             try {
             const resp = await axios.get('https://api.vhtear.com/funkuis&apikey=' + vhtearkey)
             if (resp.data.error) return tobz.reply(from, resp.data.error, id)
-            const anm2 = `➸ Soal : ${resp.data.result.soal}\n➸ Jawaban : ${resp.data.result.jawaban}\n➸ Deskripsi : ${resp.data.result.desk}\n➸ Poin : ${resp.data.result.poin}`
+            const anm2 = `➸ Soal : ${resp.data.result.soal}\n➸ Deskripsi : ${resp.data.result.desk}\n➸ Poin : ${resp.data.result.poin}`
+            const jwban = `➸ Jawaban : ${resp.data.result.jawaban}`
             tobz.reply(from, anm2, id)
+            tobz.sendText(from, `30 Detik Lagi...`, id)
+            await sleep(10000)
+            tobz.sendText(from, `20 Detik Lagi...`, id)
+            await sleep(10000)
+            tobz.sendText(from, `10 Detik Lagi...`, id)
+            await sleep(10000)
+            tobz.reply(from, jwban, id)
             } catch (err) {
                 console.error(err.message)
                 await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
@@ -1689,8 +1697,16 @@ ${desc}`)
             try {
             const resp = await axios.get('https://api.vhtear.com/family100&apikey=' + vhtearkey)
             if (resp.data.error) return tobz.reply(from, resp.data.error, id)
-            const anm2 = `➸ Soal : ${resp.data.result.soal}\n➸ Jawaban : ${resp.data.result.jawaban}`
+            const anm2 = `➸ Soal : ${resp.data.result.soal}\n_Silahkan DiJawab_`
+            const jwban = `➸ Jawaban : ${resp.data.result.jawaban}`
             tobz.reply(from, anm2, id)
+            tobz.sendText(from, `30 Detik Lagi...`, id)
+            await sleep(10000)
+            tobz.sendText(from, `20 Detik Lagi...`, id)
+            await sleep(10000)
+            tobz.sendText(from, `10 Detik Lagi...`, id)
+            await sleep(10000)
+            tobz.reply(from, jwban, id)
             } catch (err) {
                 console.error(err.message)
                 await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
@@ -1736,7 +1752,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#artimimpi [mimpi]*\nContoh : *#artinama ular*', id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#artimimpi [mimpi]*\nContoh : *#artimimpi ular*', id)
             try {
             const resp = await axios.get('https://api.vhtear.com/artimimpi?query=' + body.slice(10) + '&apikey=' + vhtearkey)
             if (resp.data.error) return tobz.reply(from, resp.data.error, id)
@@ -1952,6 +1968,7 @@ Menunggu video...`
             const twstalk2 = await axios.get('https://mhankbarbar.herokuapp.com/api/twstalk?username=' + twstalk + '&apiKey=' + barbarkey)
             const { followers_count, full_name, name, profile_pic, status_count } = twstalk2.data
             const twstalk3 = `*User Ditemukan!*
+
 ➸ *Nama:* ${name}
 ➸ *Nama Panjang:* ${full_name}
 ➸ *Jumlah Pengikut:* ${followers_count}
@@ -1980,15 +1997,17 @@ Menunggu video...`
             console.log(istalk)
             try {
             const istalk2 = await axios.get('https://api.vhtear.com/igprofile?query=' + istalk + '&apikey=' + vhtearkey)
-            const { biography, follower, follow, post_count, full_name, username, picture, is_private } = istalk2.data.result
+            const { biography, follower, follow, picture, post_count, full_name, username, is_private } = istalk2.data.result
             const istalk3 = `*User Ditemukan!*
+
 ➸ *Username:* ${username}
 ➸ *Nama:* ${full_name}
 ➸ *Bio:* ${biography}
 ➸ *Mengikuti:* ${follow}
 ➸ *Pengikut:* ${follower}
-➸ *Jumlah Postingan:* ${post_count}`
-
+➸ *Jumlah Postingan:* ${post_count}
+➸ *Private:* ${is_private}`
+            
             const pictk = await bent("buffer")(picture)
             const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
             tobz.sendImage(from, base64, username, istalk3)
