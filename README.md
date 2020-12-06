@@ -93,7 +93,7 @@ for npm :
 ```
 for pm2 :
 ```bash
-> pm2 stop run.js
+> pm2 stop
 ```
 
 after running it you need to scan the qr
