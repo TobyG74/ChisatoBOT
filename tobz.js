@@ -891,7 +891,7 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#kusonime [query]*\nContoh : *#kusonime darling in the franxx*', id)
-            const animeq = await axios.get('https://mhankbarbar.herokuapp.com/api/kuso?q=' + body.slice(7) + '&apiKey=' + barbarkey)
+            const animeq = await axios.get('https://tobz-api.herokuapp.com/v1/kuso?q=' + body.slice(7))
             if (animeq.data.error) return tobz.reply(from, animeq.data.error, id)
             const res_animeq = `${animeq.data.title}\n\n${animeq.data.info}\n\n${animeq.data.sinopsis}\n\n${animeq.data.link_dl}`
             tobz.sendFileFromUrl(from, animeq.data.thumb, 'kusonime.jpg', res_animeq, id)
@@ -902,7 +902,7 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#dewabatch [query]*\nContoh : *#dewabatch darling in the franxx*', id)
-            const animek = await axios.get('https://mhankbarbar.herokuapp.com/api/dewabatch?q=' + body.slice(7) + '&apiKey=' + barbarkey)
+            const animek = await axios.get('https://tobz-api.herokuapp.com/v1/dewabatch?q=' + body.slice(7))
             if (animek.data.error) return tobz.reply(from, animek.data.error, id)
             const res_animek = `${animek.data.result}\n\n${animek.data.sinopsis}`
             tobz.sendFileFromUrl(from, animek.data.thumb, 'dewabatch.jpg', res_animek, id)
@@ -981,7 +981,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const waifu = await axios.get('https://mhankbarbar.herokuapp.com/api/waifu?apiKey=' + barbarkey)
+            const waifu = await axios.get('https://tobz-api.herokuapp.com/v1/waifu')
             tobz.sendFileFromUrl(from, waifu.data.image, 'Waifu.jpg', `➸ Name : ${waifu.data.name}\n➸ Description : ${waifu.data.desc}\n\n➸ Source : ${waifu.data.source}`, id)
             break
         case '#husbu':
