@@ -2933,7 +2933,7 @@ ${desc}`)
         case '#ban':
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
             for (let i = 0; i < mentionedJidList.length; i++) {
-                if ((adminNumber).includes(mentionedJidList[i])) return tobz.reply(from,`Maaf ${pushname], Kamu tidak bisa banned Admin Elaina!`, id)
+                if ((adminNumber).includes(mentionedJidList[i])) return tobz.reply(from,`Maaf ${pushname}, Kamu tidak bisa banned Admin Elaina!`, id)
                 banned.push(mentionedJidList[i])
                 fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
                 tobz.reply(from, `Succes ban target!`,id)
