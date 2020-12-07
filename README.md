@@ -21,6 +21,7 @@
 
 ## Information
 
+- [Cara Penginstallan Bot](https://youtu.be/41Xj_Kg4DCM)
 - Change [ownerNumber](https://github.com/TobyG74/ElainaBOT/blob/df5caa20c74a1e76345a9664baa8dbc1b198da21/tobz.js#L248) in tobz.js to be your number
 ownerNumber = "6213xxxxxx@c.us"
 - Change [adminNumber](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/admin.json#L1) in admin.json to be your number
