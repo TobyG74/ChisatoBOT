@@ -981,7 +981,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const waifu = await axios.get('https://mhankbarbar.herokuapp.com/api/waifu' + '?apiKey=' + barbarkey)
+            const waifu = await axios.get('https://mhankbarbar.herokuapp.com/api/waifu?apiKey=' + barbarkey)
             tobz.sendFileFromUrl(from, waifu.data.image, 'Waifu.jpg', `➸ Name : ${waifu.data.name}\n➸ Description : ${waifu.data.desc}\n\n➸ Source : ${waifu.data.source}`, id)
             break
         case '#husbu':
@@ -1001,13 +1001,8 @@ ${desc}`)
             
             await limitAdd(serial)
             const nekonime = await axios.get(`https://api.vhtear.com/randomnekonime&apikey=${vhtearkey}`)
-            const nekon = nekonime.data
-            if (nekon.result.endsWith('.png')) {
-                var ext = '.png'
-            } else {
-                var ext = '.jpg'
-            }
-            tobz.sendFileFromUrl(from, nekon.result, `Nekonime${ext}`, 'Nekonime!', id)
+            const nekon = nekonime.data.result.result
+            tobz.sendFileFromUrl(from, nekon, `Nekonime${ext}`, 'Nekonime!', id)
             break
         case '#randomtrapnime':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1031,13 +1026,8 @@ ${desc}`)
             
             await limitAdd(serial)
             const hentai = await axios.get(`https://api.vhtear.com/randomhentai?apikey=${vhtearkey}`)
-            const henta = hentai.data.result
-            if (henta.url.endsWith('.png')) {
-                var ext = '.png'
-            } else {
-                var ext = '.jpg'
-            }
-            tobz.sendImage(from, henta.result, `RandomHentai${ext}`, 'Random Hentai!', id)
+            const henta = hentai.data.result.url
+            tobz.sendImage(from, henta, `RandomHentai${ext}`, 'Random Hentai!', id)
             break
         case '#randomnsfwneko':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1436,10 +1426,10 @@ ${desc}`)
                  if (ytvh2.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
-                    if (Number(ytvh2.result.size.split(' MB')[0]) > 30.00) return tobz.reply(from, `Maaf durasi video sudah melebihi batas maksimal 30 MB!`, id)
                     const { title, UrlVideo, imgUrl, size } = await ytvh2.result
-                    tobz.sendFileFromUrl(from, imgUrl, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_*Untuk durasi lebih dari batas disajikan dalam bentuk link*._\n${UrlVideo}`, id)
-                    await tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                    if (Number(ytvh2.result.size.split(' MB')[0]) > 30.00) return tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, `*「 YOUTUBE MP4 」*\n\n• *Judul* : ${title}\n• *Filesize* : ${size}\n\n__Maaf, Durasi video melebihi 30 MB. Silahkan download video melalui link dibawah_.\n${UrlVideo}`, id)
+                    tobz.sendFileFromUrl(from, imgUrl, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n• *Judul* : ${title}\n• *Filesize* : ${size}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`, id)
+                    /await tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                     await limitAdd(serial)
                 }
             } catch (err) {
@@ -1488,10 +1478,12 @@ ${desc}`)
                  if (vhtearyt33.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
-                    if (Number(vhtearyt33.result.size.split(' MB')[0]) >= 10.00) return tobz.reply(from, 'Maaf durasi audio sudah melebihi batas maksimal 10 MB!', id)
                     const { title, ext, size, UrlMp3, status, imgUrl } = await vhtearyt33.result
-                    const captions = `*「 YOUTUBE MP3 」*\n\n➸ *Judul* : ${title}\n➸ *Filesize* : ${size}\n\n_*Untuk durasi lebih dari batas disajikan dalam bentuk link*._\n${UrlMp3}`
+                    console.log(`VhTear Giliran ${ext}\n${size}\n${status}`)
+                    if(Number(vhtearyt33.result.size.split(' MB')[0]) >= 10.00) return tobz.sendFileFromUrl(from, imgUrl, `thumb.jpg`, `*「 YOUTUBE MP3 」*\n\n• *Judul* : ${title}\n• *Filesize* : ${size}\n\n_Maaf, Durasi audio melebihi 10 MB. Silahkan download audio melalui link dibawah_.\n${UrlMp3}`, id)
+                    const captions = `*「 YOUTUBE MP3 」*\n\n• *Judul* : ${title}\n• *Filesize* : ${size}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
                     tobz.sendFileFromUrl(from, imgUrl, `thumb.jpg`, captions, id)
+                    //await tobz.sendFile(from, UrlMp3, `${title}.mp3`, '', id)
                     await tobz.sendFileFromUrl(from, UrlMp3, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                     await limitAdd(serial)
                 }
@@ -1788,8 +1780,6 @@ ${desc}`)
            }
             break
          case '#fb':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
 
@@ -1865,7 +1855,6 @@ ${desc}`)
             if (argz.length >= 2) {
             const qwery = argz[1]
             const jum = argz[2]
-            const isKasar = await cariKasar(qwery)
             if(!qwery) return await tobz.reply(from, `Kirim perintah *#googleimage [ |Query|Jumlah ]*, contoh = #googleimage |loli|3`, id)
             if(!jum) return await tobz.reply(from, `Jumlah gambar diperlukan, contoh = #googleimage |loli|3`, id)
             if(jum >= 5) return await tobz.reply(from, 'Jumlah terlalu banyak! Max 4', id)
@@ -2943,10 +2932,11 @@ ${desc}`)
             break
         case '#ban':
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
-                for (let i = 0; i < mentionedJidList.length; i++) {
+            for (let i = 0; i < mentionedJidList.length; i++) {
+                if ((adminNumber).includes(mentionedJidList[i])) return tobz.reply(from,`Maaf ${pushname], Kamu tidak bisa banned Admin Elaina!`, id)
                 banned.push(mentionedJidList[i])
-                fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
-                tobz.reply(from, 'Succes ban target!',id)
+                fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
+                tobz.reply(from, `Succes ban target!`,id)
             }
             break
         case '#unban':
