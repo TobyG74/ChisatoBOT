@@ -8,24 +8,22 @@ const getYouTubeID = require('get-youtube-id')
 const os = require('os')
 const get = require('got')
 const speed = require('performance-now')
+const color = require('./lib/color')
 const fetch = require('node-fetch')
 const { spawn, exec } = require('child_process')
+const urlShortener = require('./lib/shortener')
 const nhentai = require('nhentai-js')
 const { API } = require('nhentai-api')
 const google = require('google-it')
 const translatte = require('translatte')
 const { stdout } = require('process')
+const quotedd = require('./lib/quote')
 const translate = require('translatte')
+const { getStickerMaker } = require('./lib/ttp')
 const Math_js = require('mathjs');
 const imageToBase64 = require('image-to-base64')
 const bent = require('bent')
 const request = require('request')
-
-// LOCAL //
-const urlShortener = require('./lib/shortener')
-const color = require('./lib/color')
-const quotedd = require('./lib/quote')
-const { getStickerMaker } = require('./lib/ttp')
 const { addFilter, isFiltered } = require('./lib/msgFilter')
 
 /*
@@ -1003,7 +1001,13 @@ ${desc}`)
             
             await limitAdd(serial)
             const nekonime = await axios.get(`https://api.vhtear.com/randomnekonime&apikey=${vhtearkey}`)
-            tobz.sendFileFromUrl(from, nekon.data.result.result, `Nekonime${ext}`, 'Nekonime!', id)
+            const nekon = nekonime.data
+            if (nekon.result.endsWith('.png')) {
+                var ext = '.png'
+            } else {
+                var ext = '.jpg'
+            }
+            tobz.sendFileFromUrl(from, nekon.result, `Nekonime${ext}`, 'Nekonime!', id)
             break
         case '#randomtrapnime':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1013,6 +1017,11 @@ ${desc}`)
             await limitAdd(serial)
             const trapnime = await axios.get('https://mhankbarbar.herokuapp.com/api/random/trap')
             const trapn = trapnime.data.result
+            if (trapn.result.endsWith('.png')) {
+                var ext = '.png'
+            } else {
+                var ext = '.jpg'
+            }
             tobz.sendImage(from, trapn.result, `trapnime${ext}`, 'Trapnime!', id)
             break
         case '#randomhentai':
@@ -1023,7 +1032,12 @@ ${desc}`)
             await limitAdd(serial)
             const hentai = await axios.get(`https://api.vhtear.com/randomhentai?apikey=${vhtearkey}`)
             const henta = hentai.data.result
-            tobz.sendImage(from, henta.url, `RandomHentai${ext}`, 'Random Hentai!', id)
+            if (henta.url.endsWith('.png')) {
+                var ext = '.png'
+            } else {
+                var ext = '.jpg'
+            }
+            tobz.sendImage(from, henta.result, `RandomHentai${ext}`, 'Random Hentai!', id)
             break
         case '#randomnsfwneko':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1045,7 +1059,13 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const ranime = await get.get('https://api.computerfreaker.cf/v1/anime').json
+            const ranime = await axios.get('https://api.computerfreaker.cf/v1/anime')
+            const ranimen = ranime.data
+            if (ranimen.url.endsWith('.png')) {
+                var ext = '.png'
+            } else {
+                var ext = '.jpg'
+            }
             tobz.sendFileFromUrl(from, ranime.url, `RandomAnime${ext}`, 'Random Anime!', id)
             break
         case '#subreddit':
@@ -1524,19 +1544,11 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
           break
-         case '#xxx': // SEARCH VIDEO FROM XXX
+        case '#xvideos': // SEARCH VIDEO FROM YOUTUBE
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#getxxx': // DOWNLOADER VIDEO FROM #XXX
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
-            break
-        case '#xvideos': // SEARCH VIDEO FROM XVIDEOS
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
-            break
-        case '#getxvideos': // DOWNLOADER VIDEO FROM #XVIDEOS
+        case '#getxvideos': // DOWNLOADER VIDEO FROM #VIDEO
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
@@ -1776,6 +1788,8 @@ ${desc}`)
            }
             break
          case '#fb':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
 
@@ -1851,6 +1865,7 @@ ${desc}`)
             if (argz.length >= 2) {
             const qwery = argz[1]
             const jum = argz[2]
+            const isKasar = await cariKasar(qwery)
             if(!qwery) return await tobz.reply(from, `Kirim perintah *#googleimage [ |Query|Jumlah ]*, contoh = #googleimage |loli|3`, id)
             if(!jum) return await tobz.reply(from, `Jumlah gambar diperlukan, contoh = #googleimage |loli|3`, id)
             if(jum >= 5) return await tobz.reply(from, 'Jumlah terlalu banyak! Max 4', id)
@@ -2109,7 +2124,7 @@ ${desc}`)
             tobz.reply(from, sigot.success, id)
             console.log(sigot)
             break
-        case '#ig': // PUT YOUR APIKEY IN FUNCTION.JS
+        case '#ig': 
         case '#instagram':
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, `Kirim perintah *#ig [ Link Instagram ]* untuk contoh silahkan kirim perintah *#readme*`)
@@ -2844,6 +2859,18 @@ ${desc}`)
                 tobz.reply(from, `Sisa limit request anda tersisa : *${limitCount}*\n\n_Note : Limit akan direset setiap jam 21:00!_`, id)
             }
             break
+        case '#eval':
+            const q = args.join(' ')
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner Elaina!', id)
+            if (!q) return tobz.reply(from, 'Harap masukkan code JavaScript!', id)
+            try {
+                let evaled = await eval(q)
+                if (typeof evaled !== 'string') evaled = require('util').inspect(evaled)
+                tobz.sendText(from, evaled)
+            } catch (err) {
+                tobz.reply(from, err, id)
+            }
+        break
         case '#restart': // WORK IF YOU RUN USING PM2
             if(isOwner){
                 tobz.sendText(from, '*[WARN]* Restarting ...')
@@ -2914,21 +2941,20 @@ ${desc}`)
                 })
             } 
             break
-       case '#ban':
-            if (!isAdmin) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin Elaina!`, id)
+        case '#ban':
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
                 for (let i = 0; i < mentionedJidList.length; i++) {
-                    if ((adminNumber).includes(mentionedJidList[i])) return tobz.reply(from, 'Maaf, Kamu tidak bisa banned Admin atau Owner', id)
-                    banned.push(mentionedJidList[i])
-                    fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
-                    tobz.reply(from, `Succes ban target!`,id)
-                }
+                banned.push(mentionedJidList[i])
+                fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
+                tobz.reply(from, 'Succes ban target!',id)
+            }
             break
         case '#unban':
-            if (!isAdmin) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin Elaina!`, id)
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin Elaina!', id)
                 let inz = banned.indexOf(mentionedJidList[0])
                 banned.splice(inz, 1)
                 fs.writeFileSync('./lib/database/banned.json', JSON.stringify(banned))
-                tobz.reply(from, `Unbanned User!`, id)
+                tobz.reply(from, 'Unbanned User!', id)
             break
         case '#listgroup':
                 tobz.getAllGroups().then((res) => {
