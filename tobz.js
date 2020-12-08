@@ -1045,7 +1045,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const nsfwneko = await axios.get('https://tobz-api.herokuapp.com/api/nsfwneko)
+            const nsfwneko = await axios.get('https://tobz-api.herokuapp.com/api/nsfwneko')
             const nsfwn = nsfwneko.data
             if (nsfwn.result.endsWith('.png')) {
                 var ext = '.png'
