@@ -981,7 +981,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const waifu = await axios.get('https://tobz-api.herokuapp.com/v1/waifu')
+            const waifu = await axios.get('https://tobz-api.herokuapp.com/api/waifu')
             tobz.sendFileFromUrl(from, waifu.data.image, 'Waifu.jpg', `➸ Name : ${waifu.data.name}\n➸ Description : ${waifu.data.desc}\n\n➸ Source : ${waifu.data.source}`, id)
             break
         case '#husbu':
@@ -1000,9 +1000,14 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const nekonime = await axios.get(`https://api.vhtear.com/randomnekonime&apikey=${vhtearkey}`)
-            const nekon = nekonime.data.result.result
-            tobz.sendFileFromUrl(from, nekon, `Nekonime${ext}`, 'Nekonime!', id)
+            const nekonime = await axios.get(`https://tobz-api.herokuapp.com/api/nekonime`)
+            const nekon = nekonime.data
+            if (nekon.result.endsWith('.png')) {
+                var ext = '.png'
+            } else {
+                var ext = '.jpg'
+            }
+            tobz.sendFileFromUrl(from, nekon.result, `Nekonime${ext}`, 'Nekonime!', id)
             break
         case '#randomtrapnime':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1010,7 +1015,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const trapnime = await axios.get('https://mhankbarbar.herokuapp.com/api/random/trap')
+            const trapnime = await axios.get('https://tobz-api.herokuapp.com/api/nsfwtrap')
             const trapn = trapnime.data.result
             if (trapn.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1025,9 +1030,14 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const hentai = await axios.get(`https://api.vhtear.com/randomhentai?apikey=${vhtearkey}`)
-            const henta = hentai.data.result.url
-            tobz.sendImage(from, henta, `RandomHentai${ext}`, 'Random Hentai!', id)
+            const hentai = await axios.get(`https://tobz-api.herokuapp.com/api/hentai`)
+            const henta = hentai.data
+            if (henta.result.endsWith('.png')) {
+                var ext = '.png'
+            } else {
+                var ext = '.jpg'
+            }
+            tobz.sendImage(from, henta.result, `RandomHentai${ext}`, 'Random Hentai!', id)
             break
         case '#randomnsfwneko':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1035,7 +1045,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const nsfwneko = await axios.get('https://mhankbarbar.herokuapp.com/api/random/nsfwneko?apiKey='+barbarkey)
+            const nsfwneko = await axios.get('https://tobz-api.herokuapp.com/api/nsfwneko)
             const nsfwn = nsfwneko.data
             if (nsfwn.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1049,14 +1059,50 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const ranime = await axios.get('https://api.computerfreaker.cf/v1/anime')
+            const ranime = await axios.get('https://tobz-api.herokuapp.com/api/randomanime')
             const ranimen = ranime.data
             if (ranimen.url.endsWith('.png')) {
                 var ext = '.png'
             } else {
                 var ext = '.jpg'
             }
-            tobz.sendFileFromUrl(from, ranime.url, `RandomAnime${ext}`, 'Random Anime!', id)
+            tobz.sendFileFromUrl(from, ranime.result, `RandomAnime${ext}`, 'Random Anime!', id)
+            break
+        case '#randomblowjob':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
+            await limitAdd(serial)
+            const sblow = await axios.get('https://tobz-api.herokuapp.com/api/nsfwblowjob')
+            const rblow = sblow.data
+            tobz.sendFileFromUrl(from, rblow.result, `RandoBlow${ext}`, 'Random Blowjob!', id)
+            break
+        case '#randomhug':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            const shug = await axios.get('https://tobz-api.herokuapp.com/api/hug')
+            const rhug = shug.data
+            tobz.sendFileFromUrl(from, rhug.result, `RandomHug${ext}`, 'Random Hug!', id)
+            break
+        case '#randomcry':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            const scry = await axios.get('https://tobz-api.herokuapp.com/api/cry')
+            const rcry = scry.data
+            tobz.sendFileFromUrl(from, rcry.result, `RandomCry${ext}`, 'Random Cry!', id)
+            break
+        case '#randomkiss':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            const skiss = await axios.get('https://tobz-api.herokuapp.com/api/kiss')
+            const rkiss = skiss.data
+            tobz.sendFileFromUrl(from, rkiss.result, `RandomKiss${ext}`, 'Random Kiss!', id)
             break
         case '#subreddit':
             arg = body.trim().split(' ')
@@ -1107,7 +1153,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const skya = await axios.get('https://mhankbarbar.herokuapp.com/api/quotesnime/random')
+            const skya = await axios.get('https://tobz-api.herokuapp.com/api/quotesnime/random')
             skya_ = skya.data
             tobz.reply(from, `➸ *Quotes* : ${skya_.quote}\n➸ *Character* : ${skya_.character}\n➸ *Anime* : ${skya_.anime}`, id)
             break
@@ -1363,10 +1409,11 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#shorturl [linkWeb]*\nContoh : *#shorturl https://neonime.vip*', id)
-            const surl = await axios.get('https://api.vhtear.com/shortener?link=' + body.slice(10) + '&apikey=' + vhtearkey)
+            const sorturl = body.slice(10)
+            const surl = await axios.get('https://tobz-api.herokuapp.com/api/shorturl?url=' + sorturl)
             const surll = surl.data
             if (surll.error) return tobz.reply(from, ssww.error, id)
-            const surl2 = `Link : ${surll.result.Url}\nShort URL : ${surll.result.Short}`
+            const surl2 = `Link : ${sorturl}\nShort URL : ${surll.result}`
             tobz.sendText(from, surl2, id)
             break
         case '#cuaca':
