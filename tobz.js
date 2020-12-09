@@ -1061,7 +1061,7 @@ ${desc}`)
             await limitAdd(serial)
             const ranime = await axios.get('https://tobz-api.herokuapp.com/api/randomanime')
             const ranimen = ranime.data
-            if (ranimen.url.endsWith('.png')) {
+            if (ranimen.result.endsWith('.png')) {
                 var ext = '.png'
             } else {
                 var ext = '.jpg'
