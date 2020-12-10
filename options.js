@@ -1,3 +1,5 @@
+const fs = require 'fs'
+
 module.exports = options = (headless, start) => {
     // const chromePath = {
     //     win32: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Windows 32 bit
