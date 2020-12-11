@@ -252,10 +252,10 @@ Fix Stuck on linux, install google chrome stable:
 
 ## 🙏 Big Special Thanks To
 
-*[`MHRTZ`](https://github.com/MRHRTZ) 
-*[`OpenWA-WAAutomate`](https://github.com/open-wa/wa-automate-nodejs) 
-*[`YogaSakti`](https://github.com/YogaSakti/imageToSticker) 
-*[`MhankBarBar`](https://github.com/MhankBarBar/whatsapp-bot) 
-*[`ItzNgga`](https://github.com/ItzNgga/wa-bot.js) 
-*[`Gimenz`](https://github.com/Gimenz) 
-*[`ArugaZ`](https://github.com/ArugaZ/whatsapp-bot) 
+* [`MHRTZ`](https://github.com/MRHRTZ) 
+* [`OpenWA-WAAutomate`](https://github.com/open-wa/wa-automate-nodejs) 
+* [`YogaSakti`](https://github.com/YogaSakti/imageToSticker) 
+* [`MhankBarBar`](https://github.com/MhankBarBar/whatsapp-bot) 
+* [`ItzNgga`](https://github.com/ItzNgga/wa-bot.js) 
+* [`Gimenz`](https://github.com/Gimenz) 
+* [`ArugaZ`](https://github.com/ArugaZ/whatsapp-bot) 
