@@ -250,13 +250,12 @@ Fix Stuck on linux, install google chrome stable:
 > sudo apt install ./google-chrome-stable_current_amd64.deb
 ```
 
-## 🙏Special Thanks To
-<ul>
-<li>https://github.com/MRHRTZ<br>
-<li>https://github.com/open-wa/wa-automate-nodejs<br>
-<li>https://github.com/YogaSakti/imageToSticker<br>
-<li>https://github.com/MhankBarBar/whatsapp-bot<br>
-<li>https://github.com/ItzNgga/wa-bot<br>
-<li>https://github.com/Gimenz<br>
-<li>https://github.com/ArugaZ/whatsapp-bot<br>
-</li>
+## 🙏 Big Special Thanks To
+
+*[`MHRTZ`](https://github.com/MRHRTZ) 
+*[`OpenWA-WAAutomate`](https://github.com/open-wa/wa-automate-nodejs) 
+*[`YogaSakti`](https://github.com/YogaSakti/imageToSticker) 
+*[`MhankBarBar`](https://github.com/MhankBarBar/whatsapp-bot) 
+*[`ItzNgga`](https://github.com/ItzNgga/wa-bot.js) 
+*[`Gimenz`](https://github.com/Gimenz) 
+*[`ArugaZ`](https://github.com/ArugaZ/whatsapp-bot) 
