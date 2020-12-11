@@ -10,7 +10,7 @@
   "author": "TOBZ",
   "license": "Apache-2.0",
   "dependencies": {
-    "@open-wa/wa-automate": "^3.0.15",
+    "@open-wa/wa-automate": "^3.1.0",
     "@open-wa/wa-decrypt": "^2.0.1",
     "axios": "^0.19.2",
     "brainly-scraper": "^1.0.2",
@@ -54,7 +54,9 @@
   "directories": {
     "lib": "lib"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TobyG74/ElainaBOT",
