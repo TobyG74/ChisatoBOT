@@ -1,4 +1,4 @@
-const fs = require 'fs'
+const fs = require('fs-extra')
 
 module.exports = options = (headless, start) => {
     // const chromePath = {
