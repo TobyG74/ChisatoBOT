@@ -3237,6 +3237,12 @@ ${desc}`)
         case '#bahasa':
             tobz.sendText(from, bahasalist)
             break
+// By Gimenz
+        case '#wa.me':
+        case '#wame':
+            await client.reply(from, `*Neh Mhank Link Nomor Wa Lu ${pushname}*\n\n*wa.me/${sender.id.replace(/[@c.us]/g, '')}*\n\n*Atau*\n\n*api.whatsapp.com/send?phone=${sender.id.replace(/[@c.us]/g, '')}*`)
+            break
+// By Gimenz
         case '#snk':
             tobz.reply(from, snk, id)
             break
