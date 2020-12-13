@@ -3253,6 +3253,43 @@ ${desc}`)
         case '#bahasa':
             tobz.sendText(from, bahasalist)
             break
+        case '#afk':
+             if (!isGroupMsg) tobz.reply(from, 'cuman bisa dipakai di grup', id)
+			mydir, err := os.Getwd()
+			if err != nil {
+				fmt.Println(err)
+			}
+			if _, err := os.Stat(mydir + "/afk"); os.IsNotExist(err) {
+				os.MkdirAll(mydir+"/afk", os.ModePerm)
+			}
+			Settingan20.Listuserafk = append(Settingan20.Listuserafk, nohptotag(nomorsender))
+			SaveSettings20(Settingan20)
+			bb := "-"
+			scx := mydir + "/afk" + "/" + nohptotag(nomorsender)
+                        /*type Settings20 struct { 
+                        	Listuserafk []string
+                        	//Listtimeafk []msgall2
+                        }
+                        
+                        func ReadSettings20() Settings20 {
+                        	raw, err := ioutil.ReadFile("core/json/sett20.json")
+                        	if err != nil {
+                        		fmt.Println(err.Error())
+                        		os.Exit(1)
+                        	}
+
+                        	s := Settings20{}
+                        	json.Unmarshal(raw, &s)
+                        	return s
+                        }
+
+                        var Settingan20 = ReadSettings20()
+
+                        func SaveSettings20(data Settings20) {
+	                        rawJson, _ := json.Marshal(data)
+	                        ioutil.WriteFile("core/json/sett20.json", rawJson, 0644)
+                        }*/
+            break
 // By Gimenz
         case '#wa.me':
         case '#wame':
