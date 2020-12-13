@@ -662,6 +662,9 @@ module.exports = tobz = async (tobz, message) => {
 *➸ Group Description* 
 ${desc}`)
             break
+        case '#afk':
+            tobz.sendTextWithMention(from, '${sender.id} ```Sekarang afk```', id)
+        break
         case '#quoterandom' :
         case '#quote' :
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
