@@ -1018,11 +1018,11 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id) // MFARELS
             
             await limitAdd(serial) // MFARELS
-            const konsol = fs.readFileSync('./lib/18+.json') // MFARELS
-            const konsolJsin = JSON.parse(konsol) // MFARELS
-            const rindIndix = Math.floor(Math.random() * konsolJsin.length) // MFARELS
-            const rindKiy = konsolJsin[rindIndix] // MFARELS
-            tobz.sendFileFromUrl(from, rindKiy.image, 'Bokep.jpg', rindKiy.teks, id) // MFARELS
+            const mskkntl = fs.readFileSync('./lib/18+.json') // MFARELS
+            const kntlnya = JSON.parse(mskkntl) // MFARELS
+            const rindBkp = Math.floor(Math.random() * kntlnya.length) // MFARELS
+            const rindBkep = konsolJsin[rindBkp] // MFARELS
+            tobz.sendFileFromUrl(from, rindBkep.image, 'Bokep.jpg', rindBkep.teks, id) // MFARELS
             break // MFARELS
         // MFARELS
         case '#randomtrapnime':
