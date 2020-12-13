@@ -1009,6 +1009,22 @@ ${desc}`)
             }
             tobz.sendFileFromUrl(from, nekon.result, `Nekonime${ext}`, 'Nekonime!', id)
             break
+        // MFARELS
+        case '#bokep': // MFARELS
+        case '#randombokep': // MFARELS
+        case '#bkp': // MFARELS
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id) // MFARELS
+            if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id) // MFARELS
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id) // MFARELS
+            
+            await limitAdd(serial) // MFARELS
+            const diti = fs.readFileSync('./lib/18+.json') // MFARELS
+            const ditiJsin = JSON.parse(diti) // MFARELS
+            const rindIndix = Math.floor(Math.random() * ditiJsin.length) // MFARELS
+            const rindKiy = ditiJsin[rindIndix] // MFARELS
+            tobz.sendFileFromUrl(from, rindKiy.image, 'Bokep.jpg', rindKiy.teks, id) // MFARELS
+            break // MFARELS
+        // MFARELS
         case '#randomtrapnime':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
