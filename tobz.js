@@ -568,6 +568,19 @@ module.exports = tobz = async (tobz, message) => {
                 tobz.reply(from, 'Maaf, Server sedang Error')
             }
             break
+        case '#afk':
+	        mydir, err := os.Getwd()
+		if err != nil {
+			fmt.Println(err)
+			}
+		if _, err := os.Stat(mydir + "/afk"); os.IsNotExist(err) {
+			os.MkdirAll(mydir+"/afk", os.ModePerm)
+		}
+		Settingan20.Listuserafk = append(Settingan20.Listuserafk, nohptotag(nomorsender))
+		SaveSettings20(Settingan20)
+		bb := "-"
+		scx := mydir + "/afk" + "/" + nohptotag(nomorsender)
+            break
         case '#stickertoimg':
             if (quotedMsg && quotedMsg.type == 'sticker') {
                 const mediaData = await decryptMedia(quotedMsg)
