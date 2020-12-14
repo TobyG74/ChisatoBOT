@@ -564,7 +564,7 @@ module.exports = tobz = async (tobz, message) => {
             break;*/
         case '#ttp':
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ttp2 [ Teks ]*, contoh *#ttp2 Elaina*`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#ttp2 [ Teks ]*, contoh *#ttp2 Elaina*`, id)
             const ttp2t = body.slice(6)
             const lttp2 = ["Orange","White","Green","Black","Purple","Red","Yellow","Blue","Navy","Grey","Magenta","Brown","Gold"]
             const rttp2 = lttp2[Math.floor(Math.random() * (lttp2.length))]
