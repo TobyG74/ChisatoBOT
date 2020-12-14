@@ -19,7 +19,7 @@ const translatte = require('translatte')
 const { stdout } = require('process')
 const quotedd = require('./lib/quote')
 const translate = require('translatte')
-const { getStickerMaker } = require('./lib/ttp')
+//const { getStickerMaker } = require('./lib/ttp')
 const Math_js = require('mathjs');
 const imageToBase64 = require('image-to-base64')
 const bent = require('bent')
@@ -520,7 +520,7 @@ module.exports = tobz = async (tobz, message) => {
                     tobz.reply(from, mess.error.St, id)
             }
             break
-        case '#ttp':
+        /*case '#ttp':
                 if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', message.id)
                 try
                 {
@@ -561,7 +561,15 @@ module.exports = tobz = async (tobz, message) => {
                 {
                     console.log(error)
                 }
-            break;
+            break;*/
+        case '#ttp':
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}ttp2 [ Teks ]*, contoh *#ttp2 Elaina*`, id)
+            const ttp2t = body.slice(6)
+            const lttp2 = ["Orange","White","Green","Black","Purple","Red","Yellow","Blue","Navy","Grey","Magenta","Brown","Gold"]
+            const rttp2 = lttp2[Math.floor(Math.random() * (lttp2.length))]
+            await tobz.sendStickerfromUrl(from, `https://api.vhtear.com/textmaker?text=${ttp2t}&warna=${rttp2}&apikey=${vhtearkey}`)
+            break
         case '#ttg':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
