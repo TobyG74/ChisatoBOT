@@ -43,8 +43,6 @@ Open setting.js then edit & paste it in YOUR_APIKEY
 
 Apikey Location
 - [SETTING](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
-- [FETCHER](https://github.com/TobyG74/ElainaBOT/blob/8ea2130f24132647feea3ff61dc09466fe91b19e/lib/fetcher.js#L6)
-- [FUNCTION](https://github.com/TobyG74/ElainaBOT/blob/a6252b0ee6ec754d25d71061d7989d86fc54a19e/lib/functions.js#L11)
 
 ## Donate
 - [Saweria](https://saweria.co/ItzTobz)
