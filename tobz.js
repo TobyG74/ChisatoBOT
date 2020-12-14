@@ -766,7 +766,7 @@ ${desc}`)
             if (args[1] == 'enable') {
                 var cek = antibadword.includes(chatId);
                 if(cek){
-                    return tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
+                    return tobz.reply(from, `*「 ANTI BADWORD 」*\nSudah diaktifkan di grup ini`, id)
                 } else {
                     antibadword.push(chatId)
                     fs.writeFileSync('./lib/database/antibadword.json', JSON.stringify(antibadword))
@@ -775,7 +775,7 @@ ${desc}`)
             } else if (args[1] == 'disable') {
                 var cek = antibadword.includes(chatId);
                 if(!cek){
-                    return tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
+                    return tobz.reply(from, `*「 ANTI BADWORD 」*\nSudah dinonaktifkan di grup ini`, id)
                 } else {
                     let nixx = antibadword.indexOf(chatId)
                     antibadword.splice(nixx, 1)
@@ -793,7 +793,7 @@ ${desc}`)
             if (args[1] == 'enable') {
                 var cek = antilink.includes(chatId);
                 if(cek){
-                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
+                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nSudah diaktifkan di grup ini`, id)
                 } else {
                     antilink.push(chatId)
                     fs.writeFileSync('./lib/database/antilink.json', JSON.stringify(antilink))
@@ -802,7 +802,7 @@ ${desc}`)
             } else if (args[1] == 'disable') {
                 var cek = antilink.includes(chatId);
                 if(!cek){
-                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
+                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nSudah dinonaktifkan di grup ini`, id)
                 } else {
                     let nixx = antilink.indexOf(chatId)
                     antilink.splice(nixx, 1)
@@ -818,13 +818,23 @@ ${desc}`)
             if (!isGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin group!', id)
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
+                var cek = nsfw_.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `NSFW Sudah diaktifkan di grup ini`, id)
+                } else {
                 nsfw_.push(chat.id)
                 fs.writeFileSync('./lib/database/nsfwz.json', JSON.stringify(nsfw_))
                 tobz.reply(from, 'NSFW berhasil di aktifkan di group ini! kirim perintah *#nsfwMenu* untuk mengetahui menu', id)
+                }
             } else if (args[1].toLowerCase() === 'disable') {
+                var cek = nsfw_.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `NSFW Sudah dinonaktifkan di grup ini`, id)
+                } else {
                 nsfw_.splice(chat.id, 1)
                 fs.writeFileSync('./lib/database/nsfwz.json', JSON.stringify(nsfw_))
                 tobz.reply(from, 'NSFW berhasil di nonaktifkan di group ini!', id)
+                }
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
             }
@@ -834,13 +844,24 @@ ${desc}`)
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin Elaina!', id) // Hanya Admin yang bisa mengaktifkan
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
+                var cek = simi_.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `Simsimi Sudah diaktifkan di grup ini`, id)
+                } else {
                 simi_.push(chat.id)
                 fs.writeFileSync('./lib/database/Simsimi.json', JSON.stringify(simi_))
                 tobz.reply(from, 'Simsimi berhasil di aktifkan di group ini! Kirim perintah *# [teks]*\nContoh : *# halo*', id)
+                }
             } else if (args[1].toLowerCase() === 'disable') {
+                if (args[1].toLowerCase() === 'enable') {
+                var cek = simi_.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `Simsimi Sudah diaktifkan di grup ini`, id)
+                } else {
                 simi_.splice(chat.id, 1)
                 fs.writeFileSync('./lib/database/Simsimi.json', JSON.stringify(simi_))
                 tobz.reply(from, 'Simsimi berhasil di nonaktifkan di group ini!', id)
+                }
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
             }
@@ -1037,7 +1058,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id) // MFARELS
             
             await limitAdd(serial) // MFARELS
-            const mskkntl = fs.readFileSync('./lib/18+.json') // MFARELS
+            const mskkntl = fs.readFileSync('./lib/database/18+.json') // MFARELS
             const kntlnya = JSON.parse(mskkntl) // MFARELS
             const rindBkp = Math.floor(Math.random() * kntlnya.length) // MFARELS
             const rindBkep = konsolJsin[rindBkp] // MFARELS
@@ -1101,7 +1122,7 @@ ${desc}`)
             } else {
                 var ext = '.jpg'
             }
-            tobz.sendFileFromUrl(from, ranime.result, `RandomAnime${ext}`, 'Random Anime!', id)
+            tobz.sendFileFromUrl(from, ranimen.result, `RandomAnime${ext}`, 'Random Anime!', id)
             break
         case '#randomblowjob':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -3191,7 +3212,7 @@ ${desc}`)
             tobz.sendText(from, ownercmd)
             break
         case '#praymenu':
-            tobz.reply(from, praycmd)
+            tobz.reply(from, praycmd, id)
             break
         case '#nsfwmenu':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
