@@ -82,11 +82,14 @@ const {
     twitter
     } = require('./lib/downloader')
 
-const { 
-    uploadImages, 
-    custom,
+const {
     stickerburn,
     stickerlight
+    } = require('./lib/sticker')
+
+const { 
+    uploadImages, 
+    custom
     } = require('./lib/fetcher')
 
 // LOAD FILE
