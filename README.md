@@ -57,6 +57,10 @@ This is a Bot Group Type, so you have to enter the bot into a group in order to 
 - [DOWNLOAD](https://ffmpeg.org/)
 - [TUTORIAL](https://youtu.be/04Gf6TEnmjk)
 
+### IMAGEMAGICK
+- [DOWNLOAD](https://imagemagick.org/script/download.php)
+Note : Kalo Mau Work, Centang Kolom 1,2,3,5,6
+
 ### Install
 Clone this project
 
@@ -182,6 +186,7 @@ after running it you need to scan the qr
 |       ✅        |   Tiktok Stalk                  |
 |       ✅        |   Smule Stalk                   |
 |       ✅        |   Write in Image                |
+|       ✅        |   Write in Paper                |
 |       ✅        |   Weather Information           |
 |       ✅        |   Hero Mobile Legends           |
 |       ✅        |   Zodiac Information            |
@@ -252,9 +257,10 @@ Fix Stuck on linux, install google chrome stable:
 ## 🙏 Big Special Thanks To
 
 * [`MHRTZ`](https://github.com/MRHRTZ) 
-* [`OpenWA-WAAutomate`](https://github.com/open-wa/wa-automate-nodejs) 
+* [`OpenWA/WA-Automate`](https://github.com/open-wa/wa-automate-nodejs) 
 * [`YogaSakti`](https://github.com/YogaSakti/imageToSticker) 
 * [`MhankBarBar`](https://github.com/MhankBarBar/whatsapp-bot) 
 * [`ItzNgga`](https://github.com/ItzNgga/wa-bot.js) 
 * [`Gimenz`](https://github.com/Gimenz) 
 * [`ArugaZ`](https://github.com/ArugaZ/whatsapp-bot) 
+
