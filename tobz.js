@@ -48,7 +48,6 @@ const {
     sleep,
     jadwalTv,
     processTime,
-    instagram,
     nulis
     } = require('./lib/functions')
 
@@ -73,6 +72,15 @@ const {
     listChannel,
     commandArray
     } = require('./lib/help')
+
+const {
+    instagram,
+    tiktok,
+    facebook,
+    smule,
+    starmaker,
+    twitter
+    } = require('./lib/downloader')
 
 const { 
     uploadImages, 
@@ -1842,49 +1850,6 @@ ${desc}`)
                 tobz.sendText(ownerNumber, 'Artimimpi Error : ' + err)
            }
             break
-         case '#fb':
-            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-
-            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#fb [ Link Fb ]*\nContoh : *#fb https://www.facebook.com/24609282673/posts/10158628585367674/*`, id)
-            try {
-            tobz.reply(from, mess.wait, id)
-            const resp = await axios.get('https://api.vhtear.com/fbdl?link='+ body.slice(4) +'&apikey=' + vhtearkey)
-            const epbe2 = `*「 FACEBOOK DOWNLOADER 」*\n➸ *Aplikasi*: Facebook`
-            tobz.sendFileFromUrl(from, resp.data.result.VideoUrl, `Facebook.mp4`, epbe2, id)
-            await limitAdd(serial)
-            } catch (err) {
-                console.error(err.message)
-                await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
-                tobz.sendText(ownerNumber, 'Facebook Error : ' + err)
-            }
-            break
-        case '#tiktok':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            
-            await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#tiktok [linkTiktok]*\nContoh : *#tiktok https://vt.tiktok.com/yqyjPX/*', id)
-            const tkdl = body.slice(8)
-            tobz.reply(from, mess.wait, id)
-            try {
-                const titkod = await fetch(`https://api.vhtear.com/tiktokdl?link=${tkdl}&apikey=${vhtearkey}`)
-                if (!titkod.ok) throw new Error(`Error Tiktok : ${titkod.statusText}`)
-                const tiktod = await titkod.json()
-                if (tiktod.status == false) {
-                    tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
-                } else {
-                    const { video, title, image, desk, dibuat, duration } = await tiktod.result
-                    tobz.sendFileFromUrl(from, image, 'thumb.jpg', `*「 TIKTOK DOWNLOADER 」*\n\n➸ *Judul* : ${title}\n➸ Deskripsi : ${desk}\n➸ Durasi : ${duration}\n➸ Dibuat : ${dibuat}\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`, id)
-                    await tobz.sendFileFromUrl(from, video, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
-                    await limitAdd(serial)
-                }
-            } catch (err) {
-                tobz.sendText(ownerNumber, 'Tiktok Download Error : '+ err)
-                tobz.reply(from, mess.error.Yt4, id)
-                console.log(err)
-            }
-            break
         case '#wiki':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
@@ -1941,35 +1906,6 @@ ${desc}`)
                     }
                 }
             }
-        case '#smule':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            
-            await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#smule [linkSmule]*\nContoh : *#smule https://www.smule.com/p/767512225_3062360163*', id)
-            tobz.reply(from, mess.wait, id)
-            arg = body.trim().split(' ')
-            console.log(...arg[1])
-            var slicedArgs = Array.prototype.slice.call(arg, 1);
-            console.log(slicedArgs)
-            const sml = await slicedArgs.join(' ')
-            console.log(sml)
-            try {
-            const resp = await axios.get('https://api.vhtear.com/getsmule?link=' + sml + '&apikey=' + vhtearkey)
-            const { Type, title, url, image } = resp.data.result
-            const sml3 = `*Music Ditemukan!*
-
-➸ *Judul:* ${title}
-➸ *Type:* ${Type}`
-
-            tobz.sendImage(from, image, `${title}.jpg`, sml3)
-            tobz.sendFileFromUrl(from, url, `${title}.mp3`, sml3, id)
-            } catch (err) {
-             console.error(err.message)
-             await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Music tidak ditemukan')
-             tobz.sendText(ownerNumber, 'Smule Error : ' + err)
-           }
-          break
         case '#sandwriting': 
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
@@ -2196,37 +2132,94 @@ ${desc}`)
                 console.log(err);
                 tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
             })
-            break       
+            break
+        case '#fb':
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#fb [ Link Fb ]*\nContoh : *#fb https://www.facebook.com/24609282673/posts/10158628585367674/*`, id)
+
+            tobz.reply(from, mess.wait, id)
+            facebook(args[1]).then(async(res) => {
+                let { VideoUrl } = await res
+                const epbe2 = `*「 FACEBOOK DOWNLOADER 」*\n➸ *Aplikasi*: Facebook\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`
+                tobz.sendFileFromUrl(from, VideoUrl, `Facebook.mp4`, epbe2, id)
+                await limitAdd(serial)
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
+            })
+            break
+        case '#tiktok':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#tiktok [linkTiktok]*\nContoh : *#tiktok https://vt.tiktok.com/yqyjPX/*', id)
+            tobz.reply(from, mess.wait, id)
+            tiktok(args[1]).then(async(res) => {
+                let { video, title, image, desk, dibuat, duration } = await res
+                let ttiktok = `*「 TIKTOK DOWNLOADER 」*\n\n➸ *Judul* : ${title}\n➸ Deskripsi : ${desk}\n➸ Durasi : ${duration}\n➸ Dibuat : ${dibuat}\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`
+                tobz.sendFileFromUrl(from, image, 'thumb.jpg', ttiktok, id)
+                await tobz.sendFileFromUrl(from, video, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                await limitAdd(serial)
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
+            })
+            break
+        case '#smule':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#smule [linkSmule]*\nContoh : *#smule https://www.smule.com/p/767512225_3062360163*', id)
+            tobz.reply(from, mess.wait, id)
+            smule(args[1]).then(async(res) => {
+                let { Type, title, url, image } = await res
+                let tsmule = `*「 SMULE DOWNLOADER 」*\n\n➸ *Judul* : ${title}\n➸ *Type:* ${Type}\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`
+                tobz.sendFileFromUrl(from, image, 'thumb.jpg', tsmule, id)
+                await tobz.sendFileFromUrl(from, url, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                await limitAdd(serial)
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
+            })
+            break
         case '#starmaker':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#starmaker [linkStarmaker]* untuk contoh silahkan kirim perintah *#readme*')
-            arg = body.trim().split(' ')
-            console.log(...arg[1])
-            var slicedArgs = Array.prototype.slice.call(arg, 1);
-            console.log(slicedArgs)
-            const smkr = await slicedArgs.join(' ')
-            console.log(smkr)
-            try {
-            const smkr2 = await axios.get('https://api.vhtear.com/starmakerdl?link=' + smkr + '&apikey=' + vhtearkey)
-            const { image, desc, url, title } = smkr2.data.result
-            const smkr3 = `*User Ditemukan!*
+            tobz.reply(from, mess.wait, id)
+            starmaker(args[1]).then(async(res) => {
+                let { image, desc, url, title } = await res
+                let tstarmaker = `*「 STARMAKER DOWNLOADER 」*\n\n➸ *Judul* : ${title}\n➸ *Deskripsi:* ${desc}\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`
+                tobz.sendFileFromUrl(from, image, 'thumb.jpg', tstarmaker, id)
+                await tobz.sendFileFromUrl(from, url, `${title}.mp3`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                await limitAdd(serial)
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
+            })
+            break
+        case '#twitter':
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
 
-➸ *Judul:* ${title}
-➸ *Deskripsi:* ${desc}`
-
-            const pictk = await bent("buffer")(image)
-            const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
-            tobz.sendImage(from, base64, 'image.jpg', 'nihh mhank')
-            tobz.sendFileFromUrl(from, url, `${title}.mp4`, '', id)
-            } catch (err) {
-             console.error(err.message)
-             await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, User tidak ditemukan')
-             tobz.sendText(ownerNumber, 'Error Starmaker : '+ err)
-           }
-          break
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#twitter [ Link Twitter ]* untuk contoh silahkan kirim perintah *#readme*`)
+            tobz.reply(from, mess.wait, id)
+            twitter(args[1]).then(async(res) => {
+                let { desk, urlVideo } = await res
+                let ttwitter = `*「 TWITTER DOWNLOADER 」*\n\n➸ *Aplikasi:* Twitter\n➸ *Deskripsi:* ${desk}\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`
+                await tobz.sendFileFromUrl(from, urlVideo, `twit.mp3`, ttwitter, id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                await limitAdd(serial)
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
+            })
+            break
         case '#maps':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
@@ -2251,68 +2244,22 @@ ${desc}`)
              tobz.sendText(ownerNumber, 'Error Maps : '+ err)
            }
           break
-        case '#twitter':
-            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
-
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, `Kirim perintah *#twitter [ Link Twitter ]* untuk contoh silahkan kirim perintah *#readme*`)
-            argz = body.trim().split(' ')
-            console.log(...argz[1])
-            var slicedArgs = Array.prototype.slice.call(argz, 1);
-            console.log(slicedArgs)
-            const twtdl = await slicedArgs.join(' ')
-            console.log(twtdl)
-            try {
-            const twtdl2 = await axios.get('ttps://api.vhtear.com/twitter?link=' + twtdl + '&apikey=' + vhtearkey)
-            const { desk, urlVideo } = twtdl2.data.result
-            const twtdl3 = `*「 TWITTER 」*
-
-• *Aplikasi:* Twitter
-• *Deskripsi:* ${desk}`
-
-            tobz.sendFileFromUrl(from, urlVideo, `Twitter.mp4`, twtdl3, id)
-            await limitAdd(serial)
-            } catch (err) {
-             console.error(err.message)
-             await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
-           }
-          break
         case '#joox':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
 
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             tobz.reply(from, mess.wait, id)
             if (args.length === 1) return tobz.reply(from, `Kirim perintah *#joox [ Optional ]*\nContoh : *#joox Alan Walker*`, id)
-            const lagune = body.slice(6)
-            axios.get('https://api.vhtear.com/music?query='+lagune+'&apikey='+vhtearkey, {
-                headers: {
-                'Content-Type':'application/json'}
-            })
-            .then(async(res) => {
-                const eror = res.data.result.response
-                const data = res.data.result[0]
-                if (eror == 403) {
-                    tobz.reply(from, `Error`, id) 
-                } else {
-                    const { penyanyi, judul, album, linkImg, linkMp3, filesize, ext, duration } = data
-                    const musik = `*「 JOOX 」*
-
-• *Penyanyi:* ${penyanyi}
-• *Judul:* ${judul}
-• *Album:* ${album}
-• *Ext:* ${ext}
-• *Size:* ${filesize}
-• *Durasi:* ${duration}`
-                    
-                    const pictk = await bent("buffer")(linkImg)
-                    const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
-                    tobz.sendImage(from, base64, judul, musik)
-                    tobz.sendFileFromUrl(from, linkMp3, `${judul}.${ext}`, '', id)
-                    limitAdd(serial)
-                }
-            })
-            .catch(err => {
-                console.error(err.message)
+            tobz.reply(from, mess.wait, id)
+            joox(args[1]).then(async(res) => {
+                let { penyanyi, judul, album, linkImg, linkMp3, filesize, ext, duration } = await res
+                let tjoox = `*「 JOOX DOWNLOADER 」*\n\n➸ *Penyanyi:* ${penyanyi}\n➸ *Judul:* ${judul}\n➸ *Album:* ${album}\n➸ *Ext:* ${ext}\n➸ *Size:* ${filesize}\n➸ *Durasi:* ${duration}\n\n_Silahkan tunggu sebentar proses pengiriman file membutuhkan waktu beberapa menit._`
+                tobz.sendImage(from, linkImg, judul, tjoox)
+                tobz.sendFileFromUrl(from, linkMp3, `${judul}.${ext}`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
+                await limitAdd(serial)
+            }).catch((err) => {
+                console.log(err);
+                tobz.reply(from, `Maaf, Terjadi Kesalahan`, id)
             })
             break
         case '#checkip':
