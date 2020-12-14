@@ -853,7 +853,6 @@ ${desc}`)
                 tobz.reply(from, 'Simsimi berhasil di aktifkan di group ini! Kirim perintah *# [teks]*\nContoh : *# halo*', id)
                 }
             } else if (args[1].toLowerCase() === 'disable') {
-                if (args[1].toLowerCase() === 'enable') {
                 var cek = simi_.includes(chatId);
                 if(cek){
                     return tobz.reply(from, `Simsimi Sudah diaktifkan di grup ini`, id)
