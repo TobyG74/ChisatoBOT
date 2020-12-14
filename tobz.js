@@ -965,12 +965,16 @@ ${desc}`)
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#pinterest [query]*\nContoh : *#pinterest Elaina*', id)
             const ptrsq = body.slice(11)
-            const ptrs = await axios.get('https://api.fdci.se/rep.php?gambar='+ptrsq)
-            const b = JSON.parse(JSON.stringify(ptrs.data))
+            const ptrst = await fetch(`https://api.vhtear.com/pinterest?query=${ptrsq}&apikey=${vhtearkey}`)
+            if (!ptrst.ok) throw new Error(`Error Pinterest : ${ptrst.statusText}`)
+            const ptrs = await ptrst.json()
+            const ptrsn = ptrs.result
+            const b = JSON.parse(JSON.stringify(ptrsn))
             const ptrs2 =  b[Math.floor(Math.random() * b.length)]
             const image = await bent("buffer")(ptrs2)
             const base64 = `data:image/jpg;base64,${image.toString("base64")}`
-            tobz.sendImage(from, base64, 'ptrs.jpg', `*Pinterest*\n\n*Hasil Pencarian : ${ptrsq}*`)
+            await tobz.sendImage(from, base64, 'ptrs.jpg', `*Pinterest*\n\n*Hasil Pencarian : ${ptrsq}*`)
+            await limitAdd(serial)
             break
         case '#nhview':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
@@ -1675,7 +1679,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
-        case '#animesearch': // SEARCH ANIME
+        case '#neonime': // SEARCH ANIME
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, 'PREMIUM COMMAND, HUBUNGI : wa.me/6281311850715', id)
             break
@@ -2049,7 +2053,7 @@ ${desc}`)
             const { Biodata, Jumlah_Followers, Jumlah_Following, Profile_pic, Jumlah_Post, Name, Username } = istalk2.data.result
             const istalk3 = `*User Ditemukan!*
 
-➸ *Username:* ${username}
+➸ *Username:* ${Username}
 ➸ *Nama:* ${Name}
 ➸ *Bio:* ${Biodata}
 ➸ *Mengikuti:* ${Jumlah_Following}
