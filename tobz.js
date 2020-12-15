@@ -1008,7 +1008,7 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#otakudesu [query]*\nContoh : *#otakudesu darling in the franxx*', id)
-            const animes = await axios.get('https://mhankbarbar.herokuapp.com/api/otakudesu?q=' + body.slice(7) + '&apiKey=' + barbarkey)
+            const animes = await axios.get('https://mhankbarbars.herokuapp.com/api/otakudesu?q=' + body.slice(7) + '&apiKey=' + barbarkey)
             if (animes.data.error) return tobz.reply(from, animes.data.error, id)
             const res_animes = `${animes.data.title}\n\n${animes.data.info}\n\n${animes.data.sinopsis}`
             tobz.sendFileFromUrl(from, animes.data.thumb, 'otakudesu.jpg', res_animes, id)
@@ -1041,7 +1041,7 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#komiku [query]*\nContoh : *#komiku darling in the franxx*', id)
-            const animep = await axios.get('https://mhankbarbar.herokuapp.com/api/komiku?q=' + body.slice(7) + '&apiKey=' + barbarkey)
+            const animep = await axios.get('https://mhankbarbars.herokuapp.com/api/komiku?q=' + body.slice(7) + '&apiKey=' + barbarkey)
             if (animep.data.error) return tobz.reply(from, animep.data.error, id)
             const res_animep = `${animep.data.info}\n\n${animep.data.sinopsis}\n\n${animep.data.link_dl}`
             tobz.sendFileFromUrl(from, animep.data.thumb, 'komiku.jpg', res_animep, id)
@@ -1320,7 +1320,7 @@ ${desc}`)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#nekopoi [linkNekopoi]*\nContoh : *#nekopoi https://nekopoi.care/tsunpuri-episode-1-subtitle-indonesia/*', id)
             try {
             tobz.reply(from, mess.wait, id)
-            const nekipoi = await axios.get('https://mhankbarbar.herokuapp.com/api/nekopoi?url=' + body.slice(7) + '&apikey=' + vhtearkey)
+            const nekipoi = await axios.get('https://mhankbarbars.herokuapp.com/api/nekopoi?url=' + body.slice(7) + '&apikey=' + vhtearkey)
             const nekop = nekipoi.data.result
             const nekop2 = `*Anime Ditemukan!*\n➸ Judul : ${nekop.judul}\n➸ Dilihat : ${nekop.dilihat}\n➸ Info : ${nekop.info}`
             const image = await bent("buffer")(nekop.thumbnail)
@@ -1545,7 +1545,7 @@ ${desc}`)
             
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ssweb [linkWeb]*\nContoh : *#ssweb https://neonime.vip*', id)
-            const ssw = await axios.get('https://mhankbarbar.herokuapp.com/api/url2image?url=' + body.slice(7) + '&apiKey=' + barbarkey)
+            const ssw = await axios.get('https://mhankbarbars.herokuapp.com/api/url2image?url=' + body.slice(7) + '&apiKey=' + barbarkey)
             const ssww = ssw.data
             if (ssww.error) return tobz.reply(from, ssww.error, id)
             const ssw2 = `Filesize: ${ssww.filesize}`
@@ -1571,7 +1571,7 @@ ${desc}`)
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#cuaca [tempat]*\nContoh : *#cuaca tangerang', id)
             const tempat = body.slice(7)
-            const weather = await axios.get('https://mhankbarbar.herokuapp.com/api/cuaca?q='+ tempat +'&apiKey='+ barbarkey)
+            const weather = await axios.get('https://mhankbarbars.herokuapp.com/api/cuaca?q='+ tempat +'&apiKey='+ barbarkey)
             const weatherr = weather.data
             if (weatherr.error) {
                 tobz.reply(from, weatherr.error, id)
@@ -1781,7 +1781,7 @@ ${desc}`)
             if (!args[1].match(isUrl) && !args[1].includes('xnxx.com')) return tobz.reply(from, mess.error.Iv, id)
             try {
                 tobz.reply(from, mess.wait, id)
-                const resq = await axios.get('https://mhankbarbar.herokuapp.com/api/xnxx?url='+ args[1] +'&apiKey='+ barbarkey)
+                const resq = await axios.get('https://mhankbarbars.herokuapp.com/api/xnxx?url='+ args[1] +'&apiKey='+ barbarkey)
                 const resp = resq.data
                  if (resp.error) {
                     tobz.reply(from, ytvv.error, id)
@@ -2106,7 +2106,7 @@ ${desc}`)
             const twstalk = await slicedArgs.join(' ')
             console.log(twstalk)
             try {
-            const twstalk2 = await axios.get('https://mhankbarbar.herokuapp.com/api/twstalk?username=' + twstalk + '&apiKey=' + barbarkey)
+            const twstalk2 = await axios.get('https://mhankbarbars.herokuapp.com/api/twstalk?username=' + twstalk + '&apiKey=' + barbarkey)
             const { followers_count, full_name, name, profile_pic, status_count } = twstalk2.data
             const twstalk3 = `*User Ditemukan!*
 
@@ -2621,7 +2621,7 @@ ${desc}`)
             await limitAdd(serial)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#nulis [teks]*, contoh *#nulis aku bukan boneka*', id)
             const ngettik = body.slice(7)
-            const ngetikk = await axios.get('https://mhankbarbar.herokuapp.com/nulis?text='+ ngettik+'&apiKey='+ barbarkey)
+            const ngetikk = await axios.get('https://mhankbarbars.herokuapp.com/nulis?text='+ ngettik+'&apiKey='+ barbarkey)
             if (ngetikk.data.error) return tobz.reply(from, ngetikk.data.error, id)
             tobz.sendFileFromUrl(from, ngetikk.data.result, 'nulis.jpg', '', id)
             break
