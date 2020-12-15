@@ -610,8 +610,8 @@ module.exports = tobz = async (tobz, message) => {
                     thisDay = myDays[thisDay];
                 var yy = date.getYear();
                 var year = (yy < 1000) ? yy + 1900 : yy;
-                const waktu = (day + ' ' + months[month] + ' ' + year)
-                const hari = (thisDay)
+                const waktunye = (day + ' ' + months[month] + ' ' + year)
+                const harinye = (thisDay)
                 spawn('convert', [
                     './mager/magernulis/magernulis1.jpg',
                     '-font',
@@ -624,7 +624,7 @@ module.exports = tobz = async (tobz, message) => {
                     '1',
                     '-annotate',
                     '+806+78',
-                    hari,
+                    harinye,
                     '-font',
                     './font/Zahraaa.ttf',
                     '-size',
@@ -635,7 +635,7 @@ module.exports = tobz = async (tobz, message) => {
                     '1',
                     '-annotate',
                     '+806+102',
-                    waktu,
+                    waktunye,
                     '-font',
                     './font/Zahraaa.ttf',
                     '-size',
