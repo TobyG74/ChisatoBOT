@@ -762,8 +762,8 @@ module.exports = tobz = async (tobz, message) => {
             argz = body.trim().split('|')
             if (argz.length >= 2) {
                 tobz.reply(from, mess.wait, id)
-                const lpornhub = argz.split('|')[0]
-                const lpornhub2 = argz.split('|')[1]
+                const lpornhub = argz[1]
+                const lpornhub2 = argz[2]
                 if (lpornhub.length > 10) return tobz.reply(from, '*Teks1 Terlalu Panjang!*\n_Maksimal 10 huruf!_', id)
                 if (lpornhub2.length > 10) return tobz.reply(from, '*Teks2 Terlalu Panjang!*\n_Maksimal 10 huruf!_', id)
                 tobz.sendFileFromUrl(from, `https://api.vhtear.com/pornlogo?text1=${lpornhub}&text2=${lpornhub2}&apikey=${vhtearkey}`)
