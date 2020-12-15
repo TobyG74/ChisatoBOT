@@ -2138,7 +2138,7 @@ ${desc}`)
             console.log(istalk)
             try {
             const istalk2 = await axios.get('https://tobz-api.herokuapp.com/api/stalk?username=' + istalk)
-            const { Biodata, Jumlah_Followers, Jumlah_Following, Profile_pic, Jumlah_Post, Name, Username } = istalk2.data.result
+            const { Biodata, Jumlah_Followers, Jumlah_Following, Profile_pic, Jumlah_Post, Name, Username } = istalk2.data
             const istalk3 = `*User Ditemukan!*
 
 ➸ *Username:* ${Username}
