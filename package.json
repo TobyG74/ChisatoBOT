@@ -30,6 +30,7 @@
     "image-size": "^0.9.1",
     "image-to-pdf": "^1.0.0",
     "image-to-base64": "^2.1.1",
+    "lolcatjs": "^2.4.0",
     "mathjs": "^8.0.1",
     "moment-timezone": "^0.5.31",
     "mysql": "^2.18.1",
