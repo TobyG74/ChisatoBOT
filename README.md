@@ -39,7 +39,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 ## APIKEY
 Open setting.js then edit & paste it in YOUR_APIKEY
 - [VHTEAR](https://api.vhtear.com)
-- [MHANKBARBAR](https://mhankbarbar.herokuapp.com/api)
+- [MHANKBARBAR](https://mhankbarbars.herokuapp.com/api)
 
 Apikey Location
 - [SETTING](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
