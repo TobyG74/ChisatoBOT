@@ -1535,8 +1535,8 @@ ${desc}`)
             
             await limitAdd(serial)
             const bmkg = await axios.get('http://tobz-api.herokuapp.com/api/infogempa')
-            const { potensi, koordinat, lokasi, kedalaman, magnitude, waktu, map } = bmkg.data
-            const hasil = `*${waktu}*\n📍 *Lokasi* : *${lokasi}*\n〽️ *Kedalaman* : *${kedalaman}*\n💢 *Magnitude* : *${magnitude}*\n🔘 *Potensi* : *${potensi}*\n📍 *Koordinat* : *${koordinat}*`
+            const { potensi, koordinat, lokasi, kedalaman, magnitude, kapan, map } = bmkg.data
+            const hasil = `*${kapan}*\n📍 *Lokasi* : *${lokasi}*\n〽️ *Kedalaman* : *${kedalaman}*\n💢 *Magnitude* : *${magnitude}*\n🔘 *Potensi* : *${potensi}*\n📍 *Koordinat* : *${koordinat}*`
             tobz.sendFileFromUrl(from, map, 'shakemap.jpg', hasil, id)
             break
         case '#ssweb':
