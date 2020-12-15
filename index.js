@@ -6,6 +6,7 @@ const color = require('./lib/color')
 const fs = require('fs')
 // const msgHndlr = require ('./tobz')
 const figlet = require('figlet')
+const lolcatjs = require('lolcatjs')
 const options = require('./options')
 
 // AUTO UPDATE BY NURUTOMO
@@ -35,12 +36,15 @@ function restartAwal(tobz){
     //fs.writeFileSync('./lib/setting.json', JSON.stringify(setting, null,2));
 }
 
+lolcatjs.options.seed = Math.round(Math.random() * 1000);
+lolcatjs.options.colors = true;
+
 const start = async (tobz = new Client()) => {
         console.log('------------------------------------------------')
-        console.log(color(figlet.textSync('ELAINA BOT', { horizontalLayout: 'full' })))
+        lolcatjs.fromString(color(figlet.textSync('ELAINA BOT', { horizontalLayout: 'full' })))
         console.log('------------------------------------------------')
-        console.log('[DEV] TOBZ')
-        console.log('[SERVER] Server Started!')
+        lolcatjs.fromString('[DEV] TOBZ')
+        lolcatjs.fromString('[SERVER] Server Started!')
         tobz.onAnyMessage((fn) => messageLog(fn.fromMe, fn.type))
         // Force it to keep the current session
         tobz.onStateChanged((state) => {
