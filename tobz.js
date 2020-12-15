@@ -1571,17 +1571,23 @@ ${desc}`)
             const hasil = `*${waktu}*\n📍 *Lokasi* : *${lokasi}*\n〽️ *Kedalaman* : *${kedalaman}*\n💢 *Magnitude* : *${magnitude}*\n🔘 *Potensi* : *${potensi}*\n📍 *Koordinat* : *${koordinat}*`
             tobz.sendFileFromUrl(from, map, 'shakemap.jpg', hasil, id)
             break
-        case '#ssweb':
+        case '#ssphone':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ssweb [linkWeb]*\nContoh : *#ssweb https://neonime.vip*', id)
-            const ssw = await axios.get('https://mhankbarbars.herokuapp.com/api/url2image?url=' + body.slice(7) + '&apiKey=' + barbarkey)
-            const ssww = ssw.data
-            if (ssww.error) return tobz.reply(from, ssww.error, id)
-            const ssw2 = `Filesize: ${ssww.filesize}`
-            tobz.sendFileFromUrl(from, ssww.result, 'ssweb.jpg', ssw2, id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ssphone [linkWeb]*\nContoh : *#ssphone https://neonime.vip*', id)
+            const sspc = body.slice(9)
+            tobz.sendFileFromUrl(from, `https://api.vhtear.com/ssweb?link=${sspc}&type=phone&apikey=${vhtearkey}`, 'ssphone.jpg', '', id)
+            break
+        case '#sspc':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            
+            await limitAdd(serial)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#sspc [linkWeb]*\nContoh : *#sspc https://neonime.vip*', id)
+            const sspc = body.slice(6)
+            tobz.sendFileFromUrl(from, `https://api.vhtear.com/ssweb?link=${sspc}&type=pc&apikey=${vhtearkey}`, 'sspc.jpg', '', id)
             break
         case '#shorturl':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
