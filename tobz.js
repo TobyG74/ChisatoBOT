@@ -178,7 +178,6 @@ module.exports = tobz = async (tobz, message) => {
         const isQuotedFile = quotedMsg && quotedMsg.type === 'document'
 
         body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : ''
-        const chats = (type === 'chat') ? body : (type === 'image' || type === 'video') ? caption : ''
         
         const isMuted = (chatId) => {
           if(muted.includes(chatId)){
