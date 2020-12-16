@@ -14,6 +14,10 @@ const options = require('./options')
 // Cache handler and check for file change
 require('./tobz.js')
 nocache('./tobz.js', module => console.log(`'${module}' Updated!`))
+require('./lib/help.js')
+nocache('./lib/help.js', module => console.log(`'${module}' Updated!`))
+require('./lib/database/setting.json')
+nocache('./lib/database/setting.json', module => console.log(`'${module}' Updated!`))
 
 const adminNumber = JSON.parse(fs.readFileSync('./lib/database/admin.json'))
 const setting = JSON.parse(fs.readFileSync('./lib/database/setting.json'))
