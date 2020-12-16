@@ -871,7 +871,7 @@ module.exports = tobz = async (tobz, message) => {
             var ngrp = nsfw_.includes(chat.id)
             var antlink = antilink.includes(chat.id)
             var simu = simi_.includes(chat.id)
-            var grplink = antilink.includes(chat.id)
+            var stprt = antisticker.includes(chat.id)
             var antbad = antibadword.includes(chat.id)
             var grouppic = await tobz.getProfilePicFromServer(chat.id)
             if (grouppic == undefined) {
@@ -886,7 +886,7 @@ module.exports = tobz = async (tobz, message) => {
 *➸ Left : ${leftgrp ? 'Aktif' : 'Tidak Aktif'}*
 *➸ NSFW : ${ngrp ? 'Aktif' : 'Tidak Aktif'}*
 *➸ Simsimi : ${simu ? 'Aktif' : 'Tidak Aktif'}*
-*➸ Anti Link Status : ${grplink ? 'Aktif' : 'Tidak Aktif'}*
+*➸ Anti Sticker : ${stprt ? 'Aktif' : 'Tidak Aktif'}*
 *➸ Anti Link : ${antlink ? 'Aktif' : 'Tidak Aktif'}*
 *➸ Anti Badword : ${antbad ? 'Aktif' : 'Tidak Aktif'}*
 *➸ Group Description* 
@@ -1066,33 +1066,6 @@ ${desc}`)
                     antibadword.splice(nixx, 1)
                     fs.writeFileSync('./lib/database/antibadword.json', JSON.stringify(antibadword))
                     tobz.reply(from, `*「 ANTI BADWORD 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nHarap Jangan Toxic Di Sini Atau Elaina Akan Kick!`, id)
-                }
-            } else {
-                tobz.reply(from, `Pilih enable atau disable udin!`, id)
-            } 
-            break   
-        case prefix+'antilink':
-            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
-            if (!isGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin group!`, id)
-            if (!isBotGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan jika Bot menjadi Admin!`, id)
-            if (args[1] == 'enable') {
-                var cek = antilink.includes(chatId);
-                if(cek){
-                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nSudah diaktifkan di grup ini`, id)
-                } else {
-                    antilink.push(chatId)
-                    fs.writeFileSync('./lib/database/antilink.json', JSON.stringify(antilink))
-                    tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
-                }
-            } else if (args[1] == 'disable') {
-                var cek = antilink.includes(chatId);
-                if(!cek){
-                    return tobz.reply(from, `*「 ANTI GROUP LINK 」*\nSudah dinonaktifkan di grup ini`, id)
-                } else {
-                    let nixx = antilink.indexOf(chatId)
-                    antilink.splice(nixx, 1)
-                    fs.writeFileSync('./lib/database/antilink.json', JSON.stringify(antilink))
-                    tobz.reply(from, `*「 ANTI GROUP LINK 」*\nPerhatian Untuk Member Grup ${name} Tercinta\nJika Ingin Send Link Harap Izin Ke Admin`, id)
                 }
             } else {
                 tobz.reply(from, `Pilih enable atau disable udin!`, id)
