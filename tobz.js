@@ -194,8 +194,6 @@ module.exports = tobz = async (tobz, message) => {
         const AntiStickerSpam = antisticker.includes(chatId)
         const isPrivate = sender.id === chat.contact.id
         const stickermsg = message.type === 'sticker'
-        const tms = (Date.now() / 1000) - (timeStart);
-        const cts = waktu(tms)
         const isCmd = command.startsWith(prefix)
 
         const serial = sender.id
@@ -689,7 +687,7 @@ module.exports = tobz = async (tobz, message) => {
         case prefix+'magernulis1': // BY MFARELS
                 if (args.length === 4) return await tobz.reply(from, 'Kirim Perintah *#magernulis1 --[Nama]--[Kelas]--[Teks]*\n\n*Contoh :*\n#magernulis1 --MFarelS--7B--Subscribe MFarelS CH', id) // https://github.com/MFarelS/RajinNulis-BOT
                 arg = body.trim().split('--') // INSTALL IMAGEMAGICK KALO MAU WORK
-                const diNama = arg[1] // WAKTU INSTALL, CENTANG KOLOM 1,2,3,5,6
+                const diNama = arg[1] // INSTALL, CENTANG KOLOM 1,2,3,5,6
                 const diKelas = arg[2] // SUBSCRIBE MFARELS CH
                 const diTulis = arg[3] // FOLLOW INSTAGRAM @mfarelsyahtiawan
                 await tobz.reply(from, mess.magernulissatu, id) // NAMA, KELAS, WAKTU, BY ST4RZ
