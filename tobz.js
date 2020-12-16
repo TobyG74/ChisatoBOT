@@ -319,6 +319,23 @@ module.exports = tobz = async (tobz, message) => {
         const tutor = 'https://i.ibb.co/Hp1XGbL/a4dec92b8922.jpg'
         const errorurl = 'https://steamuserimages-a.akamaihd.net/ugc/954087817129084207/5B7E46EE484181A676C02DFCAD48ECB1C74BC423/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false'
         const errorurl2 = 'https://steamuserimages-a.akamaihd.net/ugc/954087817129084207/5B7E46EE484181A676C02DFCAD48ECB1C74BC423/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false'
+       
+        const isMuted = (chatId) => {
+          if(muted.includes(chatId)){
+            return false
+        }else{
+            return true
+            }
+        }
+
+        function banChat () {
+            if(banChats == true) {
+            return false
+        }else{
+            return true
+            }
+        }
+        
         // FUNCTION
                 function isStickerMsg(id){
                 if (isAdmin) {return false;}
