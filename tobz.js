@@ -87,7 +87,8 @@ const {
     facebook,
     smule,
     starmaker,
-    twitter
+    twitter,
+    joox
     } = require('./lib/downloader')
 
 const {
