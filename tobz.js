@@ -1061,6 +1061,34 @@ ${desc}`)
                 tobz.reply(from, `Pilih enable atau disable udin!`, id)
             }
             break    
+        case prefix+'antisticker':
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+            if (!isGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin group!`, id)
+            if (!isBotGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan jika Bot menjadi Admin!`, id)
+            if (args[1] == 'enable') {
+                var cek = antisticker.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `*「 ANTI SPAM STICKER 」*\nStatus : Sudah Aktif`, id)
+                 } else {
+                    antisticker.push(chatId)
+                    fs.writeFileSync('./lib/database/antisticker.json', JSON.stringify(antisticker))
+                    tobz.reply(from, `*「 ANTI SPAM STICKER 」*\nStatus : Aktif`, id)
+                }
+            } else if (args[1] == 'disable') {
+                var cek = antisticker.includes(chatId);
+                if(cek){
+                    return tobz.reply(from, `*「 ANTI SPAM STICKER 」*\nStatus : Sudak DiNonaktif`, id) //if number already exists on database
+                } else {
+                    let nixx = antisticker.indexOf(chatId)
+                    antisticker.splice(nixx, 1)
+                    fs.writeFileSync('./lib/database/antisticker.json', JSON.stringify(antisticker))
+                    tobz.reply(from, `*「 ANTI SPAM STICKER 」*\nStatus : Nonaktif`, id)
+                    limitAdd(serial)
+                }
+            } else {
+                tobz.reply(from, `Pilih enable atau disable udin!`, id)
+            }
+            break
         case prefix+'antibadword':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
             if (!isGroupAdmins) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin group!`, id)
