@@ -119,6 +119,7 @@ let antibadword = JSON.parse(fs.readFileSync('./lib/database/antibadword.json'))
 let antisticker = JSON.parse(fs.readFileSync('./lib/database/antisticker.json'))
 let msgBadword = JSON.parse(fs.readFileSync('./lib/database/msgBadword.json'))
 let dbbadword = JSON.parse(fs.readFileSync('./lib/database/katakasar.json'))
+let badword = JSON.parse(fs.readFileSync('./lib/database/badword.json'))
 
 let { 
     limitCount,
