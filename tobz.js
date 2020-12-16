@@ -188,7 +188,6 @@ module.exports = tobz = async (tobz, message) => {
         const isBadword = badword.includes(chatId)
         body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : ''
         const arg = body.substring(body.indexOf(' ') + 1)
-        const pengirim = sender.id;
         const isKasar = await cariKasar(chats)
         const GroupLinkDetector = antilink.includes(chatId)
         const AntiStickerSpam = antisticker.includes(chatId)
@@ -487,13 +486,6 @@ module.exports = tobz = async (tobz, message) => {
                 }
         
                 // END HELPER FUNCTION
-        var nmr = sender.id
-        var obj = pengirim.some((val) => {
-            return val.id === nmr
-        })
-        var cekage = pengirim.some((val) => {
-            return val.id === nmr && val.umur >= 15
-        })
         // FUNCTION DAFTAR! NEXT UPDATE
         function monospace(string) {
             return '```' + string + '```'
