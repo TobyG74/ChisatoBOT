@@ -293,7 +293,6 @@ module.exports = tobz = async (tobz, message) => {
         const isDetectorBadword = antibadword.includes(chatId)
         const AntiStickerSpam = antisticker.includes(chatId)
             
-        const chats = (type === 'chat') ? body : (type === 'image' || type === 'video') ? caption : ''
         const stickermsg = message.type === 'sticker'
         const argx = chats.toLowerCase()
         const isKasar = await cariKasar(chats)
