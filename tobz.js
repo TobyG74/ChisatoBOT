@@ -127,6 +127,7 @@ let {
     banChats,
     barbarkey,
     vhtearkey,
+    prefix,
     restartState: isRestart,
     mtc: mtcState
     } = setting
