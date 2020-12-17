@@ -930,28 +930,28 @@ module.exports = tobz = async (tobz, message) => {
                 await tobz.reply(from, `Wrong Format!\n[❗] Kirim perintah *#pornhub [ |Teks1|Teks2 ]*, contoh *#pornhub |Tobz|Dev Elaina*`, id)
             }
             break
-         case prefix+'daftar':  // NAMBAHIN NOMOR DI DATABASE
+                  case prefix+'daftar':  // NAMBAHIN NOMOR DI DATABASE
                 argz = body.trim().split('|')
                 if (argz.length >= 2) {
-                const no = sender.id
-                const nem = argz[1]
-                const mur = argz[2]
+                const nonye = sender.id
+                const namanye = argz[1]
+                const umurnye = argz[2]
                     if(isNaN(mur)) return await tobz.reply(from, 'Umur harus berupa angka!!', id)
-                    if(mur >= 40) return await tobz.reply(from, 'Kamu terlalu tua, kembali lagi ke masa muda untuk menggunakan Elaina', id)
-                    const jenenge = nem.replace(' ','')
-                    var cek = no
+                    if(umurnye >= 40) return await tobz.reply(from, 'Kamu terlalu tua, kembali lagi ke masa muda untuk menggunakan Elaina', id)
+                    const jenenge = namanye.replace(' ','')
+                    var ceknya = nonye
                         var obj = pendaftar.some((val) => {
-                            return val.id === cek
+                            return val.id === ceknya
                         })
                         if (obj === true){
                             return tobz.reply(from, 'kamu sudah terdaftar', id) // BAKAL RESPON JIKA NO UDAH ADA
                         } else {
-                            const mentah = await tobz.checkNumberStatus(no) // PENDAFTARAN
+                            const mentah = await tobz.checkNumberStatus(nonye) // PENDAFTARAN
                             const msg = monospace(`Pendaftaran berhasil dengan SN: ${SN} pada ${moment().format('DD/MM/YY HH:mm:ss')}
 ₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋
-[Nama]: ${jenenge} [@${no.replace(/[@c.us]/g, '')}]
-[Nomor]: wa.me/${no.replace('@c.us', '')}
-[Umur]: ${mur}
+[Nama]: ${jenenge} [@${nonye.replace(/[@c.us]/g, '')}]
+[Nomor]: wa.me/${nonye.replace('@c.us', '')}
+[Umur]: ${umurnye}
 ⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻⁻
 Untuk menggunakan bot silahkan kirim ${prefix}menu
 Total Pengguna yang telah terdaftar ${pendaftar.length}`)
@@ -961,7 +961,7 @@ Total Pengguna yang telah terdaftar ${pendaftar.length}`)
                             const register = ({
                                 id: mentah.id._serialized,
                                 nama: jenenge,
-                                umur: mur
+                                umur: umurnye
                             })
                             pendaftar.push(register)
                             fs.writeFileSync('./lib/database/user.json', JSON.stringify(pendaftar)) // DATABASE
@@ -974,19 +974,19 @@ Total Pengguna yang telah terdaftar ${pendaftar.length}`)
                 break
             case prefix+'daftarulang':
                     if (!isAdmin) return tobz.reply(from, 'Command ini hanya dapat digunakan oleh admin Elaina', id)  
-                    const nomer = args[1]
-                    let text = nomer.replace(/[-\s+@c.us]/g,'')
-                    const cus = text + '@c.us'
-                    const umur = args[2]
-                    if(umur >= 40) return await tobz.reply(from, 'Umur terlalu tua kak, max 40 yaa :D', id)
+                    const nomernya = args[1]
+                    let textnya = nomernya.replace(/[-\s+@c.us]/g,'')
+                    const cusnya = textnya + '@c.us'
+                    const umurnya = args[2]
+                    if(umurnya >= 40) return await tobz.reply(from, 'Umur terlalu tua kak, max 40 yaa :D', id)
                         var found = false
                         Object.keys(pendaftar).forEach((i) => {
-                            if(pendaftar[i].id == cus){
+                            if(pendaftar[i].id == cusnya){
                                 found = i
                             }
                         })
                         if (found !== false) {
-                            pendaftar[found].umur = umur;
+                            pendaftar[found].umur = umurnya;
                             const updated = pendaftar[found]
                             const result = monospace(`Update data berhasil dengan SN: ${SN} pada ${moment().format('DD/MM/YY HH:mm:ss')}
 ₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋₋
@@ -4009,7 +4009,7 @@ ${desc}`)
             await tobz.sendSeen(from) 
             }
         }
-    } catch (err)
+    } catch (err) {
         console.log(color('[ERROR]', 'red'), err)
         //tobz.kill().then(a => console.log(a))
     }
