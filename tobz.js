@@ -2055,8 +2055,8 @@ ${desc}`)
                  if (ytvh2.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
+                    const { title, UrlVideo, imgUrl, size } = await ytvh2.result //Ini Keatasin Biar Ga Emror Karena Dibawah ini >>>>>>>>title<< jadi kalo dipake cannot read 'title' before initialisation:v
                     if (Number(ytvh2.result.size.split(' MB')[0]) > 30.00) return tobz.sendFileFromUrl(from, ytvh2.result.UrlVideo, `${title}.mp4`, `*「 YOUTUBE MP4 」*\n\n• *Judul* : ${ytvh2.result.title}\n• *Filesize* : ${ytvh2.result.size}\n\n__Maaf, Durasi video melebihi 30 MB. Silahkan download video melalui link dibawah_.\n${ytvh2.result.UrlVideo}`, id)
-                    const { title, UrlVideo, imgUrl, size } = await ytvh2.result
                     tobz.sendFileFromUrl(from, imgUrl, 'thumb.jpg', `*「 YOUTUBE MP4 」*\n\n• *Judul* : ${title}\n• *Filesize* : ${size}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`, id)
                     /await tobz.sendFileFromUrl(from, UrlVideo, `${title}.mp4`, '', id).catch(() => tobz.reply(from, mess.error.Yt4, id))
                     await limitAdd(serial)
@@ -2111,8 +2111,8 @@ ${desc}`)
                  if (vhtearyt33.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
                 } else {
+                    const { title, ext, size, UrlMp3, status, imgUrl } = await vhtearyt33.result // Ni Juga Sama Keatasin Aja Wkwk
                     if(Number(vhtearyt33.result.size.split(' MB')[0]) >= 10.00) return tobz.sendFileFromUrl(from, vhtearyt33.result.imgUrl, `thumb.jpg`, `*「 YOUTUBE MP3 」*\n\n• *Judul* : ${vhtearyt33.result.title}\n• *Filesize* : ${vhtearyt33.result.size}\n\n_Maaf, Durasi audio melebihi 10 MB. Silahkan download audio melalui link dibawah_.\n${vhtearyt33.result.UrlMp3}`, id)
-                    const { title, ext, size, UrlMp3, status, imgUrl } = await vhtearyt33.result
                     console.log(`VhTear Giliran ${ext}\n${size}\n${status}`)
                     const captions = `*「 YOUTUBE MP3 」*\n\n• *Judul* : ${title}\n• *Filesize* : ${size}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
                     tobz.sendFileFromUrl(from, imgUrl, `thumb.jpg`, captions, id)
