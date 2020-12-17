@@ -930,13 +930,13 @@ module.exports = tobz = async (tobz, message) => {
                 await tobz.reply(from, `Wrong Format!\n[❗] Kirim perintah *#pornhub [ |Teks1|Teks2 ]*, contoh *#pornhub |Tobz|Dev Elaina*`, id)
             }
             break
-                  case prefix+'daftar':  // NAMBAHIN NOMOR DI DATABASE
+            case prefix+'daftar':  // NAMBAHIN NOMOR DI DATABASE
                 argz = body.trim().split('|')
                 if (argz.length >= 2) {
                 const nonye = sender.id
                 const namanye = argz[1]
                 const umurnye = argz[2]
-                    if(isNaN(mur)) return await tobz.reply(from, 'Umur harus berupa angka!!', id)
+                    if(isNaN(umurnye)) return await tobz.reply(from, 'Umur harus berupa angka!!', id)
                     if(umurnye >= 40) return await tobz.reply(from, 'Kamu terlalu tua, kembali lagi ke masa muda untuk menggunakan Elaina', id)
                     const jenenge = namanye.replace(' ','')
                     var ceknya = nonye
