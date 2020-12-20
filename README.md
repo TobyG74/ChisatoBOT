@@ -22,33 +22,33 @@
 ## Information
 
 #### This script is open to anyone! If you want to add commands, please contribute / pull request! Buying and selling scripts is prohibited!
-- [Cara Penginstallan Bot](https://youtu.be/41Xj_Kg4DCM)
-- Change [ownerNumber](https://github.com/TobyG74/ElainaBOT/blob/df5caa20c74a1e76345a9664baa8dbc1b198da21/tobz.js#L248) in tobz.js to be your number
+* [`Cara Penginstallan Bot`](https://youtu.be/41Xj_Kg4DCM)
+* Change [`ownerNumber`](https://github.com/TobyG74/ElainaBOT/blob/df5caa20c74a1e76345a9664baa8dbc1b198da21/tobz.js#L248) in tobz.js to be your number
 ownerNumber = "6213xxxxxx@c.us"
-- Change [adminNumber](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/admin.json#L1) in admin.json to be your number
+* Change [`adminNumber`](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/admin.json#L1) in admin.json to be your number
 [] -> ["62813xxxxxx@c.us"]
 
 ## Contact
 
 If you find some bugs please contact the WhatsApp number on Contact
 
-- [TELEGRAM](https://t.me/tobz2k19)
-- [WHATSAPP](https://wa.me/6281311850715)
-- [MY BOT](wa.me/447418349954)
-- [WHATSAPP GROUP](https://chat.whatsapp.com/JuwROWyZh70Gn8rrmtReyu)
-- [RESELLER RDP](wa.me/62895325425229)
+* [`TELEGRAM`](https://t.me/tobz2k19)
+* [`WHATSAPP`](https://wa.me/6281311850715)
+* [`MY BOT`](wa.me/447418349954)
+* [`WHATSAPP GROUP`](https://chat.whatsapp.com/JuwROWyZh70Gn8rrmtReyu)
+* [`RESELLER RDP`](wa.me/62895325425229)
 
 ## APIKEY
 Open setting.js then edit & paste it in YOUR_APIKEY
-- [VHTEAR](https://api.vhtear.com)
-- [MHANKBARBAR](https://mhankbarbars.herokuapp.com/api)
+* [`VHTEAR`](https://api.vhtear.com)
+* [`MHANKBARBAR`](https://mhankbarbars.herokuapp.com/api)
 
 Apikey Location
-- [SETTING](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
+* [`SETTING`](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
 
 ## Donate
-- [Saweria](https://saweria.co/ItzTobz)
-- [Dana](https://link.dana.id/qr/17mlqta)
+* [`Saweria`](https://saweria.co/ItzTobz)
+* [`Dana`](https://link.dana.id/qr/17mlqta)
 
 ## Getting Started
 
@@ -56,12 +56,12 @@ Apikey Location
 This is a Bot Group Type, so you have to enter the bot into a group in order to fully use the command!
 
 ### FFMPEG
-- [DOWNLOAD](https://ffmpeg.org/)
-- [TUTORIAL](https://youtu.be/04Gf6TEnmjk)
+* [`DOWNLOAD`](https://ffmpeg.org/)
+* [`TUTORIAL`](https://youtu.be/04Gf6TEnmjk)
 
 ### IMAGEMAGICK
-- [DOWNLOAD](https://imagemagick.org/script/download.php)
-Note : Kalo Mau Work, Centang Kolom 1,2,3,5,6
+* [`DOWNLOAD`](https://imagemagick.org/script/download.php)
+`Note : Kalo Mau Work, Centang Kolom 1,2,3,5,6`
 
 ### Install
 Clone this project
@@ -105,7 +105,7 @@ after running it you need to scan the qr
 
 ### License
 
-- [Apache License 2.0](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
+* [`Apache License 2.0`](https://github.com/TobyG74/ElainaBOT/blob/main/LICENSE)
 
 ---
 ## 120+ Feature
@@ -265,4 +265,6 @@ Fix Stuck on linux, install google chrome stable:
 * [`ItzNgga`](https://github.com/ItzNgga/wa-bot.js) 
 * [`Gimenz`](https://github.com/Gimenz) 
 * [`ArugaZ`](https://github.com/ArugaZ/whatsapp-bot) 
+* [`MFarelS`](https://github.com/MFarelS/RajinNulis-BOT)
+
 
