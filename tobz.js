@@ -735,93 +735,64 @@ module.exports = tobz = async (tobz, message) => {
         case prefix+'magernulis1': // BY MFARELS
                 if(isReg(obj)) return
                 if(cekumur(cekage)) return
-                if (args.length === 4) return await tobz.reply(from, 'Kirim Perintah *#magernulis1 --[Nama]--[Kelas]--[Teks]*\n\n*Contoh :*\n#magernulis1 --MFarelS--7B--Subscribe MFarelS CH', id) // https://github.com/MFarelS/RajinNulis-BOT
-                arg = body.trim().split('--') // INSTALL IMAGEMAGICK KALO MAU WORK
-                const diNama = arg[1] // INSTALL, CENTANG KOLOM 1,2,3,5,6
-                const diKelas = arg[2] // SUBSCRIBE MFARELS CH
-                const diTulis = arg[3] // FOLLOW INSTAGRAM @mfarelsyahtiawan
-                await tobz.reply(from, mess.magernulissatu, id) // NAMA, KELAS, WAKTU, BY ST4RZ
-                const panjangKalimat = diTulis.replace(/(\S+\s*){1,10}/g, '$&\n')
-                const panjangNama = diNama.replace(/(\S+\s*){1,10}/g, '$&\n')
-                const panjangKelas = diKelas.replace(/(\S+\s*){1,10}/g, '$&\n')
-                const panjangBaris = panjangKalimat.split('\n').slice(0, 30).join('\n')
-                const panjangBarisNama = panjangNama.split('\n').slice(0, 30).join('\n')
-                const panjangBarisKelas = panjangKelas.split('\n').slice(0, 30).join('\n')
-                var months = ['- 1 -', '- 2 -', '- 3 -', '- 4 -', '- 5 -', '- 6 -', '- 7 -', '- 8 -', '- 9 -', '- 10 -', '- 11 -', '- 12 -'];
-                var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                var date = new Date();
-                var day = date.getDate();
-                var month = date.getMonth();
-                var thisDay = date.getDay(),
-                    thisDay = myDays[thisDay];
-                var yy = date.getYear();
-                var year = (yy < 1000) ? yy + 1900 : yy;
-                const waktunye = (day + ' ' + months[month] + ' ' + year)
-                const harinye = (thisDay)
-                spawn('convert', [
-                    './mager/magernulis/magernulis1.jpg',
-                    '-font',
-                    './font/Zahraaa.ttf',
-                    '-size',
-                    '700x960',
-                    '-pointsize',
-                    '20',
-                    '-interline-spacing',
-                    '1',
-                    '-annotate',
-                    '+806+78',
-                    harinye,
-                    '-font',
-                    './font/Zahraaa.ttf',
-                    '-size',
-                    '700x960',
-                    '-pointsize',
-                    '18',
-                    '-interline-spacing',
-                    '1',
-                    '-annotate',
-                    '+806+102',
-                    waktunye,
-                    '-font',
-                    './font/Zahraaa.ttf',
-                    '-size',
-                    '700x960',
-                    '-pointsize',
-                    '18',
-                    '-interline-spacing',
-                    '1',
-                    '-annotate',
-                    '+360+100',
-                    panjangBarisNama,
-                    '-font',
-                    './font/Zahraaa.ttf',
-                    '-size',
-                    '700x960',
-                    '-pointsize',
-                    '18',
-                    '-interline-spacing',
-                    '1',
-                    '-annotate',
-                    '+360+120',
-                    panjangBarisKelas, 
-                    '-font',
-                    './font/Zahraaa.ttf',
-                    '-size',
-                    '700x960',
-                    '-pointsize',
-                    '20',
-                    '-interline-spacing',
-                    '-7.5',
-                    '-annotate',
-                    '+344+142',
-                    panjangBaris,
-                    './mager/magernulis√/magernulis1√.jpg'
-                ])
-                .on('error', () => tobz.reply(from, 'Error Bjeer, Keknya Scriptnya Lagi Error', id))
-                .on('exit', () => {
-                    tobz.sendImage(from, './mager/magernulis√/magernulis1√.jpg', 'FarelZahra.jpg', '*Sukses✓ Nulis DiBuku ✓*\n\n*YouTube : MFarelS CH*\n*Instagram : @mfarelsyahtiawan*\n*Twitter : @MSyahtiawan*\n*GitHub : @MFarelS*\n*Saweria : MFarelS*\n\n*© Powered By BOT✓*', id)
-                })
-            break // BY MFARELS
+            if (args.length === 1) return await tobz.reply(from, 'Kirim perintah *prefix+magernulis1 [teks]*', id)  // BY MFARELS
+            const farel = body.slice(13)  // YOUTUBE : MFARELS CH
+            await tobz.reply(from, mess.magernulissatu, id)  // INSTAGRAM : @mfarelsyahtiawan
+            const zahra = farel.replace(/(\S+\s*){1,10}/g, '$&\n')  // INSTALL IMAGEMAGICK KALO WAU WORK
+            const farelzahra = zahra.split('\n').slice(0, 33).join('\n')  // WAKTU INSTALL IMAGEMAGICK CENTANG KOLOM 1,2,3,5,6
+            var months = ['- 1 -', '- 2 -', '- 3 -', '- 4 -', '- 5 -', '- 6 -', '- 7 -', '- 8 -', '- 9 -', '- 10 -', '- 11 -', '- 12 -'];
+            var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            var date = new Date();
+            var day = date.getDate();
+            var month = date.getMonth();
+            var thisDay = date.getDay(),
+                thisDay = myDays[thisDay];
+            var yy = date.getYear();
+            var year = (yy < 1000) ? yy + 1900 : yy;
+            const zahrafarel = (day + ' ' + months[month] + ' ' + year)
+            const farelllzahraaa = (thisDay)
+            spawn('convert', [
+                './mager/magernulis/magernulis1.jpg',
+                '-font',
+                './font/Zahraaa.ttf',
+                '-size',
+                '700x960',
+                '-pointsize',
+                '100',
+                '-interline-spacing',
+                '1',
+                '-annotate',
+                '+4100+460',
+                farelllzahraaa,
+                '-font',
+                './font/Zahraaa.ttf',
+                '-size',
+                '700x960',
+                '-pointsize',
+                '100',
+                '-interline-spacing',
+                '1',
+                '-annotate',
+                '+4100+640',
+                zahrafarel,
+                '-font',
+                './font/Zahraaa.ttf',
+                '-size',
+                '6000x8000',
+                '-pointsize',
+                '130',
+                '-interline-spacing',
+                '1',
+                '-annotate',
+                '+1010+1010',
+                farelzahra,
+                './mager/magernulis√/magernulis1√.jpg'
+            ])
+            .on('error', () => tobz.reply(from, 'Error Bjeer', id))
+            .on('exit', () => {
+                tobz.sendImage(from, './mager/magernulis√/magernulis1√.jpg', 'magernulis.jpg', '*Sukses Nulis DiBuku✓*\n\n*YouTube : MFarelS CH*\n*Instagram : @mfarelsyahtiawan*\n\n*© Powered By MFarelS | RajinNulis-BOT*', id)
+            })
+            break  // BY MFARELS
         case prefix+'stickertoimg':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
