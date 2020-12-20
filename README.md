@@ -36,6 +36,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [WHATSAPP](https://wa.me/6281311850715)
 - [MY BOT](wa.me/447418349954)
 - [WHATSAPP GROUP](https://chat.whatsapp.com/JuwROWyZh70Gn8rrmtReyu)
+- [RESELLER RDP](wa.me/62895325425229)
 
 ## APIKEY
 Open setting.js then edit & paste it in YOUR_APIKEY
