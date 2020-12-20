@@ -735,7 +735,7 @@ module.exports = tobz = async (tobz, message) => {
         case prefix+'magernulis1': // BY MFARELS
                 if(isReg(obj)) return
                 if(cekumur(cekage)) return
-            if (args.length === 1) return await tobz.reply(from, 'Kirim perintah *prefix+magernulis1 [teks]*', id)  // BY MFARELS
+            if (args.length === 1) return await tobz.reply(from, 'Kirim perintah *#magernulis1 [teks]*', id)  // BY MFARELS
             const farel = body.slice(13)  // YOUTUBE : MFARELS CH
             await tobz.reply(from, mess.magernulissatu, id)  // INSTAGRAM : @mfarelsyahtiawan
             const zahra = farel.replace(/(\S+\s*){1,10}/g, '$&\n')  // INSTALL IMAGEMAGICK KALO WAU WORK
