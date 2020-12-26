@@ -1131,6 +1131,22 @@ ${desc}`)
             if (!rating) tobz.reply(from, '⚠️ Format salah! Ketik *#menu* untuk penggunaan.')
             await tobz.sendText(from, `Pertanyaan: *${rating}* \n\nJawaban: ${awr}`)
             break
+        case prefix+'shutdown':
+                if (!isOwner) return await tobz.reply(from, FITUR KHUSUS OWNER, id)
+                await tobz.sendText(from, 'BOT DI MATIKAN~ 👋')
+                    .then(async () => await tobz.kill())
+            break
+            case prefix+'readmore':
+                    rid = body.trim().split('|')
+            if (arg.length >= 3) {
+                tobz.reply(from, mess.wait, id)
+                const k1t = encodeURIComponent(rid[1])
+                const k2t = encodeURIComponent(rid[2])
+                tobz.reply(from, `${k1t}${k2t}` , id)
+            } else {
+                tobz.reply(from, 'Masukan Seperti ini =readmore |teks1|teks2|\n\n*=readmore |Habis ini klik baca selengkapnya|Setelah klik Baca Selengkapnya|*\n\nGaris | yang berada di tengah itu sebagai tombol baca selengkapnya.', id)
+            }
+            break
         case prefix+'apakah':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
