@@ -130,7 +130,6 @@ let {
     banChats,
     barbarkey,
     vhtearkey,
-    prefix,
     restartState: isRestart,
     mtc: mtcState
     } = setting
@@ -149,6 +148,8 @@ let state = {
     }
 }
 
+prefix = '#'
+var timeStart = Date.now() / 1000
 moment.tz.setDefault('Asia/Jakarta').locale('id')
 
 module.exports = tobz = async (tobz, message) => {
@@ -164,6 +165,8 @@ module.exports = tobz = async (tobz, message) => {
         const args =  commands.split(' ')
         const command = commands.toLowerCase().split(' ')[0] || ''
 
+        global.prefix
+        
         const time = moment(t * 1000).format('DD/MM HH:mm:ss')
         const botNumber = await tobz.getHostNumber()
         const blockNumber = await tobz.getBlockedIds()
@@ -181,7 +184,6 @@ module.exports = tobz = async (tobz, message) => {
         const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/gi)
         const url = args.length !== 0 ? args[0] : ''
 
-
         const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
         const isQuotedVideo = quotedMsg && quotedMsg.type === 'video'
         const isQuotedAudio = quotedMsg && (quotedMsg.type === 'audio' || quotedMsg.type === 'ptt' || quotedMsg.type === 'ppt')
@@ -196,6 +198,9 @@ module.exports = tobz = async (tobz, message) => {
         const isPrivate = sender.id === chat.contact.id
         const stickermsg = message.type === 'sticker'
         const isCmd = command.startsWith(prefix)
+        
+        const tms = (Date.now() / 1000) - (timeStart);
+        const cts = waktu(tms)
 
         const serial = sender.id
         const isAdmin = adminNumber.includes(sender.id)
@@ -237,6 +242,18 @@ module.exports = tobz = async (tobz, message) => {
         if (isCmd && isGroupMsg) {console.log(color('[EXEC]'), color(moment(t * 1000).format('DD/MM/YY HH:mm:ss'), 'yellow'), color(`${command} [${args.length}]`), 'from', color(pushname), 'in', color(name || formattedTitle))}
 
         // FUNCTION
+        function waktu(seconds) { // TOBZ
+            seconds = Number(seconds);
+            var d = Math.floor(seconds / (3600 * 24));
+            var h = Math.floor(seconds % (3600 * 24) / 3600);
+            var m = Math.floor(seconds % 3600 / 60);
+            var s = Math.floor(seconds % 60);
+            var dDisplay = d > 0 ? d + (d == 1 ? " Hari,":" Hari,") : "";
+            var hDisplay = h > 0 ? h + (h == 1 ? " Jam,":" Jam,") : "";
+            var mDisplay = m > 0 ? m + (m == 1 ? " Menit,":" Menit,") : "";
+            var sDisplay = s > 0 ? s + (s == 1 ? " Detik,":" Detik") : "";
+            return dDisplay + hDisplay + mDisplay + sDisplay;
+        }
         // Serial Number Generator
         function GenerateRandomNumber(min,max){
             return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -3298,11 +3315,8 @@ ${desc}`)
         case prefix+'setprefix':
             if(!isOwner) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Owner Elaina!`, id)
             if (args.length === 1) return tobz.reply(from, `Kirim perintah *${prefix}prefix [ NEW PREFIX ]*`, id)
-            const prefa = body.slice(11)
-            setting.prefix = `${prefa}`
-            prefix = `${prefa}`
-            fs.writeFileSync('./lib/database/setting.json', JSON.stringify(setting))
-            tobz.sendText(from, `Berhasil Mengganti Prefix Ke *「* ${prefa} *」*`)
+            prefix = args[1]
+            tobz.sendText(from, `Berhasil Mengganti Prefix Ke *「* ${prefix} *」*`)
             break
         case prefix+'addbadword':
             if (!isAdmin) return tobz.reply(from, `Perintah ini hanya bisa di gunakan oleh Admin Elaina!`, id)
@@ -4000,59 +4014,62 @@ ${desc}`)
             }
             break
         // LIST MENU
+        case prefix+'runtime':
+            tobz.reply(from, `Elaina telah aktif selama :\n${cts}`, id)
+            break
         case prefix+'menu':
         case prefix+'help':
-            tobz.sendText(from, help)
+            tobz.sendText(from, help(prefix, cts, pendaftar))
             break
         case prefix+'elainagroup':
             tobz.reply(from, `Link Group Elaina : https://chat.whatsapp.com/By906EiJBGBCZGURDadOat\nJangan Lupa Join Ya Kak ${pushname}`, id)
             break
         case prefix+'groupmenu':
-            tobz.sendText(from, groupcmd)
+            tobz.sendText(from, groupcmd(prefix))
             break
         case prefix+'mediamenu':
-            tobz.sendText(from, mediacmd)
+            tobz.sendText(from, mediacmd(prefix))
             break
         case prefix+'funmenu':
-            tobz.sendText(from, funcmd)
+            tobz.sendText(from, funcmd(prefix))
             break
         case prefix+'animemenu':
-            tobz.sendText(from, animecmd)
+            tobz.sendText(from, animecmd(prefix))
             break
         case prefix+'kerangmenu':
-            tobz.sendText(from, kerangcmd)
+            tobz.sendText(from, kerangcmd(prefix))
             break
         case prefix+'downloadmenu':
-            tobz.sendText(from, downloadcmd)
+            tobz.sendText(from, downloadcmd(prefix))
             break
         case prefix+'othermenu':
-            tobz.sendText(from, othercmd)
+            tobz.sendText(from, othercmd(prefix))
             break
         case prefix+'iklan':
             tobz.sendText(from, sewa)
             break
         case prefix+'adminmenu':
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
-            tobz.sendText(from, admincmd)
+            tobz.sendText(from, admincmd(prefix))
             break
         case prefix+'ownermenu':
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Owner Elaina', id)
-            tobz.sendText(from, ownercmd)
+            tobz.sendText(from, ownercmd(prefix))
             break
         case prefix+'praymenu':
-            tobz.reply(from, praycmd, id)
+            tobz.sendText(from, praycmd(prefix))
             break
         case prefix+'nsfwmenu':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
-            tobz.sendText(from, nsfwcmd)
+            tobz.sendText(from, nsfwcmd(prefix))
             break
         // INFORMATION
         case prefix+'donate':
             tobz.sendText(from, sumbang)
             break
         case prefix+'readme':
-            tobz.reply(from, readme, id)
+            tobz.sendText(from, readme(prefix))
             break
         case prefix+'info':
             tobz.sendText(from, info)
