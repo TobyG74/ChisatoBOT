@@ -4,7 +4,6 @@
   "groupLimit": 25,
   "barbarkey": "YOUR_APIKEY",
   "vhtearkey": "YOUR_APIKEY",
-  "prefix": "#",
   "mtc": false,
   "restartState": false,
   "restartId": "undefined",
