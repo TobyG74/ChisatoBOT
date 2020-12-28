@@ -38,6 +38,7 @@ const translate = require('translatte')
 const Math_js = require('mathjs');
 const imageToBase64 = require('image-to-base64')
 const bent = require('bent')
+const { getStickerMaker } = require('./lib/ttp')
 const request = require('request')
 
 //const { getStickerMaker } = require('./lib/ttp')
