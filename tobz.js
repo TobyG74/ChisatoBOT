@@ -4055,7 +4055,7 @@ ${desc}`)
             tobz.sendText(from, othercmd(prefix))
             break
         case prefix+'iklan':
-            tobz.sendText(from, sewa)
+            tobz.sendText(from, sewa())
             break
         case prefix+'adminmenu':
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
@@ -4075,16 +4075,16 @@ ${desc}`)
             break
         // INFORMATION
         case prefix+'donate':
-            tobz.sendText(from, sumbang)
+            tobz.sendText(from, sumbang())
             break
         case prefix+'readme':
             tobz.sendText(from, readme(prefix))
             break
         case prefix+'info':
-            tobz.sendText(from, info)
+            tobz.sendText(from, info())
             break
         case prefix+'bahasa':
-            tobz.sendText(from, bahasalist)
+            tobz.sendText(from, bahasalist())
             break
 // By Gimenz
         case prefix+'wa.me':
@@ -4093,7 +4093,7 @@ ${desc}`)
             break
 // By Gimenz
         case prefix+'snk':
-            tobz.reply(from, snk, id)
+            tobz.reply(from, snk(), id)
             break
         default:
             //if (!isGroupMsg) return tobz.reply(from, 'Jika Ingin Menggunakan Bot Harap Masuk Ke Dalam Grup Elaina, Link Ada Di Bio atau Bisa Mengetik #elainagroup!\nJika Ingin Sewa Bot atau Bikin Bot Harap Ketik *#iklan*', id)
