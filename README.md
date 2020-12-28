@@ -35,7 +35,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [TELEGRAM](https://t.me/tobz2k19)
 - [WHATSAPP](https://wa.me/6281311850715)
 - [MY BOT](wa.me/447418349954)
-- [WHATSAPP GROUP](https://chat.whatsapp.com/JuwROWyZh70Gn8rrmtReyu)
+- [WHATSAPP GROUP](https://chat.whatsapp.com/H4dJ6YT7jDJG0xzRrB36sn)
 - [RESELLER RDP](wa.me/62895325425229)
 
 ## APIKEY
