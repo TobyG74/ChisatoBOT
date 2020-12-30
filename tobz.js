@@ -2104,7 +2104,7 @@ ${desc}`)
                     const dfdc2 = arg.split('|')[1]
                     const dfdcres = await axios.get('https://api.vhtear.com/distance?from='+dfdc1+'&to='+dfdc2+'&apikey='+vhtearkey)
                     const { result } = dfdcres.data
-                    await tobz.sendFileFromUrl(from, `https://lh3.googleusercontent.com/proxy/7cQFVJA0HP3VByvejXDnqEt2r31uOhQf29ePL3q5cDdJF_bF6AgvbQCoIVWff41McK03Dvi8k9wy1JpJBrUNYpXouGb0gpk98H4v-w4yjYQ8E_-4nQ4FPGTmoOFV9peolil3H56Wq9ZdarUw8iTxTRPQ`, 'dfdis.jpg', `*「 DRIVING-FLYING DISTANCE 」*\n\n${result.data}`)
+                    await tobz.reply(from, `*「 DRIVING-FLYING DISTANCE 」*\n\n${result.data}`, id)
                     await limitAdd(serial)
                 } catch (err) {
                     console.error(err.message)
