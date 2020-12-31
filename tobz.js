@@ -46,6 +46,7 @@ const color = require('./lib/color')
 const urlShortener = require('./lib/shortener')
 const { addFilter, isFiltered } = require('./lib/msgFilter')
 const cariKasar = require('./lib/kataKotor')
+const quotei = require('.lib/quoteislam')
 
 const { 
     downloader,
@@ -2065,6 +2066,13 @@ ${desc}`)
             }catch{
                 tobz.reply(from, 'Data tidak ditemukan, mungkin nama surah/ayat salah', id)
             }
+            break
+        case prefix+'quoteislam': // NANAS
+        case prefix+'qi':
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik #limit Untuk Mengecek Kuota Limit Kamu`, id)
+            await limitAdd(serial)
+            tobz.sendText(from, quotei())
             break
         // MEDIA //
         case prefix+'ytsearch':
