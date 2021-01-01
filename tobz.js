@@ -750,10 +750,12 @@ module.exports = tobz = async (tobz, message) => {
         case prefix+'pastebin': //BY VINZ
         if(isReg(obj)) return
         if(cekumur(cekage)) return
-        if (args.length == 1) return tobz.reply(from, 'Ketik command *prefix+pastebin [text]|[nama]\nContoh *prefix+pastebin ini contohnya', id)
-        await tobz.reply(from, mess.wait, id)
-        var bdtrm = body.trim().split('|')
-        const pstbn = await axios.get(`https://zeksapi.herokuapp.com/api/pastebin?apikey=apivinz&text=${bdtrm[0]}&name=${bdtrm[1]}`) //LIMIT 800/HARI
+        if (args.length == 1) return tobz.reply(from, `Ketik command ${prefix}pastebin [text]|[nama]\nContoh ${prefix}pastebin ini contohnya|tolll`, id)
+           await tobz.reply(from, mess.wait, id)
+           var bdtrm = body.slice(10).trim().split('|')
+           const pstbn = await axios.get(`https://zeksapi.herokuapp.com/api/pastebin?apikey=benbenz&text=${bdtrm[0]}&name=${bdtrm[1]}`) 
+		console.log(bdtrm[0])
+		if (pstbn.data.status == false) return tobz.reply(from, pstbn.data.message ,id)
         await tobz.reply(from, pstbn.data.result, id) 
         break
         case prefix+'magernulis1': // BY MFARELS
