@@ -40,7 +40,7 @@ const imageToBase64 = require('image-to-base64')
 const bent = require('bent')
 const request = require('request')
 
-//const { getStickerMaker } = require('./lib/ttp')
+const { getStickerMaker } = require('./lib/ttp')
 const quotedd = require('./lib/quote')
 const color = require('./lib/color')
 const urlShortener = require('./lib/shortener')
