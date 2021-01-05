@@ -748,19 +748,19 @@ module.exports = tobz = async (tobz, message) => {
             }
             break
         case prefix+'pastebin': //BY VINZ
-        if(isReg(obj)) return
-        if(cekumur(cekage)) return
-        if (args.length == 1) return tobz.reply(from, `Ketik command ${prefix}pastebin [text]|[nama]\nContoh ${prefix}pastebin ini contohnya|tolll`, id)
-           await tobz.reply(from, mess.wait, id)
-           var bdtrm = body.slice(10).trim().split('|')
-           const pstbn = await axios.get(`https://zeksapi.herokuapp.com/api/pastebin?apikey=benbenz&text=${bdtrm[0]}&name=${bdtrm[1]}`) 
-		console.log(bdtrm[0])
-		if (pstbn.data.status == false) return tobz.reply(from, pstbn.data.message ,id)
-        await tobz.reply(from, pstbn.data.result, id) 
-        break
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (args.length == 1) return tobz.reply(from, `Ketik command ${prefix}pastebin [text]|[nama]\nContoh ${prefix}pastebin ini contohnya|tolll`, id)
+            await tobz.reply(from, mess.wait, id)
+            var bdtrm = body.slice(10).trim().split('|')
+            const pstbn = await axios.get(`https://zeksapi.herokuapp.com/api/pastebin?apikey=benbenz&text=${bdtrm[0]}&name=${bdtrm[1]}`) 
+	    console.log(bdtrm[0])
+	    if (pstbn.data.status == false) return tobz.reply(from, pstbn.data.message ,id)
+            await tobz.reply(from, pstbn.data.result, id) 
+            break
         case prefix+'magernulis1': // BY MFARELS
-                if(isReg(obj)) return
-                if(cekumur(cekage)) return
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
             if (args.length === 1) return await tobz.reply(from, 'Kirim perintah *prefix+magernulis1 [teks]*', id)  // BY MFARELS
             const farel = body.slice(13)  // YOUTUBE : MFARELS CH
             await tobz.reply(from, mess.magernulissatu, id)  // INSTAGRAM : @mfarelsyahtiawan
@@ -2996,15 +2996,14 @@ ${desc}`)
             if (!args[1].match(isUrl) && !args[1].includes('instagram.com')) return tobz.reply(from, `Maaf, link yang kamu kirim tidak valid. [Invalid Link]`, id)
             await tobz.reply(from, mess.wait, id);
             instagram(args[1]).then(async(res) => {
-                let username = res.owner_username;
-                for (let i = 0; i < res.post.length; i++) {
-                if (res.post[i].type == "image") {
-                        await tobz.sendFileFromUrl(from, res.post[i].urlDownload, "ig.jpg", `*「 INSTAGRAM 」*\n\n➸ *Username* : ${username}\n➸ *Tipe* : Image/Jpg`, id);
-                        limitAdd(serial)
-                    } else if (res.post[i].type == "video") {
-                        await tobz.sendFileFromUrl(from, res.post[i].urlDownload, "ig.mp4", `*「 INSTAGRAM 」*\n\n➸ *Username* : ${username}\n➸ *Tipe* : Video/MP4`);
-                        limitAdd(serial)
-                    }
+                for (let i = 0; i < res.result.result.length; i++) {
+		    if (res.result.result[i].includes('.mp4')) {
+                    	var ext = '.mp4'
+                    } else {
+                        var ext = '.jpg'
+               	    }
+		    tobz.sendFileFromUrl(from, res.result.result[i], `ig.${ext}`, `*「 INSTAGRAM 」*`, id);
+                    limitAdd(serial)
                 }
             }).catch((err) => {
                 console.log(err);
