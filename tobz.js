@@ -129,7 +129,7 @@ let {
     memberLimit, 
     groupLimit,
     banChats,
-    barbarkey,
+    melodickey,
     vhtearkey,
     restartState: isRestart,
     mtc: mtcState
@@ -1460,18 +1460,6 @@ ${desc}`)
                     await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Anime tidak ditemukan')
             }
             break
-        case prefix+'otakudesu':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#otakudesu [query]*\nContoh : *#otakudesu darling in the franxx*', id)
-            const animes = await axios.get('https://mhankbarbars.herokuapp.com/api/otakudesu?q=' + body.slice(7) + '&apiKey=' + barbarkey)
-            if (animes.data.error) return tobz.reply(from, animes.data.error, id)
-            const res_animes = `${animes.data.title}\n\n${animes.data.info}\n\n${animes.data.sinopsis}`
-            tobz.sendFileFromUrl(from, animes.data.thumb, 'otakudesu.jpg', res_animes, id)
-            await limitAdd(serial)
-            break
         case prefix+'kusonime':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
@@ -1494,18 +1482,6 @@ ${desc}`)
             if (animek.data.error) return tobz.reply(from, animek.data.error, id)
             const res_animek = `${animek.data.result}\n\n${animek.data.sinopsis}`
             tobz.sendFileFromUrl(from, animek.data.thumb, 'dewabatch.jpg', res_animek, id)
-            await limitAdd(serial)
-            break
-        case prefix+'komiku':
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#komiku [query]*\nContoh : *#komiku darling in the franxx*', id)
-            const animep = await axios.get('https://mhankbarbars.herokuapp.com/api/komiku?q=' + body.slice(7) + '&apiKey=' + barbarkey)
-            if (animep.data.error) return tobz.reply(from, animep.data.error, id)
-            const res_animep = `${animep.data.info}\n\n${animep.data.sinopsis}\n\n${animep.data.link_dl}`
-            tobz.sendFileFromUrl(from, animep.data.thumb, 'komiku.jpg', res_animep, id)
             await limitAdd(serial)
             break
         case prefix+'pinterest':
@@ -1799,24 +1775,6 @@ ${desc}`)
             const { postlink, title, subreddit, url, nsfw, spoiler } = response.data
             tobz.sendFileFromUrl(from, `${url}`, 'meme.jpg', `${title}`)
             await limitAdd(serial)
-            break
-        /* case prefix+'nekopoi':
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#nekopoi [linkNekopoi]*\nContoh : *#nekopoi https://nekopoi.care/tsunpuri-episode-1-subtitle-indonesia/*', id)
-            try {
-            tobz.reply(from, mess.wait, id)
-            const nekipoi = await axios.get('https://mhankbarbars.herokuapp.com/api/nekopoi?url=' + body.slice(7) + '&apikey=' + vhtearkey)
-            const nekop = nekipoi.data.result
-            const nekop2 = `*Anime Ditemukan!*\n➸ Judul : ${nekop.judul}\n➸ Dilihat : ${nekop.dilihat}\n➸ Info : ${nekop.info}`
-            const image = await bent("buffer")(nekop.thumbnail)
-            const base64 = `data:image/jpg;base64,${image.toString("base64")}`
-            tobz.sendImage(from, base64, judul, nekop2)
-            } catch (err) {
-             console.error(err.message)
-             await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Video tidak ditemukan')
-             tobz.sendText(ownerNumber, 'Nekopoi Error : ' + err)
-           } */
             break
         case prefix+'quoteanime':
             if(isReg(obj)) return
@@ -2255,17 +2213,31 @@ ${desc}`)
             tobz.sendFileFromUrl(from, `https://api.vhtear.com/ssweb?link=${sspc}&type=pc&apikey=${vhtearkey}`, 'sspc.jpg', '', id)
             await limitAdd(serial)
             break
-        case prefix+'shorturl':
+	case prefix+'bitly':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#bitly [linkWeb]*\nContoh : *#bitly https://neonime.vip*', id)
+            const shorturl1 = body.slice(7)
+            const bitly1 = await axios.get('https://tobz-api.herokuapp.com/api/bitly?url=' + shorturl1)
+            const bitly2 = bitly1.data
+            if (bitly2.error) return tobz.reply(from, bitly2.error, id)
+            const surl2 = `Link : ${shorturl1}\nShort URL : ${bitly2.result}`
+            tobz.sendText(from, surl2, id)
+            await limitAdd(serial)
+            break
+        case prefix+'tinyurl':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#shorturl [linkWeb]*\nContoh : *#shorturl https://neonime.vip*', id)
-            const sorturl = body.slice(10)
-            const surl = await axios.get('https://tobz-api.herokuapp.com/api/shorturl?url=' + sorturl)
-            const surll = surl.data
-            if (surll.error) return tobz.reply(from, ssww.error, id)
-            const surl2 = `Link : ${sorturl}\nShort URL : ${surll.result}`
+            const shorturl2 = body.slice(9)
+            const tiny1 = await axios.get('https://tobz-api.herokuapp.com/api/shorturl?url=' + shorturl2)
+            const tiny2 = tiny1.data
+            if (tiny2.error) return tobz.reply(from, tiny2.error, id)
+            const surl2 = `Link : ${shorturl2}\nShort URL : ${tiny2.result}`
             tobz.sendText(from, surl2, id)
             await limitAdd(serial)
             break
@@ -2276,7 +2248,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#cuaca [tempat]*\nContoh : *#cuaca tangerang', id)
             const tempat = body.slice(7)
-            const weather = await axios.get('https://mhankbarbars.herokuapp.com/api/cuaca?q='+ tempat +'&apiKey='+ barbarkey)
+            const weather = await axios.get('http://melodicxt.herokuapp.com/api/cuaca?query='+ tempat +'&apiKey='+ melodickey)
             const weatherr = weather.data
             if (weatherr.error) {
                 tobz.reply(from, weatherr.error, id)
@@ -2530,7 +2502,7 @@ ${desc}`)
             if (!args[1].match(isUrl) && !args[1].includes('xnxx.com')) return tobz.reply(from, mess.error.Iv, id)
             try {
                 tobz.reply(from, mess.wait, id)
-                const resq = await axios.get('https://mhankbarbars.herokuapp.com/api/xnxx?url='+ args[1] +'&apiKey='+ barbarkey)
+                const resq = await axios.get('http://melodicxt.herokuapp.com/api/xnxx-downloader?url='+ args[1] +'&apiKey='+ melodickey)
                 const resp = resq.data
                  if (resp.error) {
                     tobz.reply(from, ytvv.error, id)
@@ -2875,18 +2847,23 @@ ${desc}`)
             const twstalk = await slicedArgs.join(' ')
             console.log(twstalk)
             try {
-            const twstalk2 = await axios.get('https://mhankbarbars.herokuapp.com/api/twstalk?username=' + twstalk + '&apiKey=' + barbarkey)
-            const { followers_count, full_name, name, profile_pic, status_count } = twstalk2.data
-            const twstalk3 = `*User Ditemukan!*
+            const twstalk2 = await axios.get('http://melodicxt.herokuapp.com/api/twtprofile?user=' + twstalk + '&apiKey=' + melodickey)
+            const { created_at, user } = twt.result[0]
+	    const twtz = `*「 TWITTER PROFILE 」*
 
-➸ *Nama:* ${name}
-➸ *Nama Panjang:* ${full_name}
-➸ *Jumlah Pengikut:* ${followers_count}
-➸ *Jumlah Postingan:* ${status_count}`
+• *Username:* @${user.screen_name}
+• *Nama:* ${user.name}
+• *Deskripsi:* ${user.description}
+• *Pengikut:* ${user.followers_count}
+• *Mengikuti*: ${user.friends_count}
+• *Jumlah Favorite:* ${user.favourites_count}
+• *Jumlah Status:* ${user.statuses_count}
+• *Dibuat:* ${created_at}
+• *Link:* https://twitter.com/${user.screen_name}`
 
-            const pictk = await bent("buffer")(profile_pic)
+            const pictk = await bent("buffer")(user.profile_image_url)
             const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
-            tobz.sendImage(from, base64, name, twstalk3)
+            tobz.sendImage(from, base64, name, twtz)
             await limitAdd(serial)
             } catch (err) {
              console.error(err.message)
@@ -3386,7 +3363,7 @@ ${desc}`)
                 tobz.reply(from, 'Usage: \n#quotemaker |teks|watermark|theme\n\nEx :\n#quotemaker |ini contoh|bicit|random', id)
             }
             break
-        /*case prefix+'listchannel':
+        case prefix+'listchannel':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             tobz.reply(from, listChannel, id)
             break
@@ -3400,14 +3377,14 @@ ${desc}`)
             const jadwal = await jadwalTv(query)
             tobz.reply(from, jadwal, id)
             break
-        case prefix+'jadwaltvnow': // API MATI
+        case prefix+'jadwaltvnow':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const jadwalNow = await axios.get('https://api.haipbis.xyz/jadwaltvnow')
+            const jadwalNow = await axios.get('http://melodicxt.herokuapp.com/api/jadwaltvnow?apiKey='+melodickey)
             tobz.reply(from, `Jam : ${jadwalNow.data.jam}\n\nJadwalTV : ${jadwalNow.data.jadwalTV}`, id)
-            break*/
+            break
         case prefix+'nulis':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
@@ -3415,7 +3392,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#nulis [teks]*, contoh *#nulis aku bukan boneka*', id)
             const ngettik = body.slice(7)
-            const ngetikk = await axios.get('https://mhankbarbars.herokuapp.com/nulis?text='+ ngettik+'&apiKey='+ barbarkey)
+            const ngetikk = await axios.get('http://melodicxt.herokuapp.com/api/joki-nulis?text='+ ngettik+'&apiKey='+ melodickey)
             if (ngetikk.data.error) return tobz.reply(from, ngetikk.data.error, id)
             tobz.sendFileFromUrl(from, ngetikk.data.result, 'nulis.jpg', '', id)
             await limitAdd(serial)
