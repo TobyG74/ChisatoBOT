@@ -2237,8 +2237,8 @@ ${desc}`)
             const tiny1 = await axios.get('https://tobz-api.herokuapp.com/api/shorturl?url=' + shorturl2)
             const tiny2 = tiny1.data
             if (tiny2.error) return tobz.reply(from, tiny2.error, id)
-            const surl2 = `Link : ${shorturl2}\nShort URL : ${tiny2.result}`
-            tobz.sendText(from, surl2, id)
+            const surl3 = `Link : ${shorturl2}\nShort URL : ${tiny2.result}`
+            tobz.sendText(from, surl3, id)
             await limitAdd(serial)
             break
         case prefix+'cuaca':
