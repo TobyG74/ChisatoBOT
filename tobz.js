@@ -302,7 +302,7 @@ module.exports = tobz = async (tobz, message) => {
             if (obj === true){
                 return false
             } else {
-                return tobz.reply(from, `Kamu belum cukup umur untuk menggunakan T027BOT, min 16 tahun\n\nKamu bisa mendaftar ulang dengan cara donasi terlebih dahulu, bales ${prefix}donasi\nHubungi Owner : wa.me/6287775452636`, id) //if user is not registered
+                return tobz.reply(from, `Kamu belum cukup umur untuk menggunakan T027BOT, min 14 tahun\n\nKamu bisa mendaftar ulang dengan cara donasi terlebih dahulu, bales ${prefix}donate\nHubungi Owner : wa.me/6287775452636`, id) //if user is not registered
             }
         }
 
