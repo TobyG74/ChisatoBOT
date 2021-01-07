@@ -4243,7 +4243,7 @@ ${desc}`)
         case prefix+'help':
             tobz.sendText(from, help(prefix, cts, pendaftar))
             break
-        case prefix+'T027BOTgroup':
+        case prefix+'groupbot':
             tobz.reply(from, `Link Group T027BOT : https://chat.whatsapp.com/KP39QfOWWA37jV16sPeUYh\nJangan Lupa Join Ya Kak ${pushname}`, id)
             break
         case prefix+'groupmenu':
