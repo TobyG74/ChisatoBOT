@@ -15,7 +15,7 @@ BACA README NYA, PERCUMA W BUAT README
 INGAT JANGAN JUAL SCRIPT ELAINA KEPADA ORANG LAIN!
 INGIN PREMIUM? CHAT TOBZ!
 
-ELAINA BOT V3
+T027BOT BOT V3
 */
 require('dotenv').config()
 const { decryptMedia } = require('@open-wa/wa-decrypt')
@@ -3576,7 +3576,7 @@ ${desc}`)
         case prefix+'bc': // KASIH CREDIT DONG KALO COPAS
             if (!isOwner) return tobz.reply(from, `Perintah ini hanya untuk Owner T027BOT`, id)
                 bctxt = body.slice(4)
-                txtbc = `*「 T027BOT BROADCAST 」*\n\n${bctxt}`
+                txtbc = `❮ 𝘽𝙊𝙏 𝘽𝙍𝙊𝘼𝘿𝘾𝘼𝙎𝙏 ❯\n\n${bctxt}`
                 const semuagrup = await tobz.getAllChatIds();
                 if(quotedMsg && quotedMsg.type == 'image'){
                     const mediaData = await decryptMedia(quotedMsg)
@@ -3613,12 +3613,12 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Owner T027BOT', id)
             const groupMek = await tobz.getGroupMembers(groupId)
-            let heho = '╔══✪〘 Mention All 〙✪══\n'
+            let heho = '╭───────────────────\n'
             for (let i = 0; i < groupMek.length; i++) {
-                heho += '╠➥'
+                heho += '├❏'
                 heho += ` @${groupMek[i].id.replace(/@c.us/g, '')}\n`
             }
-            heho += '╚═〘 T027BOT 〙'
+            heho += '╰───────────────────'
             await sleep(2000)
             await tobz.sendTextWithMentions(from, heho)
             break
@@ -3627,12 +3627,12 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isGroupAdmins) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin group', id)
             const groupMem = await tobz.getGroupMembers(groupId)
-            let hehe = '╔══✪〘 Mention All 〙✪══\n'
+            let hehe = '╭───────────────────\n'
             for (let i = 0; i < groupMem.length; i++) {
-                hehe += '╠➥'
+                hehe += '├❏'
                 hehe += ` @${groupMem[i].id.replace(/@c.us/g, '')}\n`
             }
-            hehe += '╚═〘 T027BOT 〙'
+            hehe += '╰───────────────────'
             await sleep(2000)
             await tobz.sendTextWithMentions(from, hehe)
             break
