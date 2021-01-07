@@ -282,7 +282,7 @@ module.exports = tobz = async (tobz, message) => {
             return val.id === nmr
         })
         var cekage = pendaftar.some((val) => {
-            return val.id === nmr && val.umur >= 15
+            return val.id === nmr && val.umur >= 14
         })
 
         function monospace(string) {
