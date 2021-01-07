@@ -1180,8 +1180,8 @@ ${desc}`)
             break
         case prefix+'owner':
         case prefix+'creator':
-            tobz.sendContact(chatId, `6287775452636@c.us`)
-            tobz.reply(from, 'Itu nomor Pacar ku, eh maksudnya Owner ku', id)
+            tobz.sendContact(chatId, `OWNER T027BOT`)
+            tobz.reply(from, 'Nih Nomor Owner T027BOT', id)
             break
         case prefix+'resetsticker':
             if(isReg(obj)) return
