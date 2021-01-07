@@ -3863,7 +3863,7 @@ ${desc}`)
             const sesPic = await tobz.getSnapshot()
             tobz.sendFile(from, sesPic, 'session.png', 'Nih boss', id)
             break
-        case prefix+'T027BOTadmin':
+        case prefix+'adminbot':
             let admn = `This is list of T027BOT Admin\nTotal : ${adminNumber.length}\n`
             for (let i of adminNumber) {
                 admn += `➸ ${i.replace(/@c.us/g,'')}\n`
