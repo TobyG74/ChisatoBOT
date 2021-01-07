@@ -1028,7 +1028,7 @@ Total Pengguna yang telah terdaftar ${pendaftar.length}`)
                     }
                 break
             case prefix+'daftarulang':
-                    if (!isAdmin) return tobz.reply(from, 'Command ini hanya dapat digunakan oleh admin T027BOT', id)  
+                    if (!isOwner) return tobz.reply(from, 'Command ini hanya dapat digunakan oleh admin T027BOT', id)  
                     const nomernya = args[1]
                     let textnya = nomernya.replace(/[-\s+@c.us]/g,'')
                     const cusnya = textnya + '@c.us'
@@ -1357,7 +1357,7 @@ ${desc}`)
             if(isReg(obj)) return
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin T027BOT!', id) // Hanya Admin yang bisa mengaktifkan
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin T027BOT!', id) // Hanya Admin yang bisa mengaktifkan
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 var cek = simi_.includes(chatId);
