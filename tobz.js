@@ -220,19 +220,6 @@ module.exports = tobz = async (tobz, message) => {
                 }
             }
         }
-
-        if (isGroupMsg && AntiStickerSpam && !isGroupAdmins && !isAdmin && !isOwner){
-            if(stickermsg === true){
-                if(isStickerMsg(serial)) return
-                addStickerCount(serial)
-            }
-        }
-
-        if(!isCmd && isKasar && isGroupMsg && isBadword && !isGroupAdmins) { 
-            console.log(color('[BADWORD]', 'red'), color(moment(t * 1000).format('DD/MM/YY HH:mm:ss'), 'yellow'), color(`${argx}`), 'from', color(pushname), 'in', color(name || formattedTitle)) 
-            if(isBadwordMsg(serial)) return
-                addBadCount(serial)
-        }
         
         // [BETA] Avoid Spam Message
         //if (isCmd && isFiltered(from) && !isGroupMsg) { return console.log(color('[SPAM]', 'red'), color(moment(t * 1000).format('DD/MM/YY HH:mm:ss'), 'yellow'), color(`${command} [${args.length}]`), 'from', color(pushname)) }
@@ -574,6 +561,19 @@ module.exports = tobz = async (tobz, message) => {
                 }
             }
             return serialNumber;
+        }
+	    
+	if (isGroupMsg && AntiStickerSpam && !isGroupAdmins && !isAdmin && !isOwner){
+            if(stickermsg === true){
+                if(isStickerMsg(serial)) return
+                addStickerCount(serial)
+            }
+        }
+
+        if(!isCmd && isKasar && isGroupMsg && isBadword && !isGroupAdmins) { 
+            console.log(color('[BADWORD]', 'red'), color(moment(t * 1000).format('DD/MM/YY HH:mm:ss'), 'yellow'), color(`${argx}`), 'from', color(pushname), 'in', color(name || formattedTitle)) 
+            if(isBadwordMsg(serial)) return
+                addBadCount(serial)
         }
         
                 if(body === '#mute' && isMuted(chatId) == true){
