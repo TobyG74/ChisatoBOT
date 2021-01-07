@@ -1357,7 +1357,7 @@ ${desc}`)
             if(isReg(obj)) return
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin Elaina!', id) // Hanya Admin yang bisa mengaktifkan
+            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Admin T027BOT!', id) // Hanya Admin yang bisa mengaktifkan
             if (args.length === 1) return tobz.reply(from, 'Pilih enable atau disable!', id)
             if (args[1].toLowerCase() === 'enable') {
                 var cek = simi_.includes(chatId);
@@ -2522,7 +2522,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ramalpasangan [kamu|pasangan]*\nContoh : *#ramalpasangan Tobz|Elaina*', id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#ramalpasangan [kamu|pasangan]*\nContoh : *#ramalpasangan T027|BOT*', id)
             argz = body.trim().split('|')
             if (argz.length >= 2) {
             tobz.reply(from, mess.wait, id)
@@ -2773,7 +2773,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            if (args.length === 1)  return tobz.reply(from, 'Kirim perintah *#sandwriting [ Teks ]*\nContoh *#sandwriting Elaina Cantik*', id)
+            if (args.length === 1)  return tobz.reply(from, 'Kirim perintah *#sandwriting [ Teks ]*\nContoh *#sandwriting T027BOT Ganteng*', id)
             const swrt = body.slice(13)
             try {
             const swrt2 = await axios.get('https://api.vhtear.com/sand_writing?text1=' + swrt + '&apikey=' + vhtearkey)
@@ -3746,7 +3746,7 @@ ${desc}`)
         case prefix+'oleave':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
             if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin T027BOT', id)
-            await tobz.sendText(from,'ELAINA DIPERINTAHKAN KELUAR OLEH OWNER!!').then(() => tobz.leaveGroup(groupId))
+            await tobz.sendText(from,'T027BOT DIPERINTAHKAN KELUAR OLEH OWNER!!').then(() => tobz.leaveGroup(groupId))
             break
         case prefix+'leave':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
@@ -3812,7 +3812,7 @@ ${desc}`)
             break
         case prefix+'odelete':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group', id)
-            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin Elaina', id)
+            if (!isOwner, !isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin T027BOT', id)
             if (!quotedMsg) return tobz.reply(from, 'Salah!!, kirim perintah *#delete [tagpesanbot]*', id)
             if (!quotedMsgObj.fromMe) return tobz.reply(from, 'Salah!!, Bot tidak bisa mengahpus chat user lain!', id)
             tobz.deleteMessage(quotedMsgObj.chatId, quotedMsgObj.id, false)
@@ -3826,8 +3826,8 @@ ${desc}`)
             break
         case prefix+'sider':
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)                
-            if (!quotedMsg) return tobz.reply(from, `Tolong Reply Pesan Elaina`, id)
-            if (!quotedMsgObj.fromMe) return tobz.reply(from, `Tolong Reply Pesan Elaina`, id)
+            if (!quotedMsg) return tobz.reply(from, `Tolong Reply Pesan T027BOT`, id)
+            if (!quotedMsgObj.fromMe) return tobz.reply(from, `Tolong Reply Pesan T027BOT`, id)
             try {
                 const reader = await tobz.getMessageReaders(quotedMsgObj.id)
                 let list = ''
@@ -3981,7 +3981,7 @@ ${desc}`)
                 for (let i = 0; i < mentionedJidList.length; i++) {
                 adminNumber.push(mentionedJidList[i])
                 fs.writeFileSync('./lib/database/admin.json', JSON.stringify(adminNumber))
-                tobz.reply(from, 'Success Menambahkan Admin Elaina!', id)
+                tobz.reply(from, 'Success Menambahkan Admin T027BOT!', id)
                 }
             break
         case prefix+'deladmin':
@@ -3989,7 +3989,7 @@ ${desc}`)
                 let inq = adminNumber.indexOf(mentionedJidList[0])
                 adminNumber.splice(inq, 1)
                 fs.writeFileSync('./lib/database/admin.json', JSON.stringify(adminNumber))
-                tobz.reply(from, 'Success Menghapus Admin Elaina!', id)
+                tobz.reply(from, 'Success Menghapus Admin T027BOT!', id)
             break
         case prefix+'block':
             if (!isOwner) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh Owner T027BOT!', id)
@@ -4055,7 +4055,7 @@ ${desc}`)
         case prefix+'ban':
             if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan oleh admin T027BOT!', id)
             for (let i = 0; i < mentionedJidList.length; i++) {
-                if ((adminNumber).includes(mentionedJidList[i])) return tobz.reply(from,`Maaf ${pushname}, Kamu tidak bisa banned Admin Elaina!`, id)
+                if ((adminNumber).includes(mentionedJidList[i])) return tobz.reply(from,`Maaf ${pushname}, Kamu tidak bisa banned Admin T027BOT!`, id)
                 banned.push(mentionedJidList[i])
                 fs.writeFileSync('./lib/banned.json', JSON.stringify(banned))
                 tobz.reply(from, `Succes ban target!`,id)
@@ -4237,7 +4237,7 @@ ${desc}`)
             break
         // LIST MENU
         case prefix+'runtime':
-            tobz.reply(from, `Elaina telah aktif selama :\n${cts}`, id)
+            tobz.reply(from, `T027BOT telah aktif selama :\n${cts}`, id)
             break
         case prefix+'menu':
         case prefix+'help':
