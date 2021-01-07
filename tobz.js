@@ -3897,11 +3897,11 @@ ${desc}`)
             if (!isAdmin, !isOwner) return tobz.reply(from, `Maaf, perintah ini hanya dapat dilakukan oleh Admin T027BOT!`, id)
                     const nomerr = arg.split(' ')[0]
                     const jmla = arg.split(' ')[1]
-                    if(!nomerr) return tobz.reply(from, `Masukkan nomor yang akan di gift, ${prefix}gift [ @tagmember Jumlah ]\n=> Contoh : ${prefix}gift @62813118507151 15`, id)
+                    if(!nomerr) return tobz.reply(from, `Masukkan nomor yang akan di gift, ${prefix}gift [ @tagmember Jumlah ]\n=> Contoh : ${prefix}gift @6287775452636 20`, id)
                     let texta = nomerr.replace(/[-\s+@c.us]/g,'')
                     const cusz = texta + '@c.us'
-                    if(!jmla) return tobz.reply(from, `Masukkan Jumlah gift quota, ${prefix}gift [ @tagmember Jumlah ]\n=> Contoh : ${prefix}gift @62813118507151 15`, id)
-                    if(jmla > 20) return await tobz.reply(from, `Maximal  20!`, id)
+                    if(!jmla) return tobz.reply(from, `Masukkan Jumlah gift quota, ${prefix}gift [ @tagmember Jumlah ]\n=> Contoh : ${prefix}gift @6287775452636 20`, id)
+                    if(jmla > 20) return await tobz.reply(from, `Maximal  50!`, id)
                         var found = false
                         Object.keys(limit).forEach((i) => {
                             if(limit[i].id == cusz){
