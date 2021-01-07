@@ -4271,7 +4271,7 @@ ${desc}`)
             tobz.sendText(from, sewa())
             break
         case prefix+'adminmenu':
-            if (!isAdmin) return tobz.reply(from, 'Perintah ini hanya untuk Admin T027BOT', id)
+            if (!isOwner) return tobz.reply(from, 'Perintah ini hanya untuk Admin T027BOT', id)
             tobz.sendText(from, admincmd(prefix))
             break
         case prefix+'ownermenu':
