@@ -1180,7 +1180,7 @@ ${desc}`)
             break
         case prefix+'owner':
         case prefix+'creator':
-            tobz.sendContact(chatId, `OWNER T027BOT`)
+            tobz.sendContact(chatId, `6287775452636@c.us`)
             tobz.reply(from, 'Nih Nomor Owner T027BOT', id)
             break
         case prefix+'resetsticker':
