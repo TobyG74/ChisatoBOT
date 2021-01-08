@@ -45,10 +45,10 @@ lolcatjs.options.colors = true;
 
 const start = async (tobz = new Client()) => {
         console.log('------------------------------------------------')
-        lolcatjs.fromString(color(figlet.textSync('ELAINA BOT', { horizontalLayout: 'full' })))
+        lolcatjs.fromString(color(figlet.textSync('T027BOT', { horizontalLayout: 'full' })))
         console.log('------------------------------------------------')
-        lolcatjs.fromString('[DEV] TOBZ')
-        lolcatjs.fromString('[SERVER] Server Started!')
+        lolcatjs.fromString('[DEV] TITO')
+        lolcatjs.fromString('[SERVER] T027BOT Started!')
         tobz.onAnyMessage((fn) => messageLog(fn.fromMe, fn.type))
         // Force it to keep the current session
         tobz.onStateChanged((state) => {
@@ -77,12 +77,12 @@ const start = async (tobz = new Client()) => {
             }))
         
         tobz.onAddedToGroup(async (chat) => {
-            if(isWhite(chat.id)) return tobz.sendText(chat.id, 'Halo aku Elaina, Ketik #help Untuk Melihat List Command Ku...')
+            if(isWhite(chat.id)) return tobz.sendText(chat.id, 'Hallo aku T027BOT, Ketik #help Untuk Melihat List Command Ku...')
             if(mtcState === false){
                 const groups = await tobz.getAllGroups()
                 // BOT group count less than
                 if(groups.length > groupLimit){
-                    await tobz.sendText(chat.id, 'Maaf, Batas group yang dapat Elaina tampung sudah penuh').then(async () =>{
+                    await tobz.sendText(chat.id, 'Maaf, Batas group yang dapat T027BOT tampung sudah penuh').then(async () =>{
                         tobz.deleteChat(chat.id)
                         tobz.leaveGroup(chat.id)
                     })
@@ -93,11 +93,11 @@ const start = async (tobz = new Client()) => {
                             tobz.leaveGroup(chat.id)
                         })
                     }else{
-                        if(!chat.isReadOnly) tobz.sendText(chat.id, 'Halo aku Elaina, Ketik #help Untuk Melihat List Command Ku...')
+                        if(!chat.isReadOnly) tobz.sendText(chat.id, 'Hallo aku T027BOT, Ketik #help Untuk Melihat List Command Ku...')
                     }
                 }
             }else{
-                await tobz.sendText(chat.id, 'Elaina sedang maintenance, coba lain hari').then(async () => {
+                await tobz.sendText(chat.id, 'T027BOT sedang maintenance, coba lain hari').then(async () => {
                     tobz.deleteChat(chat.id)
                     tobz.leaveGroup(chat.id)
                 })
