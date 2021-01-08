@@ -40,7 +40,8 @@ If you find some bugs please contact the WhatsApp number on Contact
 ## APIKEY
 Open setting.js then edit & paste it in YOUR_APIKEY
 - [VHTEAR](https://api.vhtear.com)
-- [MHANKBARBAR](https://mhankbarbars.herokuapp.com/api)
+- [MELODICXT](https://melodicxt.herokuapp.com/api)
+- [TOBZAPI](https://tobz-api.herokuapp.com)
 
 Apikey Location
 - [SETTING](https://github.com/TobyG74/ElainaBOT/blob/main/lib/database/setting.json)
