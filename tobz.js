@@ -2895,7 +2895,7 @@ ${desc}`)
 • *Mengikuti*: ${follow}
 • *Jumlah Postingan:* ${post_count}
 • *Private:* ${is_private}
-• *Link:* https://twitter.com/${username}`
+• *Link:* https://instagram.com/${username}`
             
             const pictk = await bent("buffer")(picture)
             const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
