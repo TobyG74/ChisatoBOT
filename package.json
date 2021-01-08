@@ -1,0 +1,80 @@
+{
+  "name": "T027BOT",
+  "version": "3.0.0",
+  "description": "THX FOR MHANKBARBAR AS MY FRIEND, REEDIT BY T027BOT",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "T027BOT",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@open-wa/wa-automate": "^3.1.0",
+    "@open-wa/wa-decrypt": "^2.0.1",
+    "axios": "^0.19.2",
+    "bent": "^7.3.10",
+    "brainly-scraper": "^1.0.2",
+    "dotenv": "^8.2.0",
+    "download-file": "^0.1.5",
+    "emoji-regex": "^9.0.0",
+    "figlet": "^1.5.0",
+    "file-type": "^15.0.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "fs-extra": "^9.0.1",
+    "get-youtube-id": "^1.0.1",
+    "google-it": "^1.5.0",
+    "google-translate-open-api": "^1.3.5",
+    "got": "^11.7.0",
+    "gtts": "^0.2.1",
+    "image-size": "^0.9.1",
+    "image-to-base64": "^2.1.1",
+    "image-to-pdf": "^1.0.0",
+    "lolcatjs": "^2.4.0",
+    "mathjs": "^8.0.1",
+    "moment-timezone": "^0.5.31",
+    "mysql": "^2.18.1",
+    "nana-api": "^1.1.2",
+    "needle": "^2.5.2",
+    "nhentai-api": "^3.0.2",
+    "nhentai-js": "^4.0.0",
+    "node-cron": "^2.0.3",
+    "node-fetch": "^2.6.1",
+    "node-gtts": "^2.0.2",
+    "performance-now": "^2.1.0",
+    "pm2": "^4.5.0",
+    "remove.bg": "^1.3.0",
+    "request": "^2.88.2",
+    "sastrawijs": "^1.0.3",
+    "text2png": "^2.3.0",
+    "translatte": "^2.5.8",
+    "video-crop": "^1.1.0",
+    "video-crop-cli": "^1.1.0",
+    "video-url-link": "^0.1.4",
+    "ytdl": "^1.3.5"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/T0JWK02LO-10JD/AVLPWU",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.9.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
+  },
+  "keywords": [
+    "Whatsapp-Bot"
+  ],
+  "bugs": {
+    "url": "https://github.com/T0JWK02LO-10JD/AVLPWU/issues"
+  },
+  "homepage": "https://github.com/T0JWK02LO-10JD/AVLPWU"
+}
