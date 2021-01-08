@@ -1,7 +1,7 @@
 {
-  "limitCount": 50,
-  "memberLimit": 50,
-  "groupLimit": 50,
+  "limitCount": 30,
+  "memberLimit": 30,
+  "groupLimit": 30,
   "melodickey": "YOUR_APIKEY",
   "vhtearkey": "YOUR_APIKEY",
   "mtc": false,
