@@ -294,7 +294,7 @@ module.exports = tobz = async (tobz, message) => {
             if (obj === true){
                 return false
             } else {     
-                return tobz.reply(from, `Kamu belum terdaftar sebagai Teman T027BOT\nuntuk mendaftar kirim ${prefix}daftar |nama|umur\n\ncontoh format: ${prefix}daftar |T027BOT|17\n\ncukup gunakan nama depan/panggilan saja`, id) //if user is not registered
+                return tobz.reply(from, `Kamu belum terdaftar sebagai Teman T027BOT\nuntuk mendaftar kirim ${prefix}daftar |nama|umur\n\ncontoh format: ${prefix}daftar |T027BOT|19\n\ncukup gunakan nama depan/panggilan saja`, id) //if user is not registered
             }
         }
 
@@ -3801,7 +3801,7 @@ ${desc}`)
             const minMem = 5
             const isLink = link.match(/(https:\/\/chat.whatsapp.com)/gi)
             const check = await tobz.inviteInfo(link)
-            if (!isLink) return tobz.reply(from, 'Ini link? 👊🤬', id)
+            if (!isLink) return tobz.reply(from, 'Ini link?', id)
             if (tGr.length > 256) return tobz.reply(from, 'Maaf jumlah group sudah maksimal!', id)
             if (check.size < minMem) return tobz.reply(from, 'Member group tidak melebihi 5, bot tidak bisa masuk', id)
             if (check.status === 200) {
