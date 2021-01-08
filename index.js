@@ -45,9 +45,9 @@ lolcatjs.options.colors = true;
 
 const start = async (tobz = new Client()) => {
         console.log('------------------------------------------------')
-        lolcatjs.fromString(color(figlet.textSync('ELAINA BOT', { horizontalLayout: 'full' })))
+        lolcatjs.fromString(color(figlet.textSync('T027BOT', { horizontalLayout: 'full' })))
         console.log('------------------------------------------------')
-        lolcatjs.fromString('[DEV] TOBZ')
+        lolcatjs.fromString('[DEV] TITO')
         lolcatjs.fromString('[SERVER] Server Started!')
         tobz.onAnyMessage((fn) => messageLog(fn.fromMe, fn.type))
         // Force it to keep the current session
@@ -77,7 +77,7 @@ const start = async (tobz = new Client()) => {
             }))
         
         tobz.onAddedToGroup(async (chat) => {
-            if(isWhite(chat.id)) return tobz.sendText(chat.id, 'Halo aku T027BOT, Ketik #help Untuk Melihat List Command Ku...')
+            if(isWhite(chat.id)) return tobz.sendText(chat.id, 'Hallo aku T027BOT, Ketik #help Untuk Melihat List Command Ku...')
             if(mtcState === false){
                 const groups = await tobz.getAllGroups()
                 // BOT group count less than
@@ -93,7 +93,7 @@ const start = async (tobz = new Client()) => {
                             tobz.leaveGroup(chat.id)
                         })
                     }else{
-                        if(!chat.isReadOnly) tobz.sendText(chat.id, 'Halo aku T027BOT, Ketik #help Untuk Melihat List Command Ku...')
+                        if(!chat.isReadOnly) tobz.sendText(chat.id, 'Hallo aku T027BOT, Ketik #help Untuk Melihat List Command Ku...')
                     }
                 }
             }else{
