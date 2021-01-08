@@ -131,6 +131,7 @@ let {
     banChats,
     melodickey,
     vhtearkey,
+    tobzkey,
     restartState: isRestart,
     mtc: mtcState
     } = setting
@@ -1445,7 +1446,7 @@ ${desc}`)
             const nenon = body.slice(9)
             tobz.reply(from, mess.wait, id)
             try {
-                const response2 = await fetch('https://tobz-api.herokuapp.com/api/neonime?q=' + nenon)
+                const response2 = await fetch('https://tobz-api.herokuapp.com/api/neonime?q=' + nenon + '&apikey=' + tobzkey)
                 if (!response2.ok) throw new Error(`unexpected response ${response2.statusText}`)
                 const jsonserc = await response2.json()
                 const { result } = await jsonserc
@@ -1466,7 +1467,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#kusonime [query]*\nContoh : *#kusonime darling in the franxx*', id)
-            const animeq = await axios.get('https://tobz-api.herokuapp.com/v1/kuso?q=' + body.slice(7))
+            const animeq = await axios.get('https://tobz-api.herokuapp.com/v1/kuso?q=' + body.slice(7)  + '&apikey=' + tobzkey)
             if (animeq.data.error) return tobz.reply(from, animeq.data.error, id)
             const res_animeq = `${animeq.data.title}\n\n${animeq.data.info}\n\n${animeq.data.sinopsis}\n\n${animeq.data.link_dl}`
             tobz.sendFileFromUrl(from, animeq.data.thumb, 'kusonime.jpg', res_animeq, id)
@@ -1478,7 +1479,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#dewabatch [query]*\nContoh : *#dewabatch darling in the franxx*', id)
-            const animek = await axios.get('https://tobz-api.herokuapp.com/v1/dewabatch?q=' + body.slice(7))
+            const animek = await axios.get('https://tobz-api.herokuapp.com/v1/dewabatch?q=' + body.slice(7)  + '&apikey=' + tobzkey)
             if (animek.data.error) return tobz.reply(from, animek.data.error, id)
             const res_animek = `${animek.data.result}\n\n${animek.data.sinopsis}`
             tobz.sendFileFromUrl(from, animek.data.thumb, 'dewabatch.jpg', res_animek, id)
@@ -1557,7 +1558,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const waifu = await axios.get('https://tobz-api.herokuapp.com/api/waifu')
+            const waifu = await axios.get('https://tobz-api.herokuapp.com/api/waifu?apikey=' + tobzkey)
             tobz.sendFileFromUrl(from, waifu.data.image, 'Waifu.jpg', `➸ Name : ${waifu.data.name}\n➸ Description : ${waifu.data.desc}\n\n➸ Source : ${waifu.data.source}`, id)
             await limitAdd(serial)
             break
@@ -1578,7 +1579,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const nekonime = await axios.get(`https://tobz-api.herokuapp.com/api/nekonime`)
+            const nekonime = await axios.get('https://tobz-api.herokuapp.com/api/nekonime?apikey=' + tobzkey)
             const nekon = nekonime.data
             if (nekon.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1611,7 +1612,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const trapnime = await axios.get('https://tobz-api.herokuapp.com/api/nsfwtrap')
+            const trapnime = await axios.get('https://tobz-api.herokuapp.com/api/nsfwtrap?apikey=' + tobzkey)
             const trapn = trapnime.data.result
             if (trapn.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1627,7 +1628,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const hentai = await axios.get(`https://tobz-api.herokuapp.com/api/hentai`)
+            const hentai = await axios.get('https://tobz-api.herokuapp.com/api/hentai?apikey=' + tobzkey)
             const henta = hentai.data
             if (henta.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1643,7 +1644,7 @@ ${desc}`)
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const nsfwneko = await axios.get('https://tobz-api.herokuapp.com/api/nsfwneko')
+            const nsfwneko = await axios.get('https://tobz-api.herokuapp.com/api/nsfwneko?apikey=' + tobzkey)
             const nsfwn = nsfwneko.data
             if (nsfwn.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1658,7 +1659,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const ranime = await axios.get('https://tobz-api.herokuapp.com/api/randomanime')
+            const ranime = await axios.get('https://tobz-api.herokuapp.com/api/randomanime?apikey=' + tobzkey)
             const ranimen = ranime.data
             if (ranimen.result.endsWith('.png')) {
                 var ext = '.png'
@@ -1673,7 +1674,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id)
             await limitAdd(serial)
-            const sblow = await axios.get('https://tobz-api.herokuapp.com/api/nsfwblowjob')
+            const sblow = await axios.get('https://tobz-api.herokuapp.com/api/nsfwblowjob?apikey=' + tobzkey)
             const rblow = sblow.data
             tobz.sendFileFromUrl(from, rblow.result, `RandoBlow${ext}`, 'Random Blowjob!', id)
             break
@@ -1682,7 +1683,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const shug = await axios.get('https://tobz-api.herokuapp.com/api/hug')
+            const shug = await axios.get('https://tobz-api.herokuapp.com/api/hug?apikey=' + tobzkey)
             const rhug = shug.data
             tobz.sendFileFromUrl(from, rhug.result, `RandomHug${ext}`, 'Random Hug!', id)
             break
@@ -1691,7 +1692,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const scry = await axios.get('https://tobz-api.herokuapp.com/api/cry')
+            const scry = await axios.get('https://tobz-api.herokuapp.com/api/cry?apikey=' + tobzkey)
             const rcry = scry.data
             tobz.sendFileFromUrl(from, rcry.result, `RandomCry${ext}`, 'Random Cry!', id)
             await limitAdd(serial)
@@ -1701,7 +1702,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const skiss = await axios.get('https://tobz-api.herokuapp.com/api/kiss')
+            const skiss = await axios.get('https://tobz-api.herokuapp.com/api/kiss?apikey=' + tobzkey)
             const rkiss = skiss.data
             tobz.sendFileFromUrl(from, rkiss.result, `RandomKiss${ext}`, 'Random Kiss!', id)
             await limitAdd(serial)
@@ -1761,7 +1762,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const skya = await axios.get('https://tobz-api.herokuapp.com/api/quotesnime/random')
+            const skya = await axios.get('https://tobz-api.herokuapp.com/api/quotesnime/random?apikey=' + tobzkey)
             skya_ = skya.data
             tobz.reply(from, `➸ *Quotes* : ${skya_.quote}\n➸ *Character* : ${skya_.character}\n➸ *Anime* : ${skya_.anime}`, id)
             await limitAdd(serial)
@@ -2188,7 +2189,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const bmkg = await axios.get('http://tobz-api.herokuapp.com/api/infogempa')
+            const bmkg = await axios.get('http://tobz-api.herokuapp.com/api/infogempa?apikey=' + tobzkey)
             const { potensi, koordinat, lokasi, kedalaman, magnitude, waktu, map } = bmkg.data
             const hasil = `*${waktu}*\n📍 *Lokasi* : *${lokasi}*\n〽️ *Kedalaman* : *${kedalaman}*\n💢 *Magnitude* : *${magnitude}*\n🔘 *Potensi* : *${potensi}*\n📍 *Koordinat* : *${koordinat}*`
             tobz.sendFileFromUrl(from, map, 'shakemap.jpg', hasil, id)
@@ -2220,7 +2221,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#bitly [linkWeb]*\nContoh : *#bitly https://neonime.vip*', id)
             const shorturl1 = body.slice(7)
-            const bitly1 = await axios.get('https://tobz-api.herokuapp.com/api/bitly?url=' + shorturl1)
+            const bitly1 = await axios.get('https://tobz-api.herokuapp.com/api/bitly?url=' + shorturl1 + '&apikey=' + tobzkey)
             const bitly2 = bitly1.data
             if (bitly2.error) return tobz.reply(from, bitly2.error, id)
             const surl2 = `Link : ${shorturl1}\nShort URL : ${bitly2.result}`
@@ -2234,7 +2235,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#shorturl [linkWeb]*\nContoh : *#shorturl https://neonime.vip*', id)
             const shorturl2 = body.slice(9)
-            const tiny1 = await axios.get('https://tobz-api.herokuapp.com/api/shorturl?url=' + shorturl2)
+            const tiny1 = await axios.get('https://tobz-api.herokuapp.com/api/shorturl?url=' + shorturl2 + '&apikey=' + tobzkey)
             const tiny2 = tiny1.data
             if (tiny2.error) return tobz.reply(from, tiny2.error, id)
             const surl3 = `Link : ${shorturl2}\nShort URL : ${tiny2.result}`
@@ -2284,7 +2285,7 @@ ${desc}`)
             console.log(slicedArgs)
             const spam = await slicedArgs.join(' ')
             console.log(spam)
-            const call2 = await axios.get('https://tobz-api.herokuapp.com/api/spamcall?no=' + spam)
+            const call2 = await axios.get('https://tobz-api.herokuapp.com/api/spamcall?no=' + spam + '&apikey=' + tobzkey)
             const { logs } = call2.data
                 await tobz.sendText(from, `Logs : ${logs}` + '.')
             break
@@ -2299,7 +2300,7 @@ ${desc}`)
             try {
                 tobz.reply(from, mess.wait, id)
                 const ytvh = await fetch(`http://api.vhtear.com/ytdl?link=${args[1]}&apikey=${vhtearkey}`)
-                if (!ytvh.ok) throw new Error(`Error Get Video : ${ytvh.statusText}`)
+                if (!ytvh.ok) throw new Error(`Error YTMP4 : ${ytvh.statusText}`)
                 const ytvh2 = await ytvh.json()
                  if (ytvh2.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
@@ -2313,8 +2314,7 @@ ${desc}`)
                 }
             } catch (err) {
                 tobz.sendText(ownerNumber, 'Error ytmp4 : '+ err)
-                tobz.reply(from, mess.error.Yt4, id)
-                console.log(err)
+                tobz.reply(from, 'Jangan download video yang sama dengan sebelumnya!', id)
             }
             break
         case prefix+'play':
@@ -2328,7 +2328,7 @@ ${desc}`)
                 tobz.reply(from, mess.wait, id)
                 const serplay = body.slice(6)
                 const webplay = await fetch(`https://api.vhtear.com/ytmp3?query=${serplay}&apikey=${vhtearkey}`)
-                if (!webplay.ok) throw new Error(`Error Get Video : ${webplay.statusText}`)
+                if (!webplay.ok) throw new Error(`Error Play : ${webplay.statusText}`)
                 const webplay2 = await webplay.json()
                  if (webplay2.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
@@ -2342,7 +2342,7 @@ ${desc}`)
                 }
             } catch (err) {
                 tobz.sendText(ownerNumber, 'Error Play : '+ err)
-                tobz.reply(from, mess.error.Yt3, id)
+                tobz.reply(from, 'Jangan meminta lagu yang sama dengan sebelumnya!', id)
             }
             break   
         case prefix+'ytmp3':
@@ -2356,7 +2356,7 @@ ${desc}`)
             try {
                 tobz.reply(from, mess.wait, id)
                 const vhtearyt3 = await fetch(`https://api.vhtear.com/ytdl?link=${args[1]}&apikey=${vhtearkey}`)
-                if (!vhtearyt3.ok) throw new Error(`Error ytmp3 3 : ${vhtearyt3.statusText}`)
+                if (!vhtearyt3.ok) throw new Error(`Error YTMP3 : ${vhtearyt3.statusText}`)
                 const vhtearyt33 = await vhtearyt3.json()
                  if (vhtearyt33.status == false) {
                     tobz.reply(from, `*Maaf Terdapat kesalahan saat mengambil data, mohon pilih media lain...*`, id)
@@ -2372,7 +2372,7 @@ ${desc}`)
                 }
             } catch (err) {
                 tobz.sendText(ownerNumber, 'Error ytmp3 : '+ err)
-                tobz.reply(from, mess.error.Yt3, id)
+                tobz.reply(from, 'Jangan download audio yang sama dengan sebelumnya!', id)
             }
             break
         case prefix+'google':
@@ -2884,20 +2884,22 @@ ${desc}`)
             const istalk = await slicedArgs.join(' ')
             console.log(istalk)
             try {
-            const istalk2 = await axios.get('https://tobz-api.herokuapp.com/api/stalk?username=' + istalk)
-            const { Biodata, Jumlah_Followers, Jumlah_Following, Profile_pic, Jumlah_Post, Name, Username } = istalk2.data
-            const istalk3 = `*User Ditemukan!*
+            const istalk2 = await axios.get('https://api.vhtear.com/igprofile?query=' + istalk + '&apikey=' + vhtearkey)
+            const { username, biography, follow, follower, full_name, picture, post_count, is_private } = istalk2.result
+	    const istalk3 = `*「 INSTAGRAM PROFILE 」*
 
-➸ *Username:* ${Username}
-➸ *Nama:* ${Name}
-➸ *Bio:* ${Biodata}
-➸ *Mengikuti:* ${Jumlah_Following}
-➸ *Pengikut:* ${Jumlah_Followers}
-➸ *Jumlah Postingan:* ${Jumlah_Post}`
+• *Username:* @${username}
+• *Nama:* ${full_name}
+• *Deskripsi:* ${biography}
+• *Pengikut:* ${follower}
+• *Mengikuti*: ${follow}
+• *Jumlah Postingan:* ${post_count}
+• *Private:* ${is_private}
+• *Link:* https://twitter.com/${username}`
             
-            const pictk = await bent("buffer")(Profile_pic)
+            const pictk = await bent("buffer")(picture)
             const base64 = `data:image/jpg;base64,${pictk.toString("base64")}`
-            tobz.sendImage(from, base64, Username, istalk3)
+            tobz.sendImage(from, base64, username, istalk3)
             await limitAdd(serial)
             } catch (err) {
              console.error(err.message)
@@ -3451,7 +3453,7 @@ ${desc}`)
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
-            const quotez2 = await axios.get('https://tobz-api.herokuapp.com/api/randomquotes')
+            const quotez2 = await axios.get('https://tobz-api.herokuapp.com/api/randomquotes?apikey=' + tobzkey)
             tobz.reply(from, `➸ *Quotes* : ${quotez2.data.quotes}\n➸ *Author* : ${quotez2.data.author}`, id)
             await limitAdd(serial)
             break
@@ -3473,7 +3475,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#chord [query]*, contoh *#chord aku bukan boneka*', id)
             const query__ = body.slice(7)
-            const chord = await axios.get('https://tobz-api.herokuapp.com/api/chord?q='+ query__)
+            const chord = await axios.get('https://tobz-api.herokuapp.com/api/chord?q='+ query__+'&apikey='+tobzkey)
             if (chord.data.error) return tobz.reply(from, chord.data.error, id)
             tobz.reply(from, chord.data.result, id)
             await limitAdd(serial)
@@ -3482,7 +3484,7 @@ ${desc}`)
             if(isReg(obj)) return
             if(cekumur(cekage)) return
             if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
-            const listDaerah = await axios.get('https://tobz-api.herokuapp.com/api/daerah')
+            const listDaerah = await axios.get('https://tobz-api.herokuapp.com/api/daerah?apikey='+tobzkey)
             tobz.reply(from, listDaerah.data.result, id)
             await limitAdd(serial)
             break
