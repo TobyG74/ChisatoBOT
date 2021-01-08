@@ -1,7 +1,7 @@
 {
-  "limitCount": 25,
-  "memberLimit": 25,
-  "groupLimit": 25,
+  "limitCount": 40,
+  "memberLimit": 40,
+  "groupLimit": 40,
   "melodickey": "YOUR_APIKEY",
   "vhtearkey": "YOUR_APIKEY",
   "tobzkey": "YOUR_APIKEY",
