@@ -375,36 +375,50 @@ module.exports = tobz = async (tobz, message) => {
         }
         
         // FUNCTION
-                function isStickerMsg(id){
-                if (isAdmin) {return false;}
-                let found = false;
-                for (let i of stickerspam){
-                    if(i.id === id){
-                        if (i.msg >= 12) {
-                            found === true 
-                            tobz.reply(from, `*「 𝗔𝗡𝗧𝗜 𝗦𝗣𝗔𝗠 𝗦𝗧𝗜𝗖𝗞𝗘𝗥 」*\nKamu telah SPAM STICKER di grup, kamu akan di kick otomatis oleh Elaina`, id).then(() => {
-                                tobz.removeParticipant(groupId, id)
+	// https://github.com/Gimenz/Mg-v2-WhatsApp-BOT/blob/803c5a0dc89e2a9e7bb118d1a8872fecd97d397e/msg/index.js#L76
+        function isStickerMsg(id){
+            if (isOwner, isAdmin) {return false;}
+            let found = false;
+            for (let i of stickerspam){
+                if(i.id === id){
+                    if (i.msg >= 12) {
+                        found === true 
+                        tobz.reply(from, '*「 𝗔𝗡𝗧𝗜 𝗦𝗣𝗔𝗠 𝗦𝗧𝗜𝗖𝗞𝗘𝗥 」*\nKamu telah SPAM STICKER di grup, kamu akan di kick otomatis oleh Elaina', message.id).then(() => {
+                            tobz.removeParticipant(groupId, id)
+                        }).then(() => {
+                            const cus = id
+                            var found = false
+                            Object.keys(stickerspam).forEach((i) => {
+                                if(stickerspam[i].id == cus){
+                                    found = i
+                                }
                             })
-                            return true;
-                        }else if(i.msg >= 12){
-                            found === true
-                            tobz.reply(from, `*「 𝗔𝗡𝗧𝗜 𝗦𝗣𝗔𝗠 𝗦𝗧𝗜𝗖𝗞𝗘𝗥 」*\nKamu terdeteksi spam sticker!\nMohon tidak spam 5 sticker lagi atau nomor akan di kick oleh Elaina!`, id)
-                            return true
-                        }else{
-                            found === true
-                            return false;
-                        }   
-                    }
+                            if (found !== false) {
+                                stickerspam[found].msg = 1;
+                                const resultx = 'Database telah direset!'
+                                console.log(stickerspam[found])
+                                fs.writeFileSync('./lib/database/stickerspam.json',JSON.stringify(stickerspam));
+                                client.sendText(from, resultx)
+                            } else {
+                                    tobz.reply(from, `Nomor itu tidak terdaftar didalam database!`, id)
+                            }
+                        })
+                        return true;
+                    }else{
+                        found === true
+                        return false;
+                    }   
                 }
-                if (found === false){
-                    let obj = {id: `${id}`, msg:1};
-                    stickerspam.push(obj);
-                    fs.writeFileSync('./lib/database/stickerspam.json',JSON.stringify(stickerspam));
-                    return false;
-                }  
             }
+            if (found === false){
+                let obj = {id: `${id}`, msg:1};
+                stickerspam.push(obj);
+                fs.writeFileSync('./lib/database/stickerspam.json',JSON.stringify(stickerspam));
+                return false;
+            }  
+        }
         function addStickerCount(id){
-            if (isAdmin) {return;}
+            if (isOwner, isAdmin) {return;}
             var found = false
             Object.keys(stickerspam).forEach((i) => {
                 if(stickerspam[i].id == id){
@@ -418,15 +432,32 @@ module.exports = tobz = async (tobz, message) => {
         }
 
         function isBadwordMsg(id){
-            if (isAdmin) {return false;}
+            if (isOwner, isAdmin) {return false;}
             let kasar = false;
             for (let i of msgBadword){
                 if(i.id === id){
                     let msg = i.msg
-                    if (msg >= 3) { // 3X BADWORD AKAN TERKENA KICK
+                    if (msg >= 12) { // 12x
                         kasar === true 
-                        tobz.reply(from, `*「 𝗔𝗡𝗧𝗜 𝗕𝗔𝗗𝗪𝗢𝗥𝗗 」*\nKamu telah berkata kasar di grup ini, kamu akan di kick otomatis oleh Elaina!`, id).then(() => {
+                        tobz.reply(from, '*「 𝗔𝗡𝗧𝗜 𝗕𝗔𝗗𝗪𝗢𝗥𝗗 」*\nKamu telah berkata kasar di grup ini, kamu akan di kick otomatis oleh Elaina!', message.id).then(() => {
                             tobz.removeParticipant(groupId, id)
+                        }).then(() => {
+                            const cus = id
+                            var found = false
+                            Object.keys(msgBadword).forEach((i) => {
+                                if(msgBadword[i].id == cus){
+                                    found = i
+                                }
+                            })
+                            if (found !== false) {
+                                msgBadword[found].msg = 1;
+                                const resultv = 'Database telah direset'
+                                console.log(msgBadword[found])
+                                fs.writeFileSync('./lib/database/msgBadword.json',JSON.stringify(msgBadword));
+                                tobz.sendText(from, resultv)
+                            } else {
+                                    tobz.reply(from, `Nomor itu tidak terdaftar didalam database!`, id)
+                            }
                         })
                         return true;
                     }else{
@@ -443,7 +474,7 @@ module.exports = tobz = async (tobz, message) => {
             }  
         }
         function addBadCount(id){
-            if (isAdmin) {return;}
+            if (isOwner, isAdmin) {return;}
             var kasar = false
             Object.keys(msgBadword).forEach((i) => {
                 if(msgBadword[i].id == id){
@@ -455,7 +486,7 @@ module.exports = tobz = async (tobz, message) => {
                 fs.writeFileSync('./lib/database/msgBadword.json',JSON.stringify(msgBadword));
             }
         }
-
+	// https://github.com/ItzNgga/wa-bot.js/blob/d58ddcf4e27b93535dd806e4a07a6ef2fb52463d/index.js#L204
         function isMsgLimit(id){
                     if (isAdmin) {return false;}
                     let found = false;
