@@ -1620,23 +1620,6 @@ ${desc}`)
             tobz.sendFileFromUrl(from, nekon.result, `Nekonime${ext}`, 'Nekonime!', id)
             await limitAdd(serial)
             break
-        // MFARELS
-        case prefix+'bokep': // MFARELS
-        case prefix+'randombokep': // MFARELS
-        case prefix+'bkp': // MFARELS
-            if(isReg(obj)) return
-            if(cekumur(cekage)) return
-            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id) // MFARELS
-            if (!isNsfw) return tobz.reply(from, 'command/Perintah NSFW belum di aktifkan di group ini!', id) // MFARELS
-            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id) // MFARELS
-            const mskkntl = fs.readFileSync('./lib/database/18+.json') // MFARELS
-            const kntlnya = JSON.parse(mskkntl) // MFARELS
-            const rindBkp = Math.floor(Math.random() * kntlnya.length) // MFARELS
-            const rindBkep = konsolJsin[rindBkp] // MFARELS
-            tobz.sendFileFromUrl(from, rindBkep.image, 'Bokep.jpg', rindBkep.teks, id) // MFARELS
-            await limitAdd(serial)
-            break // MFARELS
-        // MFARELS
         case prefix+'randomtrapnime':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
