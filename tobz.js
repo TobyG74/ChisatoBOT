@@ -2406,6 +2406,40 @@ ${desc}`)
                 tobz.reply(from, 'Jangan download audio yang sama dengan sebelumnya!', id)
             }
             break
+	case prefix+'moddroid':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#moddroid [query]*\nContoh : *#moddroid darling pubg*', id)
+            try {
+                const moddroid = await axios.get('https://tobz-api.herokuapp.com/api/moddroid?q=' + body.slice(10)  + '&apikey=' + tobzkey)
+                if (moddroid.data.error) return tobz.reply(from, moddroid.data.error, id)
+                const modo = moddroid.data.result[0]
+                const resmod = `• *Title* : ${modo.title}\n• *Publisher* : ${modo.publisher}\n• *Size* : ${modo.size}\n• *MOD Info* : ${modo.mod_info}\n• *Version* : ${modo.latest_version}\n• *Genre* : ${modo.genre}\n• *Link* : ${modo.link}\n• *Download* : ${modo.download}`
+                tobz.sendFileFromUrl(from, modo.image, 'MODDROID.jpg', resmod, id)
+                await limitAdd(serial)
+            } catch (err) {
+                console.log(err)
+            }
+            break
+        case prefix+'happymod':
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
+            if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
+            if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#happymod [query]*\nContoh : *#happymod darling pubg*', id)
+            try {
+                const happymod = await axios.get('https://tobz-api.herokuapp.com/api/happymod?q=' + body.slice(10)  + '&apikey=' + tobzkey)
+                if (happymod.data.error) return tobz.reply(from, happymod.data.error, id)
+                const modo = happymod.data.result[0]
+                const resmod = `• *Title* : ${modo.title}\n• *Purchase* : ${modo.purchase}\n• *Size* : ${modo.size}\n• *Root* : ${modo.root}\n• *Version* : ${modo.version}\n• *Price* : ${modo.price}\n• *Link* : ${modo.link}\n• *Download* : ${modo.download}`
+                tobz.sendFileFromUrl(from, modo.image, 'HAPPYMOD.jpg', resmod, id)
+                await limitAdd(serial)
+            } catch (err) {
+                console.log(err)
+            }
+            break
         case prefix+'google':
             if(isReg(obj)) return
             if(cekumur(cekage)) return
