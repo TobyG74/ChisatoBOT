@@ -1980,6 +1980,21 @@ ${desc}`)
              await tobz.sendFileFromUrl(from, errorurl2, 'error.png', '💔️ Maaf, Anime tidak ditemukan')
            }
           break
+        case prefix+'asupan':  //ASUPAN SANSEKAI BY CHIKA CHANTEXXZZ
+            if(isReg(obj)) return
+            if(cekumur(cekage)) return
+            if (!isGroupMsg) return tobz.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)
+                fetch('http://sansekai.my.id/sansekai.txt')
+                .then(res => res.text())
+                .then(body => {
+                    let randomasupan = body.split('\n')
+                    let randomasupann = randomasupan[Math.floor(Math.random() * randomasupan.length)]
+                    tobz.sendFileFromUrl(from, `http://sansekai.my.id/ptl_repost/${randomasupann}`, 'kpop.mp4', 'Nee..', id)
+                })
+                .catch(() => {
+                    tobz.reply(from, 'Ada yang Error!', id)
+                })
+            break
         // PRAY //
         case prefix+'jadwalshalat':
         case prefix+'jadwalsholat':
@@ -1989,15 +2004,16 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, `[❗] Kirim perintah *#jadwalShalat [ Daerah ]*\ncontoh : *#jadwalShalat Tangerang*\nUntuk list daerah kirim perintah *#listDaerah*`)
             const daerah = body.slice(14)
-            const jadwalShalat = await axios.get(`https://api.vhtear.com/jadwalsholat?query=${daerah}&apiKey=${vhtearkey}`)
+            const jadwalShalat = await axios.get(`https://api.vhtear.com/jadwalsholat?query=${daerah}&apikey=${vhtearkey}`)
             if (jadwalShalat.data.error) return tobz.reply(from, jadwalShalat.data.error, id)
-            const { Shubuh, Zduhur, Ashr, Magrib, Isya, kota } = await jadwalShalat.data
+            const { Shubuh, Zduhur, Ashr, Magrib, Isya, kota } = await jadwalShalat.data.result
             arrbulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
             tgl = new Date().getDate()
             bln = new Date().getMonth()
             thn = new Date().getFullYear()
-            const resultJadwal = `「 JADWAL SHALAT 」\n\nJadwal shalat di ${kota}, ${tgl}-${arrbulan[bln]}-${thn}\n\nSubuh : ${Shubuh}\nDzuhur : ${Zduhur}\nAshar : ${Ashr}\nMaghrib : ${Magrib}\nIsya : ${Isya}`
+            const resultJadwal = `「 *JADWAL SHALAT* 」\n\n*Jadwal shalat di ${kota}, ${tgl}-${arrbulan[bln]}-${thn}*\n\n*Subuh : ${Shubuh}*\n*Dzuhur : ${Zduhur}*\n*Ashar : ${Ashr}*\n*Maghrib : ${Magrib}*\n*Isya : ${Isya}*`
             await limitAdd(serial)
+            tobz.reply(from, resultJadwal, id)
             break
         case prefix+'quran':
             if(isReg(obj)) return
