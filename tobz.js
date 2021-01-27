@@ -4327,7 +4327,7 @@ ${desc}`)
             }
             break
 	// Fadhlur Owner of NotBot Bug? wa : wa.me/6281395771492
-        case '#slot':
+        case prefix+'slot':
           const somtoy = sotoy[Math.floor(Math.random() * (sotoy.length))]	
              tobz.sendText(from, `[  🎰 | SLOTS ]\n-----------------\n🍋 : 🍌 : 🍍\n${somtoy}<=====\n🍋 : 🍌 : 🍍\n[  🎰 | SLOTS ]\n\nKeterangan : Jika anda Mendapatkan 3Buah anda Menang\n\nContoh : 🍌 : 🍌 : 🍌<=====`, id)
 	    break
