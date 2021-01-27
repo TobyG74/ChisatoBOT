@@ -334,6 +334,29 @@ module.exports = tobz = async (tobz, message) => {
             '10%',
             '5%'
             ]
+	
+	const sotoy = [
+		'🍊 : 🍒 : 🍐',
+		'🍒 : 🔔 : 🍊',
+		'🍇 : 🍒 : 🍐',
+		'🍊 : 🍋 : 🔔',//by Fadhlur Owner of NotBot
+		'🔔 : 🍒 : 🍐',
+		'🔔 : 🍒 : 🍊',
+                '🍊 : 🍋 : 🔔',		
+		'🍐 : 🍒 : 🍋',
+		'🍐 : 🍐 : 🍐',
+		'🍊 : 🍒 : 🍒',
+		'🔔 : 🔔 : 🍇',
+		'🍌 : 🍒 : 🔔',
+		'🍐 : 🔔 : 🔔',
+		'🍊 : 🍋 : 🍒',
+		'🍋 : 🍋 : 🍌',
+		'🔔 : 🔔 : 🍇',
+		'🔔 : 🍐 : 🍇',
+		'🔔 : 🔔 : 🔔',
+		'🍒 : 🍒 : 🍒',
+		'🍌 : 🍌 : 🍌'
+		]
 
         const mess = {
             wait: '[ WAIT ] Sedang di proses⏳ silahkan tunggu sebentar',
@@ -4303,7 +4326,12 @@ ${desc}`)
                 }
             }
             break
-        // LIST MENU
+	// Fadhlur Owner of NotBot Bug? wa : wa.me/6281395771492
+        case '#slot':
+          const somtoy = sotoy[Math.floor(Math.random() * (sotoy.length))]	
+             tobz.sendText(from, `[  🎰 | SLOTS ]\n-----------------\n🍋 : 🍌 : 🍍\n${somtoy}<=====\n🍋 : 🍌 : 🍍\n[  🎰 | SLOTS ]\n\nKeterangan : Jika anda Mendapatkan 3Buah anda Menang\n\nContoh : 🍌 : 🍌 : 🍌<=====`, id)
+	    break
+	//list menu
         case prefix+'runtime':
             tobz.reply(from, `Elaina telah aktif selama :\n${cts}`, id)
             break
