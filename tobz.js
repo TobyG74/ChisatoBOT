@@ -421,7 +421,7 @@ module.exports = tobz = async (tobz, message) => {
                                 const resultx = 'Database telah direset!'
                                 console.log(stickerspam[found])
                                 fs.writeFileSync('./lib/database/stickerspam.json',JSON.stringify(stickerspam));
-                                client.sendText(from, resultx)
+                                tobz.sendText(from, resultx)
                             } else {
                                     tobz.reply(from, `Nomor itu tidak terdaftar didalam database!`, id)
                             }
@@ -1424,14 +1424,10 @@ ${desc}`)
                 tobz.reply(from, 'Simsimi berhasil di aktifkan di group ini! Kirim perintah *# [teks]*\nContoh : *# halo*', id)
                 }
             } else if (args[1].toLowerCase() === 'disable') {
-                var cek = simi_.includes(chatId);
-                if(cek){
-                    return tobz.reply(from, `Simsimi Sudah diaktifkan di grup ini`, id)
-                } else {
-                simi_.splice(chat.id, 1)
+                var grup = simi_.indexOf(groupId)
+                simi_.splice(grup, 1)
                 fs.writeFileSync('./lib/database/Simsimi.json', JSON.stringify(simi_))
                 tobz.reply(from, 'Simsimi berhasil di nonaktifkan di group ini!', id)
-                }
             } else {
                 tobz.reply(from, 'Pilih enable atau disable udin!', id)
             }
@@ -1464,7 +1460,8 @@ ${desc}`)
                 fs.writeFileSync('./lib/database/left.json', JSON.stringify(left))
                 tobz.reply(from, 'Fitur left berhasil di aktifkan di group ini!', id)
             } else if (args[1].toLowerCase() === 'disable') {
-                left.splice(chat.id, 1)
+		var grup = left.indexOf(groupId)
+                left.splice(grup, 1)
                 fs.writeFileSync('./lib/database/left.json', JSON.stringify(left))
                 tobz.reply(from, 'Fitur left berhasil di nonaktifkan di group ini!', id)
             } else {
@@ -1482,7 +1479,8 @@ ${desc}`)
                 fs.writeFileSync('./lib/database/welcome.json', JSON.stringify(welkom))
                 tobz.reply(from, 'Fitur welcome berhasil di aktifkan di group ini!', id)
             } else if (args[1].toLowerCase() === 'disable') {
-                welkom.splice(chat.id, 1)
+		var grup = welkom.indexOf(groupId)
+                welkom.splice(grup, 1)
                 fs.writeFileSync('./lib/database/welcome.json', JSON.stringify(welkom))
                 tobz.reply(from, 'Fitur welcome berhasil di nonaktifkan di group ini!', id)
             } else {
