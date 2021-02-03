@@ -15,7 +15,7 @@ BACA README NYA, PERCUMA W BUAT README
 INGAT JANGAN JUAL SCRIPT ELAINA KEPADA ORANG LAIN!
 INGIN PREMIUM? CHAT TOBZ!
 
-ELAINA BOT V3
+ELAINA BOT 
 */
 require('dotenv').config()
 const { decryptMedia } = require('@open-wa/wa-decrypt')
@@ -206,7 +206,7 @@ module.exports = tobz = async (tobz, message) => {
 
         const serial = sender.id
         const isAdmin = adminNumber.includes(sender.id)
-        const ownerNumber = '6281311850715@c.us'
+        const ownerNumber = '6285697172570@c.us'
         const isOwner = ownerNumber.includes(sender.id)
 
         if (isGroupMsg && GroupLinkDetector && !isGroupAdmins && !isAdmin && !isOwner){
@@ -270,7 +270,7 @@ module.exports = tobz = async (tobz, message) => {
             return val.id === nmr
         })
         var cekage = pendaftar.some((val) => {
-            return val.id === nmr && val.umur >= 15
+            return val.id === nmr && val.umur >= 1
         })
 
         function monospace(string) {
@@ -282,7 +282,7 @@ module.exports = tobz = async (tobz, message) => {
             if (obj === true){
                 return false
             } else {     
-                return tobz.reply(from, `Kamu belum terdaftar sebagai Teman Elaina\nuntuk mendaftar kirim ${prefix}daftar |nama|umur\n\ncontoh format: ${prefix}daftar |tobz|17\n\ncukup gunakan nama depan/panggilan saja`, id) //if user is not registered
+                return tobz.reply(from, `Kamu belum terdaftar sebagai Teman Elaina\nuntuk mendaftar kirim ${prefix}daftar |nama|umur\n\ncontoh format: ${prefix}daftar |ryu|17\n\ncukup gunakan nama depan/panggilan saja`, id) //if user is not registered
             }
         }
 
@@ -290,7 +290,7 @@ module.exports = tobz = async (tobz, message) => {
             if (obj === true){
                 return false
             } else {
-                return tobz.reply(from, `Kamu belum cukup umur untuk menggunakan Elaina, min 16 tahun\n\nKamu bisa mendaftar ulang dengan cara donasi terlebih dahulu, bales ${prefix}donasi\nHubungi Owner : wa.me/6281311850715`, id) //if user is not registered
+                return tobz.reply(from, `Kamu belum cukup umur untuk menggunakan Elaina, min 1 tahun\n\nKamu bisa mendaftar ulang dengan cara donasi terlebih dahulu, bales ${prefix}donasi\nHubungi Owner : wa.me/6285697172570`, id) //if user is not registered
             }
         }
 
@@ -339,7 +339,7 @@ module.exports = tobz = async (tobz, message) => {
 		'🍊 : 🍒 : 🍐',
 		'🍒 : 🔔 : 🍊',
 		'🍇 : 🍒 : 🍐',
-		'🍊 : 🍋 : 🔔',//by Fadhlur Owner of NotBot
+		'🍊 : 🍋 : 🔔',//by ryusenpai Owner of NotBot
 		'🔔 : 🍒 : 🍐',
 		'🔔 : 🍒 : 🍊',
                 '🍊 : 🍋 : 🔔',		
