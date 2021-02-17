@@ -71,7 +71,7 @@ const start = async (tobz = new Client()) => {
     }))
            
 
-        tobz.onGlobalParicipantsChanged((async (heuh) => {
+        tobz.onGlobalParticipantsChanged((async (heuh) => {
             await welcome(tobz, heuh) 
             left(tobz, heuh)
             }))
