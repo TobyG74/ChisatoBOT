@@ -10,8 +10,8 @@
   "author": "TOBZ",
   "license": "Apache-2.0",
   "dependencies": {
-    "@open-wa/wa-automate": "^3.1.0",
-    "@open-wa/wa-decrypt": "^2.0.1",
+    "@open-wa/wa-automate": "^3.6.1",
+    "@open-wa/wa-decrypt": "^3.0.1",
     "axios": "^0.19.2",
     "bent": "^7.3.10",
     "brainly-scraper": "^1.0.2",
