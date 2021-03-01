@@ -54,8 +54,7 @@ const {
     randomNimek,
     sleep,
     jadwalTv,
-    processTime,
-    nulis
+    processTime
     } = require('./lib/functions')
 
 const { 
@@ -2303,7 +2302,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#cuaca [tempat]*\nContoh : *#cuaca tangerang', id)
             const tempat = body.slice(7)
-            const weather = await axios.get('http://melodicxt.herokuapp.com/api/cuaca?query='+ tempat +'&apiKey='+ melodickey)
+            const weather = await axios.get('http://api-melodicxt-2.herokuapp.com/api/cuaca?query='+ tempat +'&apiKey='+ melodickey)
             const weatherr = weather.data
             if (weatherr.error) {
                 tobz.reply(from, weatherr.error, id)
@@ -2988,7 +2987,7 @@ ${desc}`)
             if (!args[1].match(isUrl) && !args[1].includes('xnxx.com')) return tobz.reply(from, mess.error.Iv, id)
             try {
                 tobz.reply(from, mess.wait, id)
-                const resq = await axios.get('http://melodicxt.herokuapp.com/api/xnxx-downloader?url='+ args[1] +'&apiKey='+ melodickey)
+                const resq = await axios.get('http://api-melodicxt-2.herokuapp.com/api/xnxx-downloader?url='+ args[1] +'&apiKey='+ melodickey)
                 const resp = resq.data
                  if (resp.error) {
                     tobz.reply(from, ytvv.error, id)
@@ -3334,7 +3333,7 @@ ${desc}`)
             const twstalk = await slicedArgs.join(' ')
             console.log(twstalk)
             try {
-            const twstalk2 = await axios.get('http://melodicxt.herokuapp.com/api/twtprofile?user=' + twstalk + '&apiKey=' + melodickey)
+            const twstalk2 = await axios.get('http://api-melodicxt-2.herokuapp.com/api/twtprofile?user=' + twstalk + '&apiKey=' + melodickey)
             const { created_at, user } = twt.result[0]
 	    const twtz = `*「 TWITTER PROFILE 」*
 
@@ -3870,7 +3869,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             
             await limitAdd(serial)
-            const jadwalNow = await axios.get('http://melodicxt.herokuapp.com/api/jadwaltvnow?apiKey='+melodickey)
+            const jadwalNow = await axios.get('http://api-melodicxt-2.herokuapp.com/api/jadwaltvnow?apiKey='+melodickey)
             tobz.reply(from, `Jam : ${jadwalNow.data.jam}\n\nJadwalTV : ${jadwalNow.data.jadwalTV}`, id)
             break
         case prefix+'nulis':
@@ -3880,7 +3879,7 @@ ${desc}`)
             if (isLimit(serial)) return tobz.reply(from, `Maaf ${pushname}, Kuota Limit Kamu Sudah Habis, Ketik ${prefix}limit Untuk Mengecek Kuota Limit Kamu`, id)
             if (args.length === 1) return tobz.reply(from, 'Kirim perintah *#nulis [teks]*, contoh *#nulis aku bukan boneka*', id)
             const ngettik = body.slice(7)
-            const ngetikk = await axios.get('http://melodicxt.herokuapp.com/api/joki-nulis?text='+ ngettik+'&apiKey='+ melodickey)
+            const ngetikk = await axios.get('http://api-melodicxt-2.herokuapp.com/api/joki-nulis?text='+ ngettik+'&apiKey='+ melodickey)
             if (ngetikk.data.error) return tobz.reply(from, ngetikk.data.error, id)
             tobz.sendFileFromUrl(from, ngetikk.data.result, 'nulis.jpg', '', id)
             await limitAdd(serial)
