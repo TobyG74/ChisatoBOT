@@ -42,7 +42,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 ## APIKEY
 Open setting.js then edit & paste it in YOUR_APIKEY
 - [VHTEAR](https://api.vhtear.com)
-- [MELODICXT](https://melodicxt.herokuapp.com/api)
+- [MELODICXT](http://api-melodicxt-2.herokuapp.com/)
 - [TOBZAPI](https://tobz-api.herokuapp.com)
 
 Apikey Location
