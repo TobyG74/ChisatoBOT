@@ -4065,6 +4065,115 @@ ${desc}`)
                             tobz.reply('Broadcast Success!')
                 }
                 break
+//---------------------------------- < CONVERTER BY NAFIZ > --------------------------------------------------------------------------------//
+        case `${prefix}videotomp3`:
+                    if ((isMedia || isQuotedVideo || isQuotedFile)) {
+                        tobz.reply(from, mess.wait, ('mp4', 'mp3', 'Meng-ekstrak audio dari video'), id)
+                        const encryptMedia = isQuotedVideo || isQuotedFile ? quotedMsg : message
+                        const _mimetype = isQuotedVideo || isQuotedFile ? quotedMsg.mimetype : mimetype
+                        console.log(color('[WAPI]', 'green'), 'Downloading and decrypt media...')
+                        const mediaData = await decryptMedia(encryptMedia)
+                        let temp = './temp'
+                        let name = new Date() * 1
+                        let fileInputPath = path.join(temp, 'video', `${name}.${_mimetype.replace(/.+\//, '')}`)
+                        let fileOutputPath = path.join(temp, 'audio', `${name}.mp3`)
+                        console.log(color('[fs]', 'green'), `Downloading media into '${fileInputPath}'`)
+                        fs.writeFile(fileInputPath, mediaData, err => {
+
+                            // ffmpeg -y -t 5 -i <input_file> -vf "scale=512:512:flags=lanczos:force_original_aspect_ratio=decrease" -qscale 100 <output_file>.webp
+                            ffmpeg(fileInputPath)
+                                .format('mp3')
+                                .on('start', function (commandLine) {
+                                    console.log(color('[FFmpeg]', 'green'), commandLine)
+                                })
+                                .on('progress', function (progress) {
+                                    console.log(color('[FFmpeg]', 'green'), progress)
+                                })
+                                .on('end', function () {
+                                    console.log(color('[FFmpeg]', 'green'), 'Processing finished!')
+                                    // fs.readFile(fileOutputPath, { encoding: 'base64' }, (err, base64) => {
+                                    // if (err) return tobz.sendText(from, `Ada yang error saat membaca file .mp3') && console.log(color('[ERROR]', 'red'), err)
+                                    tobz.sendFile(from, fileOutputPath, 'audio.mp3', '', id)
+                                    // })
+                                    setTimeout(() => {
+                                        try {
+                                            fs.unlinkSync(fileInputPath)
+                                            fs.unlinkSync(fileOutputPath)
+                                        } catch (e) {
+                                            console.log(color('[ERROR]', 'red'), e)
+                                        }
+                                    }, 30000)
+                                })
+                                .save(fileOutputPath)
+                        })
+                    }
+                    limitAdd(serial)
+                break
+        case prefix+'nightcore':
+                if (isMedia && isAudio || isQuotedAudio || isVoice || isQuotedVoice) {
+                    await tobz.reply(from, 'Bentar ya kak lagi proses nih, mohon tunggu sebentar....', id)
+                    const encryptMedia = isQuotedAudio || isQuotedVoice ? quotedMsg : message
+                    console.log(color('[WAPI]', 'green'), 'Downloading and decrypting media...')
+                    const mediaData = await decryptMedia(encryptMedia, uaOverride)
+                    const temp = './temp'
+                    const name = new Date() * 1
+                    const fileInputPath = path.join(temp, `${name}.mp3`)
+                    const fileOutputPath = path.join(temp, 'audio', `${name}.mp3`)
+                    fs.writeFile(fileInputPath, mediaData, (err) => {
+                        if (err) return console.error(err)
+                        ffmpeg(fileInputPath)
+                            .audioFilter('asetrate=44100*1.25')
+                            .format('mp3')
+                            .on('start', (commandLine) => console.log(color('[FFmpeg]', 'green'), commandLine))
+                            .on('progress', (progress) => console.log(color('[FFmpeg]', 'green'), progress))
+                            .on('end', async () => {
+                                console.log(color('[FFmpeg]', 'green'), 'Processing finished!')
+                                await tobz.sendPtt(from, fileOutputPath, id)
+                                console.log(color('[WAPI]', 'green'), 'Success sending audio!')
+                                setTimeout(() => {
+                                    fs.unlinkSync(fileInputPath)
+                                    fs.unlinkSync(fileOutputPath)
+                                }, 30000)
+                            })
+                            .save(fileOutputPath)
+                    })
+                } else {
+                    await tobz.reply(from, `Format Salah kak.`, id)
+                }
+            break    
+        case prefix+'bass':
+                if (isMedia && isAudio || isQuotedAudio || isVoice || isQuotedVoice) {
+                    if (args.length !== 1) return await tobz.reply(from, `Reply audionya lalu ketik ${prefix}bass 40 (bebas)`, id)
+                    await tobz.reply(from, 'Bentar kak Sedang diproses..', id)
+                    const encryptMedia = isQuotedAudio || isQuotedVoice ? quotedMsg : message
+                    console.log(color('[WAPI]', 'green'), 'Downloading and decrypting media...')
+                    const mediaData = await decryptMedia(encryptMedia, uaOverride)
+                    const temp = './temp'
+                    const name = new Date() * 1
+                    const fileInputPath = path.join(temp, `${name}.mp3`)
+                    const fileOutputPath = path.join(temp, 'audio', `${name}.mp3`)
+                    fs.writeFile(fileInputPath, mediaData, (err) => {
+                        if (err) return console.error(err)
+                        ffmpeg(fileInputPath)
+                            .audioFilter(`equalizer=f=40:width_type=h:width=50:g=${args[0]}`)
+                            .format('mp3')
+                            .on('start', (commandLine) => console.log(color('[FFmpeg]', 'green'), commandLine))
+                            .on('progress', (progress) => console.log(color('[FFmpeg]', 'green'), progress))
+                            .on('end', async () => {
+                                console.log(color('[FFmpeg]', 'green'), 'Processing finished!')
+                                await tobz.sendPtt(from, fileOutputPath, id)
+                                console.log(color('[WAPI]', 'green'), 'Success sending audio!')
+                                setTimeout(() => {
+                                    fs.unlinkSync(fileInputPath)
+                                    fs.unlinkSync(fileOutputPath)
+                                }, 30000)
+                            })
+                            .save(fileOutputPath)
+                    })
+                } else {
+                    await tobz.reply(from, `Format Salah kak.`, id)
+                }
+            break   
         case prefix+'adminlist':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             let mimin = ''
