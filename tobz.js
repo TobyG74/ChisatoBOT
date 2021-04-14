@@ -39,6 +39,14 @@ const Math_js = require('mathjs');
 const imageToBase64 = require('image-to-base64')
 const bent = require('bent')
 const request = require('request')
+//---------< Search Judul lagu module > -----------------//
+//Cara mendapatkan access key dan secret gimana? 
+//Buat akun di https://www.acrcloud.com/
+//Bingung? Chat : 081220439155
+//-------------------------------------------------------//
+const acrcloud = require("acrcloud")
+const acr = new acrcloud({ host: "Host-Nya", access_key: "acces key-nya", access_secret: "Access Secretnya"}) 
+//---------< Search Judul lagu module > -----------------//
 
 const { getStickerMaker } = require('./lib/ttp')
 const quotedd = require('./lib/quote')
@@ -4174,6 +4182,32 @@ ${desc}`)
                     await tobz.reply(from, `Format Salah kak.`, id)
                 }
             break   
+            case prefix+'totitle':
+            case prefix+'carilagu':
+                if (isMedia && isAudio || isQuotedAudio) {
+                    await tobz.reply(from, 'Sedang Mencari data..', id)
+                    const encryptMedia = isQuotedAudio || isQuotedVoice ? quotedMsg : message
+                    console.log(color('[WAPI]', 'green'), 'Downloading and decrypting media...')
+                    const mediaData = await decryptMedia(encryptMedia, uaOverride)
+                    fs.writeFile(`./temp/audio.mp3`, mediaData)
+                    await sleep(5000)
+                    const sampleq = fs.readFileSync(`./temp/audio.mp3`)
+                    acr.identify(sampleq).then(metadata => {
+                    console.log(metadata.metadata.music[0]);
+                    tobz.sendText(from,`  「 *Informasi Lagu Ditemukan* 」
+----------------------------------
+❐ Judul Lagu : ${metadata.metadata.music[0].title} 
+❐ Artis : ${metadata.metadata.music[0].artists[0].name} 
+❐ Album : ${metadata.metadata.music[0].album.name}
+❐ Rilis : ${metadata.metadata.music[0].release_date}
+----------------------------------`)
+                })      
+                    setTimeout(() => {
+                                    fs.unlinkSync(`./temp/audio.mp3`)
+                                }, 30000)
+                }
+         break      
+//--------------------------------------------------------------------------------------------------------------//			
         case prefix+'adminlist':
             if (!isGroupMsg) return tobz.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
             let mimin = ''
