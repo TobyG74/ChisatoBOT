@@ -53,7 +53,7 @@ const quotedd = require('./lib/quote')
 const color = require('./lib/color')
 const urlShortener = require('./lib/shortener')
 const { addFilter, isFiltered } = require('./lib/msgFilter')
-const cariKasar = require('./lib/kataKotor')
+//const cariKasar = require('./lib/kataKotor')
 
 const { 
     downloader,
@@ -201,7 +201,7 @@ module.exports = tobz = async (tobz, message) => {
         const isBadword = badword.includes(chatId)
         body = (type === 'chat' && body.startsWith(prefix)) ? body : (((type === 'image' || type === 'video') && caption) && caption.startsWith(prefix)) ? caption : ''
         const arg = body.substring(body.indexOf(' ') + 1)
-        const isKasar = await cariKasar(chats)
+        //const isKasar = await cariKasar(chats)
         const GroupLinkDetector = antilink.includes(chatId)
         const AntiStickerSpam = antisticker.includes(chatId)
         const isPrivate = sender.id === chat.contact.id
@@ -216,6 +216,17 @@ module.exports = tobz = async (tobz, message) => {
         const ownerNumber = '6281311850715@c.us'
         const isOwner = ownerNumber.includes(sender.id)
 
+	if (isGroupMsg && !isCmd && isBadword) {
+	    const detectbw = dbbadword.includes(chats.toLowerCase())
+	    if (detectbw) {
+		if (!isOwner && !isBotGroupAdmins && !isGroupAdmins) { 
+                    console.log("Badword Detected")
+                    tobz.reply(from, "*「 ANTI BADWORD 」*\nMaaf, Kamu Elaina kick dari grup karena berkata kasar :(", id)
+                    await tobz.removeParticipant(from, sender.id)
+                } tobz.reply(from, "Untung kamu Admin :)\nJangan ngomong kasar ya min! nanti Elaina kick nih :(", id)
+	    }
+	}
+	
         if (isGroupMsg && GroupLinkDetector && !isGroupAdmins && !isAdmin && !isOwner){
             if (chats.match(/(https:\/\/chat.whatsapp.com)/gi)) {
                 const check = await tobz.inviteInfo(chats);
@@ -461,7 +472,7 @@ module.exports = tobz = async (tobz, message) => {
             }
         }
 
-        function isBadwordMsg(id){
+        /*function isBadwordMsg(id){
             if (isOwner, isAdmin) {return false;}
             let kasar = false;
             for (let i of msgBadword){
@@ -515,7 +526,7 @@ module.exports = tobz = async (tobz, message) => {
                 msgBadword[kasar].msg += 1;
                 fs.writeFileSync('./lib/database/msgBadword.json',JSON.stringify(msgBadword));
             }
-        }
+        }*/
 	// https://github.com/ItzNgga/wa-bot.js/blob/d58ddcf4e27b93535dd806e4a07a6ef2fb52463d/index.js#L204
         function isMsgLimit(id){
                     if (isAdmin) {return false;}
@@ -632,11 +643,11 @@ module.exports = tobz = async (tobz, message) => {
             }
         }
 
-        if(!isCmd && isKasar && isGroupMsg && isBadword && !isGroupAdmins) { 
+        /*if(!isCmd && isKasar && isGroupMsg && isBadword && !isGroupAdmins) { 
             console.log(color('[BADWORD]', 'red'), color(moment(t * 1000).format('DD/MM/YY HH:mm:ss'), 'yellow'), color(`${argx}`), 'from', color(pushname), 'in', color(name || formattedTitle)) 
             if(isBadwordMsg(serial)) return
                 addBadCount(serial)
-        }
+        }*/
         
                 if(body === '#mute' && isMuted(chatId) == true){
                     if(isGroupMsg) {
@@ -1053,6 +1064,7 @@ module.exports = tobz = async (tobz, message) => {
                 const nonye = sender.id
                 const namanye = argz[1]
                 const umurnye = argz[2]
+                if (namanye.length > 8) return tobz.reply(from, '*Nama Terlalu Panjang!*\n_Maksimal 8 huruf!_', id)
                     if(isNaN(umurnye)) return await tobz.reply(from, 'Umur harus berupa angka!!', id)
                     if(umurnye >= 40) return await tobz.reply(from, 'Kamu terlalu tua, kembali lagi ke masa muda untuk menggunakan Elaina', id)
                     const jenenge = namanye.replace(' ','')
