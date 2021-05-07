@@ -13,7 +13,6 @@ BAGI YANG NANYA2 MASANG APIKEY DIMANA??
 BACA README NYA, PERCUMA W BUAT README
 
 INGAT JANGAN JUAL SCRIPT ELAINA KEPADA ORANG LAIN!
-INGIN PREMIUM? CHAT TOBZ!
 
 ELAINA BOT V3
 */
@@ -163,7 +162,7 @@ moment.tz.setDefault('Asia/Jakarta').locale('id')
 
 module.exports = tobz = async (tobz, message) => {
     try {
-        const { type, id, from, t, sender, isGroupMsg, chat, chatId, caption, isMedia, mimetype, quotedMsg, quotedMsgObj, author, mentionedJidList } = message
+        const { type, id, from, t, sender, isGroupMsg, chat, chatId, caption, isMedia, isAudio, mimetype, quotedMsg, quotedMsgObj, author, mentionedJidList } = message
         let { body } = message
         const { name, formattedTitle } = chat
         let { pushname, verifiedName } = sender
