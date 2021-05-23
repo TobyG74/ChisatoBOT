@@ -77,6 +77,7 @@ Install the dependencies:
 
 ```bash
 > npm install
+> npm install -g sharp
 > npm install -g pm2
 ```
 
