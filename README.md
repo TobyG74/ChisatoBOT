@@ -37,7 +37,7 @@ If you find some bugs please contact the WhatsApp number on Contact
 - [TELEGRAM](https://t.me/tobz2k19)
 - [WHATSAPP](https://wa.me/6281311850715)
 - [MY BOT](wa.me/447418349954)
-- [WHATSAPP GROUP](https://chat.whatsapp.com/JMn559mwKhN56fi4Djep4m)
+- [WHATSAPP GROUP](https://chat.whatsapp.com/IgfjcaGBMNXG1bHp3sFIOE)
 
 ## APIKEY
 Open setting.js then edit & paste it in YOUR_APIKEY
