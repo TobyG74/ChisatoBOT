@@ -212,7 +212,7 @@ module.exports = tobz = async (tobz, message) => {
 
         const serial = sender.id
         const isAdmin = adminNumber.includes(sender.id)
-        const ownerNumber = '6281311850715@c.us'
+        const ownerNumber = '6281351047727@c.us'
         const isOwner = ownerNumber.includes(sender.id)
 
 	if (isGroupMsg && !isCmd && isBadword) {
