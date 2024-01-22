@@ -1,0 +1,91 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Group {
+  id                  String      @id @default(auto()) @map("_id") @db.ObjectId
+  groupId             String      @unique
+  subject             String
+  size                Int
+  creation            Int
+  owner               String?
+  desc                String?
+  approval            Boolean    @default(false)
+  restrict            Boolean
+  announce            Boolean
+  isCommunity         Boolean
+  isCommunityAnnounce Boolean
+  memberAddMode       Boolean
+  participants        Participant[]
+  ephemeralDuration   Int?
+}
+
+type Participant {
+  id    String?
+  admin String?
+}
+
+model User {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String  @unique
+  limit   Int         
+  role    Role    @default(free)
+  expired Int     @default(0)
+  afk     Afk?
+}
+
+type Afk {
+  status Boolean @default(false)
+  reason String?
+  since  Int?    @default(0)
+}
+
+enum Role {
+  free
+  premium
+}
+
+model GroupSetting {
+  id                  String      @id @default(auto()) @map("_id") @db.ObjectId
+  groupId             String      @unique
+  notify              Boolean     @default(false)
+  welcome             Boolean     @default(false)
+  leave               Boolean     @default(false)
+  mute                Boolean     @default(false)
+  antilink            Antilink    
+  antibot             Boolean     @default(false)
+  antiviewonce        Boolean     @default(false)
+  banned              String[]
+}
+
+type Antilink {
+  status Boolean 
+  mode   Mode    
+  list   List[]   
+}
+
+enum List {
+  youtube
+  twitter
+  instagram
+  tiktok
+  facebook
+  whatsapp
+  all
+}
+
+enum Mode {
+  kick
+  delete
+}
+
+model Session {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String  @unique
+  session   String?
+}

@@ -1,0 +1,72 @@
+{
+    "name": "chisato-bot",
+    "version": "1.0.0",
+    "description": "WhatsApp Bot Multi-Device using Baileys",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc --build",
+        "start": "node ./dist/start",
+        "pm2:start": "pm2 start dist/start.js && pm2 flush start && pm2 logs start",
+        "pm2:restart": "pm2 reload start && pm2 flush start && pm2 logs start"
+    },
+    "prisma": {
+        "schema": "./prisma/schema.prisma"
+    },
+    "author": "Tobz",
+    "license": "MIT",
+    "dependencies": {
+        "@adiwajshing/keyed-db": "^0.2.4",
+        "@arugaz/ai2d": "^1.0.1-z.9",
+        "@tobyg74/tiktok-api-dl": "^1.0.13",
+        "awesome-phonenumber": "^3.2.0",
+        "axios": "^1.5.2",
+        "baileys": "github:tobyg74/baileys",
+        "cfonts": "^3.1.1",
+        "cheerio": "^1.0.0-rc.12",
+        "cli-color": "^2.0.3",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.0.3",
+        "file-type": "16.5.4",
+        "fluent-ffmpeg": "^2.1.2",
+        "form-data": "^4.0.0",
+        "fs": "^0.0.1-security",
+        "genshin-kit.js": "^2.4.11",
+        "gifencoder": "^2.0.1",
+        "jsonwebtoken": "^9.0.2",
+        "node-fetch": "^2.6.7",
+        "pastebin-api": "^5.1.2",
+        "path": "^0.12.7",
+        "pet-pet-gif": "^1.0.9",
+        "twitter-downloader": "^1.1.1",
+        "util": "^0.12.4",
+        "wa-sticker-formatter": "^4.4.4",
+        "yt-search": "^2.10.3"
+    },
+    "devDependencies": {
+        "@prisma/client": "^5.7.0",
+        "@types/cli-color": "^2.0.5",
+        "croner": "^8.0.0",
+        "moment-timezone": "^0.5.34",
+        "pino": "^7.0.0",
+        "pm2": "^5.2.0",
+        "qrcode-terminal": "^0.12.0"
+    },
+    "keywords": [
+        "wa-bot",
+        "wabot",
+        "whatsapp-bot",
+        "whatsappbot",
+        "whatsappmd",
+        "chisato-bot",
+        "chisato-md",
+        "baileys"
+    ],
+    "homepage": "https://github.com/TobyG74/ChisatoBOT#readme",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TobyG74/ChisatoBOT.git"
+    },
+    "bugs": {
+        "url": "https://github.com/TobyG74/ChisatoBOT/issues"
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "ownerNumber": ["YOUR_NUMBER"],
+    "teamNumber": [],
+    "timeZone": "Asia/Jakarta",
+    "prefix": ".",
+    "maintenance": [],
+    "stickers": {
+        "author": "Instagram : ini.tobz",
+        "packname": "Made by ChisatoBOT"
+    },
+    "settings": {
+        "ownerNotifyOnline": false,
+        "useLimit": false,
+        "useCooldown": true,
+        "selfbot": false,
+        "autoReadMessage": false,
+        "autoReadStatus": false
+    },
+    "call": {
+        "status": "reject"
+    },
+    "limit": {
+        "command": 30
+    },
+    "cfonts": {
+        "font": "block",
+        "align": "center",
+        "colors": ["green", "yellow"],
+        "background": "transparent",
+        "letterSpacing": 0,
+        "lineHeight": 0,
+        "space": true,
+        "maxLength": "0",
+        "gradient": false,
+        "independentGradient": false,
+        "transitionGradient": false,
+        "env": "node"
+    }
+}

@@ -1,0 +1,13 @@
+node_modules
+
+.vscode
+.env
+test.js
+dist/*
+
+temp/*
+!temp/.gitkeep
+
+package-lock.json
+yarn.lock
+bun.lock
