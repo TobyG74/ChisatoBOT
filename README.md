@@ -30,6 +30,7 @@
 -   Chisato is a WhatsApp bot with various functions
 -   There are various features available on Chisato BOT
 -   ChisatoBOT has a beautiful terminal logger
+-   Full Installation Tutorial [Click Here](https://youtu.be/c_TFnX7AZRs)
 
 ## Table of Contents
 
