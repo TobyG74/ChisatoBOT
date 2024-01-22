@@ -1,5 +1,3 @@
-import petPetGif from "pet-pet-gif";
-import fs from "fs";
 import Axios from "axios";
 import AI2D from "@arugaz/ai2d";
 
@@ -16,12 +14,6 @@ export class Sticker {
         }
     };
 
-    static Pet = async (param: string, filename: string) => {
-        let animatedGif = await petPetGif(param);
-        fs.writeFileSync(filename, animatedGif);
-        return filename;
-    };
-
     static emojiMix = async (emoji1: string, emoji2: string) => {
         return new Promise(async (resolve, reject) => {
             await Axios.get(
@@ -32,7 +24,7 @@ export class Sticker {
                 .then(({ data }) => {
                     if (data.results.length === 0) {
                         resolve({
-                            error: `${emoji1} and ${emoji2} cannot be combined! Try different emojis...`,
+                            error: true,
                             message: `${emoji1} and ${emoji2} cannot be combined! Try different emojis...`,
                         });
                     }
