@@ -2,7 +2,7 @@
     "name": "chisato-bot",
     "version": "1.0.0",
     "description": "WhatsApp Bot Multi-Device using Baileys",
-    "main": "index.js",
+    "main": "start.js",
     "scripts": {
         "build": "tsc --build",
         "start": "node ./dist/start",
@@ -30,9 +30,6 @@
         "fluent-ffmpeg": "^2.1.2",
         "form-data": "^4.0.0",
         "fs": "^0.0.1-security",
-        "genshin-kit.js": "^2.4.11",
-        "gifencoder": "^2.0.1",
-        "jsonwebtoken": "^9.0.2",
         "node-fetch": "^2.6.7",
         "pastebin-api": "^5.1.2",
         "path": "^0.12.7",
