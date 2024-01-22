@@ -307,7 +307,7 @@ type ConfigCommands = {
     <td align="center">
         <img src="https://avatars.githubusercontent.com/u/114492712?s=100&v=4" width="100px" height="100px"/>
         <br>
-        <a href="https://github.com/https://github.com/Hidden-Finder">
+        <a href="https://github.com/Hidden-Finder">
             <bold>Hidden-Finder</bold>
         </a>
     </td>
