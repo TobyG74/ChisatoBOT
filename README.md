@@ -333,4 +333,4 @@ type ConfigCommands = {
 [license-shield]: https://img.shields.io/github/license/TobyG74/ChisatoBOT.svg?style=for-the-badge
 [license-url]: https://github.com/TobyG74/ChisatoBOT/blob/main/LICENSE
 [community-shield]: https://img.shields.io/badge/JOIN%20WITH%20OUR%20COMMUNITY-FFFFFF?style=for-the-badge&logo=whatsapp&logoColor=0FB830
-[community-url]: https://whatsapp.com/channel/0029VaGQpAOKwEfkKNh6Z0X3
+[community-url]: https://whatsapp.com/channel/0029VaGQpAOKAwEfkKNh6Z0X
