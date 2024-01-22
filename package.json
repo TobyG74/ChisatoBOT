@@ -13,7 +13,7 @@
         "schema": "./prisma/schema.prisma"
     },
     "author": "Tobz",
-    "license": "MIT",
+    "license": "GPL-3.0-only",
     "dependencies": {
         "@adiwajshing/keyed-db": "^0.2.4",
         "@arugaz/ai2d": "^1.0.1-z.9",
@@ -30,8 +30,6 @@
         "fluent-ffmpeg": "^2.1.2",
         "form-data": "^4.0.0",
         "fs": "^0.0.1-security",
-        "node-fetch": "^2.6.7",
-        "pastebin-api": "^5.1.2",
         "path": "^0.12.7",
         "pet-pet-gif": "^1.0.9",
         "twitter-downloader": "^1.1.1",
