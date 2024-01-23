@@ -19,7 +19,7 @@ export class User {
                     create: {
                         userId,
                         limit: isOwner ? 0 : Chisato.config.limit.command,
-                        role: "free",
+                        role: isOwner ? "premium" : "free",
                         afk: {
                             status: false,
                             reason: "",
@@ -29,7 +29,7 @@ export class User {
                     update: {
                         userId,
                         limit: isOwner ? 0 : Chisato.config.limit.command,
-                        role: "free",
+                        role: isOwner ? "premium" : "free",
                         afk: {
                             status: false,
                             reason: "",

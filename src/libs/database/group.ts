@@ -44,7 +44,7 @@ export class Group {
                 });
                 resolve(metadata);
             } catch (err) {
-                reject(err);
+                resolve(null);
             }
         });
 
