@@ -1,4 +1,4 @@
-import { ConfigCommands } from "../../types/commands.js";
+import type { ConfigCommands } from "../../types/commands.js";
 import { wallpaper } from "../../utils";
 
 export default <ConfigCommands>{

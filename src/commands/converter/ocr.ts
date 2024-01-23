@@ -1,4 +1,4 @@
-import { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/commands";
 import { converter } from "../../utils";
 
 export default <ConfigCommands>{

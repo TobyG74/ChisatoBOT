@@ -1,5 +1,5 @@
 import { sleep } from "../../libs";
-import { ConfigCommands } from "../../types/commands.js";
+import type { ConfigCommands } from "../../types/commands.js";
 
 export default <ConfigCommands>{
     name: "groupbc",
