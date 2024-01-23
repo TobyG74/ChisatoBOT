@@ -4,13 +4,12 @@ import moment from "moment-timezone";
 import clc from "cli-color";
 import fstat from "fs";
 import util from "util";
-import path from "path";
 import { exec } from "child_process";
 
 /** Types */
 import { Chisato } from "../types/client";
 import { MessageSerialize } from "../types/serialize";
-import { Group, Group as GroupType, Participant, User } from "@prisma/client";
+import { Participant, User } from "@prisma/client";
 
 /** Database */
 import { Group as GroupDatabase, GroupSetting as GroupSettingDatabase, User as UserDatabase } from "../libs/database";
@@ -19,7 +18,6 @@ import { Group as GroupDatabase, GroupSetting as GroupSettingDatabase, User as U
 import * as utils from "../utils";
 import * as libs from "../libs";
 const { commands, events, cooldowns } = libs;
-const { converter } = utils;
 
 /** Eval Marker */
 const Axios = axios;
@@ -34,7 +32,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
         const time = moment().format("HH:mm:ss DD/MM");
 
-        if (config.settings.autoReadStatus && message.key.remoteJid === "stataus@broadcast")
+        if (config.settings.autoReadStatus && message.key.remoteJid === "status@broadcast")
             await Chisato.readMessages([message.key]);
 
         if (message.key && message.key.remoteJid === "status@broadcast") return;
