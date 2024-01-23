@@ -376,7 +376,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         }
 
         /** Check Afk with Mentions User */
-        if (message.mentions.length !== 0 && message.mentions && isGroup) {
+        if (message.mentions.length !== 0 && message.mentions && isGroup && !message.fromMe) {
             if (message.mentions) {
                 for (const mention of message.mentions) {
                     const afkData = (await User.get(mention))?.afk;
