@@ -394,7 +394,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
             }
         } else if (message.quoted && isGroup && !message.fromMe) {
             const afkData = (await User.get(message.quoted.sender)).afk;
-            const since = afkData?.since && Libs.runtime((Date.now() - afkData.since) / 60 / 60);
+            const since = afkData?.since && Libs.getRemaining(afkData.since);
             const reason = afkData?.reason;
             if (afkData?.status) {
                 return Chisato.sendText(
