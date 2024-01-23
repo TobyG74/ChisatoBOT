@@ -1,6 +1,6 @@
 {
     "name": "chisato-bot",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "WhatsApp Bot Multi-Device using Baileys",
     "main": "start.js",
     "scripts": {
