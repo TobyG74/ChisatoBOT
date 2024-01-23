@@ -361,7 +361,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         }
 
         /** Check Afk from user */
-        if (isAfk) {
+        if (isAfk && isGroup) {
             User.update(sender, { afk: { status: false, reason: null, since: 0 } });
             const afkData = userMetadata?.afk;
             const since = afkData?.since && Libs.getRemaining(afkData.since);
@@ -376,7 +376,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         }
 
         /** Check Afk with Mentions User */
-        if (message.mentions.length !== 0 && message.mentions) {
+        if (message.mentions.length !== 0 && message.mentions && isGroup) {
             if (message.mentions) {
                 for (const mention of message.mentions) {
                     const afkData = (await User.get(mention))?.afk;
