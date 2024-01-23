@@ -36,6 +36,7 @@ type CommandsObject = {
     command?: ConfigCommands;
     pushName?: string;
     message?: MessageSerialize;
+    blockList?: string[];
     botNumber?: string;
     botName?: string;
     isOwner?: boolean;

@@ -79,7 +79,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         const GroupSetting = new GroupSettingDatabase();
 
         /** User */
-        let blockList: String[] = [];
+        let blockList: string[] = [];
         blockList = await Chisato.fetchBlocklist().catch(() => blockList);
         const userMetadata: User = sender && ((await User.get(sender)) ?? (await User.upsert(Chisato, sender)));
 
@@ -327,6 +327,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
                     from,
                     sender,
                     message,
+                    blockList,
                     botNumber,
                     botName,
                     isOwner,
