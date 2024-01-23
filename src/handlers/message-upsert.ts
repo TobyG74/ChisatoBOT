@@ -110,7 +110,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         /** Check User Premium */
         if (userMetadata.role === "premium") {
             if (userMetadata.expired < Date.now()) {
-                await User.update(sender, { role: "user", expired: 0 });
+                await User.update(sender, { role: "free", expired: 0 });
                 Chisato.sendText(sender, `Your premium has expired!`, message);
             }
         }
