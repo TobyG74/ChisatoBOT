@@ -9,6 +9,7 @@ export default <ConfigCommands>{
     description: "Download Audio from Youtube",
     isProcess: true,
     cooldown: 3,
+    limit2: 1,
     example: `• /youtubeaudio https://youtu.be/xxxxxxx`,
     async run({ Chisato, from, query, message, command }) {
         if (!isURL(query)) return Chisato.sendText(from, "Please input a valid url!", message);

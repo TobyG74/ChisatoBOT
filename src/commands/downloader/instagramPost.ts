@@ -8,6 +8,7 @@ export default <ConfigCommands>{
     category: "downloader",
     description: "Download Post Media from Instagram",
     cooldown: 3,
+    limit: 1,
     isProcess: true,
     example: `• /instagrampost https://www.instagram.com/p/xxxxxxxx`,
     async run({ Chisato, from, query, message, command }) {

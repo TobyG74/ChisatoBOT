@@ -8,6 +8,7 @@ export default <ConfigCommands>{
     category: "downloader",
     description: "Download Reels Media from Instagram",
     cooldown: 3,
+    limit: 1,
     isProcess: true,
     example: `• /instagramreels https://www.instagram.com/reels/xxxxxxxx`,
     async run({ Chisato, from, query, message, command }) {

@@ -10,6 +10,7 @@ export default <ConfigCommands>{
     description: "Download Videos from Twitter",
     isProcess: true,
     cooldown: 3,
+    limit: 1,
     example: `• /twitterdownload https://www.twitter.com/elonmusk/status/xxxxxx`,
     async run({ Chisato, from, query, command, message }) {
         if (!isURL(query)) return Chisato.sendText(from, "Please input a valid url!", message);

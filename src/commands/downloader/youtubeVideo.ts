@@ -9,6 +9,7 @@ export default <ConfigCommands>{
     description: "Download Video from Youtube",
     isProcess: true,
     cooldown: 3,
+    limit: 1,
     example: `
 *Quality :*
 - 1080p

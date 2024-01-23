@@ -8,6 +8,7 @@ export default <ConfigCommands>{
     category: "downloader",
     description: "Download Story Media from Instagram",
     cooldown: 3,
+    limit: 1,
     isProcess: true,
     example: `• /instagramstory https://www.instagram.com/stories/ini.tobz/xxxxxxxx`,
     async run({ Chisato, from, query, message, command }) {

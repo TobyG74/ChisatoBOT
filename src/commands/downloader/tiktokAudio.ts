@@ -10,6 +10,7 @@ export default <ConfigCommands>{
     category: "downloader",
     description: "Download Audio from Tiktok",
     cooldown: 3,
+    limit: 1,
     isProcess: true,
     example: `• /tiktokaudio https://vt.tiktok.com/xxxxxxx`,
     async run({ Chisato, from, query, message, command }) {

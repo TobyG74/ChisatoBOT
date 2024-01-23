@@ -11,6 +11,7 @@ export default <ConfigCommands>{
     description: "Download Images from Tiktok",
     isProcess: true,
     cooldown: 3,
+    limit: 1,
     example: `
 Download One Image :
 • /tiktokimage https://vt.tiktok.com/xxxxxxx|2

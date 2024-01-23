@@ -11,6 +11,7 @@ export default <ConfigCommands>{
     description: "Download Video from Tiktok",
     isProcess: true,
     cooldown: 3,
+    limit: 1,
     example: `• /tiktokvideo https://vt.tiktok.com/xxxxxxx`,
     async run({ Chisato, from, query, prefix, message, command }) {
         if (!isURL(query)) return Chisato.sendText(from, "Please input a valid url!", message);
