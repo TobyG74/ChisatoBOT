@@ -29,7 +29,6 @@
         "file-type": "16.5.4",
         "fluent-ffmpeg": "^2.1.2",
         "form-data": "^4.0.0",
-        "fs": "^0.0.1-security",
         "path": "^0.12.7",
         "twitter-downloader": "^1.1.1",
         "util": "^0.12.4",
@@ -39,6 +38,7 @@
     "devDependencies": {
         "@prisma/client": "^5.7.0",
         "@types/cli-color": "^2.0.5",
+        "@types/yt-search": "^2.10.3",
         "croner": "^8.0.0",
         "moment-timezone": "^0.5.34",
         "pino": "^7.0.0",
