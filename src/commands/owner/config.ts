@@ -1,4 +1,5 @@
 import type { ConfigCommands } from "../../types/commands";
+import fs from "fs";
 
 export default <ConfigCommands>{
     name: "config",
@@ -7,7 +8,7 @@ export default <ConfigCommands>{
     description: "See Bot Config",
     isOwner: true,
     async run({ Chisato, from, message, botName }) {
-        const { config } = Chisato;
+        const config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
         let caption = `*「 CONFIG 」*
 
 ★ Owner Number : [`;
