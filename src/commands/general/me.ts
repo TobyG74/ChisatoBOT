@@ -5,7 +5,7 @@ export default <ConfigCommands>{
     alias: ["myprofile", "myinfo"],
     category: "general",
     description: "User Profile",
-    async run({ Chisato, sender, isOwner, from, message, userMetadata }) {
+    async run({ Chisato, sender, isOwner, from, message, userMetadata, groupSettingData }) {
         const fetchStatus = await Chisato.fetchStatus(sender).catch(() => void 0);
         const caption =
             "*「 YOUR PROFILE 」*\n\n" +
@@ -17,7 +17,7 @@ export default <ConfigCommands>{
                 isOwner ? "unlimited" : userMetadata.role === "premium" ? "unlimited" : userMetadata.limit
             }\n` +
             `• Role : ${isOwner ? "owner" : userMetadata.role}\n`;
-        `• Banned : ${userMetadata.banned ? "YES" : "NO"}\n`;
+        `• Banned : ${groupSettingData.banned.includes(sender) ? "YES" : "NO"}\n`;
         try {
             const profile = await Chisato.profilePictureUrl(sender, "image");
             await Chisato.sendImage(from, profile, caption, message);
