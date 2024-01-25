@@ -118,6 +118,10 @@ npm start
 
 ### Configuration File [config.json](https://github.com/TobyG74/ChisatoBOT/blob/master/config.json)
 
+-   `ownerNotifyOnline` to send a message to the Owner whenever the Bot is Online
+-   `useLimit` for limit configuration, if `true` then every time the command will use the limit
+-   `useCooldown` for cooldown configuration, if `true` then every time the command will use the cooldown
+
 ```json
 {
     "ownerNumber": ["YOUR_NUMBER"],
