@@ -288,15 +288,22 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
                     "*「 ! 」* Sorry, this command can only be used in private message!",
                     message
                 );
+            /** Only Premium Users Can Use Commands */
+            if (command.isPremium && !(isPremium || isTeam))
+                return Chisato.sendText(
+                    from,
+                    "*「 ! 」* Sorry, This command can only be used by Premium Users!",
+                    message
+                );
             /** Only the Group Admins Can Use Commands */
-            if (command.isGroupAdmin && !isGroupAdmin)
+            if (command.isGroupAdmin && !(isGroupAdmin || isTeam))
                 return Chisato.sendText(
                     from,
                     "*「 ! 」* Sorry, This command can only be used by Group Admins!",
                     message
                 );
             /** Only the Group Owner Can Use Commands */
-            if (command.isGroupOwner && !isGroupOwner)
+            if (command.isGroupOwner && !(isGroupOwner || isTeam))
                 return Chisato.sendText(
                     from,
                     "*「 ! 」* Sorry, This command can only be used by Group Owner!",
