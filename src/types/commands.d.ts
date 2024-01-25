@@ -1,7 +1,11 @@
-import { Participant } from "@prisma/client";
+import { Group, GroupSetting, Participant, User } from "@prisma/client";
 import { Chisato } from "./client";
-import { Group, GroupSetting, User } from "./database";
 import { MessageSerialize } from "./serialize";
+import {
+    Group as GroupDatabaseType,
+    GroupSetting as GroupSettingDatabaseType,
+    User as UserDatabaseType,
+} from "../libs/database";
 
 declare type ConfigCommands = {
     name: string;
@@ -56,9 +60,9 @@ type CommandsObject = {
 };
 
 declare type Database = {
-    Group: Group;
-    GroupSetting: GroupSetting;
-    User: User;
+    Group: GroupDatabaseType;
+    GroupSetting: GroupSettingDatabaseType;
+    User: UserDatanaseType;
 };
 
 declare type Commands = {

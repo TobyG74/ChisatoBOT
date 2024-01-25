@@ -1,25 +1,26 @@
 import { Database } from "..";
-import { Chisato } from "../../types/client";
 import { User as UserType } from "@prisma/client";
+import fs from "fs";
 
 export class User {
+    public config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
     /**
-     * Add Group Metadata to Database
+     * Add User Data to Database
      * @param Chisato
      * @param userId
      * @returns {Promise<UserType>}
      */
-    public upsert = (Chisato: Chisato, userId: string): Promise<UserType> =>
+    public upsert = (Chisato, userId: string): Promise<UserType> =>
         new Promise(async (resolve, reject) => {
             try {
                 if (await this.get(userId)) return;
-                const isOwner = Chisato.config.ownerNumber.includes(userId.split("@")[0]);
+                const isTeam = this.config.teamNumber.includes(userId.split("@")[0]);
                 const metadata = await Database.user.upsert({
                     where: { userId },
                     create: {
                         userId,
-                        limit: isOwner ? 0 : Chisato.config.limit.command,
-                        role: isOwner ? "premium" : "free",
+                        limit: isTeam ? 0 : this.config.limit.command,
+                        role: isTeam ? "premium" : "free",
                         afk: {
                             status: false,
                             reason: "",
@@ -28,8 +29,8 @@ export class User {
                     },
                     update: {
                         userId,
-                        limit: isOwner ? 0 : Chisato.config.limit.command,
-                        role: isOwner ? "premium" : "free",
+                        limit: isTeam ? 0 : this.config.limit.command,
+                        role: isTeam ? "premium" : "free",
                         afk: {
                             status: false,
                             reason: "",
@@ -45,7 +46,7 @@ export class User {
         });
 
     /**
-     * Get Group Metadata from Database
+     * Get User Data from Database
      * @param userId
      * @returns {Promise<UserType>}
      */
@@ -62,7 +63,21 @@ export class User {
         });
 
     /**
-     * Update Group Metadata from Database
+     * Get All User Data from Database
+     * @returns {Promise<UserType[]>}
+     */
+    public getAll = (): Promise<UserType[]> =>
+        new Promise(async (resolve, reject) => {
+            try {
+                const metadata = await Database.user.findMany();
+                resolve(metadata);
+            } catch (err) {
+                resolve(null);
+            }
+        });
+
+    /**
+     * Update User Data from Database
      * @param userId
      * @param data
      * @returns {Promise<UserType>}
@@ -81,7 +96,7 @@ export class User {
         });
 
     /**
-     * Delete Group Metadata from Database
+     * Delete User Data from Database
      * @param userId
      * @returns
      */
@@ -101,24 +116,11 @@ export class User {
      * View the count of Database
      * @returns {number}
      */
-    public size = () =>
+    public size = (): Promise<number> =>
         new Promise(async (resolve, reject) => {
             try {
-                const group = await Database.user.count();
-                resolve(group);
-            } catch (err) {
-                reject(err);
-            }
-        });
-
-    public afk = (userId: string, data: any) =>
-        new Promise(async (resolve, reject) => {
-            try {
-                const metadata = await Database.user.update({
-                    where: { userId },
-                    data: { ...data },
-                });
-                resolve(metadata);
+                const user = await Database.user.count();
+                resolve(user);
             } catch (err) {
                 reject(err);
             }

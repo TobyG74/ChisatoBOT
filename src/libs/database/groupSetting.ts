@@ -50,6 +50,20 @@ export class GroupSetting {
         });
 
     /**
+     * Get All Group Metadata from Database
+     * @returns {Promise<GroupSettingType[]>}
+     */
+    public getAll = (): Promise<GroupSettingType[]> =>
+        new Promise(async (resolve, reject) => {
+            try {
+                const metadata = await Database.groupSetting.findMany();
+                resolve(metadata);
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+    /**
      * Update Group Metadata from Database
      * @param groupId
      * @param data
@@ -89,7 +103,7 @@ export class GroupSetting {
      * View the count of Database
      * @returns {number}
      */
-    public size = () =>
+    public size = (): Promise<number> =>
         new Promise(async (resolve, reject) => {
             try {
                 const group = await Database.groupSetting.count();

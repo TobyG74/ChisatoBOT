@@ -19,6 +19,7 @@ export class Group {
                 delete groupData.subjectOwner;
                 delete groupData.subjectTime;
                 delete groupData.descId;
+                groupData.ephemeralDuration = groupData.ephemeralDuration || 0;
                 const metadata = await Database.group.upsert({
                     where: { groupId },
                     create: { groupId, ...groupData },
@@ -45,6 +46,20 @@ export class Group {
                 resolve(metadata);
             } catch (err) {
                 resolve(null);
+            }
+        });
+
+    /**
+     * Get All Group Metadata from Database
+     * @returns {Promise<GroupType[]>}
+     */
+    public getAll = (): Promise<GroupType[]> =>
+        new Promise(async (resolve, reject) => {
+            try {
+                const metadata = await Database.group.findMany();
+                resolve(metadata);
+            } catch (err) {
+                reject(err);
             }
         });
 
@@ -88,7 +103,7 @@ export class Group {
      * View the count of Database
      * @returns {number}
      */
-    public size = () =>
+    public size = (): Promise<number> =>
         new Promise(async (resolve, reject) => {
             try {
                 const group = await Database.group.count();
