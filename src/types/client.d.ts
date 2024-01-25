@@ -55,7 +55,6 @@ type Client = {
         options?: Partial<AnyMessageContent>
     ) => Promise<WAProto.WebMessageInfo>;
     getName: (jid, withoutContact = false) => Promise<string>;
-    config: Config;
 };
 
 declare type Chisato = Partial<WASocket> & Client;
