@@ -3,9 +3,9 @@ import type { ConfigCommands } from "../../types/commands.js";
 export default <ConfigCommands>{
     name: "listbanned",
     alias: ["listban"],
-    category: "group",
-    description: "List Banned Member",
-    isOwner: true,
+    category: "group setting",
+    description: "List Banned Members",
+    isGroupAdmin: true,
     async run({ Chisato, from, message, groupSettingData }) {
         if (groupSettingData.banned.length === 0) return Chisato.sendText(from, "There is no banned member!", message);
         let caption = `*「 LIST BANNED 」*\n\n`;
