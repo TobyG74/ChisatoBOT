@@ -7,9 +7,18 @@ export default <ConfigCommands>{
     usage: "<tag>",
     description: "Unbanned member from group",
     isGroup: true,
-    async run({ Chisato, from, message, Database, sender }) {
+    isGroupAdmin: true,
+    async run({ Chisato, from, message, Database }) {
         let user = await Database.GroupSetting.get(from);
+        const checkUserBanned = (userId: string) => {
+            if (!user.banned.includes(userId)) {
+                return Chisato.sendText(from, `@${userId.split("@")[0]} is not on the banned list!`, message, {
+                    mentions: [userId],
+                });
+            }
+        };
         if (message.quoted) {
+            checkUserBanned(message.quoted.sender);
             user.banned = user.banned.filter((value) => value != message.quoted.sender);
             await Database.GroupSetting.update(from, { banned: user.banned }).then(() => {
                 Chisato.sendText(
@@ -24,6 +33,7 @@ export default <ConfigCommands>{
         } else if (message.mentions) {
             let caption = `Successfully unbanned `;
             for (let i in message.mentions) {
+                checkUserBanned(message.mentions[i]);
                 user.banned = user.banned.filter((value) => value != message.mentions[i]);
                 await Database.GroupSetting.update(from, { banned: user.banned }).then(() => {
                     caption += `@${message.mentions[i].split("@")[0]} `;
