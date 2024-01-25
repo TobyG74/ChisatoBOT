@@ -189,10 +189,12 @@ export class Client {
                             await clearState();
                         }
                         break;
-                    default: {
-                        Chisato.log("status", `${reason}`, "Another Reason! Try to re-scan QR!");
-                        await clearState();
-                    }
+                    default:
+                        {
+                            Chisato.log("status", `${reason}`, "Another Reason! Try to re-scan QR!");
+                            await clearState();
+                        }
+                        break;
                 }
             } else if (connection === "open") {
                 cfonts.say(Chisato.user.name || "WhatsApp BOT", this.config.cfonts);
