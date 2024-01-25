@@ -127,6 +127,7 @@ export class Client {
                     return msg.message || undefined;
                 }
             },
+            customId: "CHISATO",
         }) as Chisato;
 
         this.sendmessage(Chisato, store);
