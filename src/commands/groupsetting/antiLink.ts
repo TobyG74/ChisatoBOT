@@ -1,3 +1,4 @@
+import { Antilink } from "@prisma/client";
 import type { ConfigCommands } from "../../types/commands";
 
 export default <ConfigCommands>{

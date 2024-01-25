@@ -66,17 +66,7 @@ model GroupSetting {
 type Antilink {
   status Boolean 
   mode   Mode    
-  list   List[]   
-}
-
-enum List {
-  youtube
-  twitter
-  instagram
-  tiktok
-  facebook
-  whatsapp
-  all
+  list   String[]   
 }
 
 enum Mode {
