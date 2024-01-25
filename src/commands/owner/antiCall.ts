@@ -23,7 +23,7 @@ export default <ConfigCommands>{
 *Turn off Reject call and block
 • /anticall block off`,
     async run({ Chisato, args, from, message }) {
-        const { config } = Chisato;
+        const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
         const type = args[0];
         const option = args[1];
         switch (type) {
