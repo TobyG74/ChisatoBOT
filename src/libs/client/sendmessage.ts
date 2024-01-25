@@ -28,8 +28,6 @@ export const sendmessage = async (Chisato: Chisato, store: any) => {
     const time = moment().format("HH:mm:ss DD/MM");
     const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
 
-    Chisato.config = config;
-
     /** Simply Log */
     Chisato.log = (type: "status" | "info" | "error" | "eval" | "exec" | "connect", text: string, text2?: string) => {
         switch (type.toLowerCase()) {

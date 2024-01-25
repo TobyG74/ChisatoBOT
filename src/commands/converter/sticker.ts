@@ -1,4 +1,5 @@
 import type { ConfigCommands } from "../../types/commands";
+import fs from "fs";
 
 export default <ConfigCommands>{
     name: "sticker",
@@ -12,7 +13,7 @@ export default <ConfigCommands>{
             let { quoted } = message;
             let buffer: Buffer | null;
             let type = args[0];
-            const { stickers } = Chisato.config;
+            const { stickers }: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
             if (message?.type === "imageMessage" || quoted?.type === "imageMessage") {
                 buffer = quoted !== null ? await quoted.download() : await message.download();
                 await Chisato.sendMediaAsSticker(

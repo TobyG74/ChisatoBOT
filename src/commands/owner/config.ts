@@ -15,6 +15,10 @@ export default <ConfigCommands>{
         for (let owner of config.ownerNumber) {
             caption += ` ${owner} `;
         }
+        caption += `]\n★ Team Number : [`;
+        for (let team of config.teamNumber) {
+            caption += ` ${team} `;
+        }
         caption +=
             `]\n` +
             `★ Bot Name : ${botName}\n` +

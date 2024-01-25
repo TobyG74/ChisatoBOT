@@ -22,7 +22,7 @@ model Group {
   isCommunityAnnounce Boolean
   memberAddMode       Boolean
   participants        Participant[]
-  ephemeralDuration   Int?
+  ephemeralDuration   Int?        @default(0)
 }
 
 type Participant {
@@ -54,8 +54,8 @@ model GroupSetting {
   id                  String      @id @default(auto()) @map("_id") @db.ObjectId
   groupId             String      @unique
   notify              Boolean     @default(false)
-  welcome             Boolean     @default(false)
-  leave               Boolean     @default(false)
+  welcome             Boolean     @default(true)
+  leave               Boolean     @default(true)
   mute                Boolean     @default(false)
   antilink            Antilink    
   antibot             Boolean     @default(false)
