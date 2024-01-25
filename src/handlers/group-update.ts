@@ -281,7 +281,10 @@ export const groupUpdate = async (Chisato: Chisato, message: GroupSerialize) => 
                     mentions: [participant, ...parameters],
                 });
             }
-            if (participant === botNumber) return await Group.delete(from);
+            if (participant.split("@")[0] === botNumber.split("@")[0]) {
+                await Group.delete(from);
+                await GroupSetting.delete(from);
+            }
             getMetadata(from).then(async (res) => {
                 await Group.update(from, {
                     size: res?.size || res?.participants?.length || 0,
