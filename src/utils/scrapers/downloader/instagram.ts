@@ -1,5 +1,5 @@
-const Axios = require("axios");
-const cheerio = require("cheerio");
+import Axios from "axios";
+import cheerio from "cheerio";
 
 const apiURL = "https://v3.igdownloader.app/api/ajaxSearch";
 
