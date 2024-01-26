@@ -338,10 +338,12 @@ export class Client {
         });
 
         // Reset Store every 10 minutes
-        Cron("*/10 * * * * *", { timezone: this.config.timezone }, async () => {
+        Cron("0 */10 * * * *", { timezone: this.config.timezone }, async () => {
             store.chats.clear();
             store.contacts = {};
             store.messages = {};
+            store.presences = {};
+            store.groupMetadata = {};
 
             console.log(
                 clc.green.bold("[ ") +
