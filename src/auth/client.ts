@@ -211,6 +211,9 @@ export class Client {
                 Chisato.log("connect", `WA Web Version : ${version}`);
                 Chisato.log("connect", `Latest  : ${isLatest ? "YES" : "NO"}`);
 
+                /** Reset Limit & Store */
+                this.reset();
+
                 /** Sendmessage Config */
                 this.sendmessage(Chisato, store);
 
