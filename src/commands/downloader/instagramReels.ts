@@ -18,7 +18,15 @@ export default <ConfigCommands>{
             .then(async (data) => {
                 if (data.status === 404) return Chisato.sendText(from, data.message, message);
                 if (data.type === "reels") {
-                    Chisato.sendVideo(from, data.video, false, "*「 INSTAGRAM REELS DOWNLOADER 」*", message);
+                    await Chisato.sendText(
+                        from,
+                        `*「 INSTAGRAM REELS DOWNLOADER 」*\n\n• Type: ${data.type}\n\n• Total: ${data.result.length}`,
+                        message
+                    );
+                    for (let i = 0; i < data.result.length; i++) {
+                        if (data.result[i].type === "video")
+                            await Chisato.sendVideo(from, data.result[i], false, `• Type: ${data.result[i].type}`);
+                    }
                 }
             })
             .catch((e) => {

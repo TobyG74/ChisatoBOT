@@ -9,13 +9,10 @@ declare type InstagramDownloader = {
     status: number;
     message?: string;
     type?: string;
-    images?: Images[];
-    video?: string;
+    result?: ResultInstagram[];
 };
 
-type Images = {
-    [string]: {
-        size: string;
-        download: string;
-    };
+type ResultInstagram = {
+    type: string;
+    url: string;
 };

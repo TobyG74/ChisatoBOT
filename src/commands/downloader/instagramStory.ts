@@ -18,7 +18,17 @@ export default <ConfigCommands>{
             .then(async (data) => {
                 if (data.status === 404) return Chisato.sendText(from, data.message, message);
                 if (data.type === "story") {
-                    Chisato.sendVideo(from, data.video, false, "*「 INSTAGRAM STORY DOWNLOADER 」*", message);
+                    await Chisato.sendText(
+                        from,
+                        `*「 INSTAGRAM STORY DOWNLOADER 」*\n\n• Type: ${data.type}\n\n• Total: ${data.result.length}`,
+                        message
+                    );
+                    for (let i = 0; i < data.result.length; i++) {
+                        if (data.result[i].type === "image")
+                            await Chisato.sendImage(from, data.result[i], `• Type: ${data.result[i].type}`);
+                        else if (data.result[i].type === "video")
+                            await Chisato.sendVideo(from, data.result[i], false, `• Type: ${data.result[i].type}`);
+                    }
                 }
             })
             .catch((e) => {

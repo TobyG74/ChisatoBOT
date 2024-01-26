@@ -4,8 +4,8 @@ import cheerio from "cheerio";
 const apiURL = "https://v3.igdownloader.app/api/ajaxSearch";
 
 export class instagram {
-    private request(url: string) {
-        return new Promise<IGDownloader>(async (resolve, reject) => {
+    private request = (url: string): Promise<IGDownloader> =>
+        new Promise(async (resolve, reject) => {
             Axios(apiURL, {
                 method: "POST",
                 headers: {
@@ -17,44 +17,44 @@ export class instagram {
                 .then(({ data }) => resolve(data))
                 .catch((err) => reject(err));
         });
-    }
 
     /** Instagram Download Post */
-    public post(url: string) {
-        return new Promise<InstagramDownloader>(async (resolve, reject) => {
+    public post = (url: string): Promise<InstagramDownloader> =>
+        new Promise(async (resolve, reject) => {
             this.request(url)
                 .then((data: any) => {
                     if (data.status === "ok") {
                         const $ = cheerio.load(data.data);
-                        const images = [];
-                        $("li")
+                        const result = [];
+
+                        $("div.download-items")
                             .get()
-                            .map((img, i) => {
-                                const imgs = [];
-                                $(img)
-                                    .find("option")
-                                    .get()
-                                    .map((v) => {
-                                        imgs.push({
-                                            size: $(v).text().trim(),
-                                            download: $(v).attr("value"),
-                                        });
+                            .map((res) => {
+                                const title = $(res).find("a").attr("title").trim().toLowerCase();
+                                const url = $(res).find("a").attr("href");
+                                if (title.includes("photo"))
+                                    result.push({
+                                        type: "image",
+                                        url,
                                     });
-                                images.push({
-                                    [i]: imgs,
-                                });
+                                else if (title.includes("video"))
+                                    result.push({
+                                        type: "video",
+                                        url,
+                                    });
                             });
-                        if (images.length !== 0)
+
+                        if (result.length > 0)
                             resolve({
                                 status: 200,
-                                type: "image",
-                                images,
+                                type: "post",
+                                result,
                             });
-                        resolve({
-                            status: 200,
-                            type: "video",
-                            video: $("div.download-items__btn > a").attr("href"),
-                        });
+                        else
+                            resolve({
+                                status: 404,
+                                message: "Post not found or account is private",
+                            });
                     } else {
                         resolve({
                             status: 404,
@@ -64,20 +64,39 @@ export class instagram {
                 })
                 .catch((err) => reject(err));
         });
-    }
 
     /** Instagram Download Reels */
-    public reels(url: string) {
-        return new Promise<InstagramDownloader>(async (resolve, reject) => {
+    public reels = (url: string): Promise<InstagramDownloader> =>
+        new Promise(async (resolve, reject) => {
             this.request(url)
                 .then((data) => {
                     if (data.status === "ok") {
                         const $ = cheerio.load(data.data);
-                        resolve({
-                            status: 200,
-                            type: "reels",
-                            video: $("div.download-items__btn > a").attr("href"),
-                        });
+                        const result = [];
+
+                        $("div.download-items")
+                            .get()
+                            .map((res) => {
+                                const title = $(res).find("a").attr("title").trim().toLowerCase();
+                                const url = $(res).find("a").attr("href");
+                                if (title.includes("video"))
+                                    result.push({
+                                        type: "video",
+                                        url,
+                                    });
+                            });
+
+                        if (result.length > 0)
+                            resolve({
+                                status: 200,
+                                type: "reels",
+                                result,
+                            });
+                        else
+                            resolve({
+                                status: 404,
+                                message: "Reels not found or account is private",
+                            });
                     } else {
                         resolve({
                             status: 404,
@@ -87,20 +106,44 @@ export class instagram {
                 })
                 .catch((err) => reject(err));
         });
-    }
 
     /** Instagram Download Story */
-    public story(url: string) {
-        return new Promise<InstagramDownloader>(async (resolve, reject) => {
+    public story = (url: string): Promise<InstagramDownloader> =>
+        new Promise<InstagramDownloader>(async (resolve, reject) => {
             this.request(url)
                 .then((data) => {
                     if (data.status === "ok") {
                         const $ = cheerio.load(data.data);
-                        resolve({
-                            status: 200,
-                            type: "story",
-                            video: $("div.download-items__btn > a").attr("href"),
-                        });
+                        const result = [];
+
+                        $("div.download-items")
+                            .get()
+                            .map((res) => {
+                                const title = $(res).find("a").attr("title").trim().toLowerCase();
+                                const url = $(res).find("a").attr("href");
+                                if (title.includes("photo"))
+                                    result.push({
+                                        type: "image",
+                                        url,
+                                    });
+                                else if (title.includes("video"))
+                                    result.push({
+                                        type: "video",
+                                        url,
+                                    });
+                            });
+
+                        if (result.length > 0)
+                            resolve({
+                                status: 200,
+                                type: "story",
+                                result,
+                            });
+                        else
+                            resolve({
+                                status: 404,
+                                message: "Story not found or account is private!",
+                            });
                     } else {
                         resolve({
                             status: 404,
@@ -110,5 +153,4 @@ export class instagram {
                 })
                 .catch((err) => reject(err));
         });
-    }
 }

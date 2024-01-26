@@ -17,13 +17,18 @@ export default <ConfigCommands>{
         ig.post(query)
             .then(async (data) => {
                 if (data.status === 404) return Chisato.sendText(from, data.message, message);
-                if (data.type === "image") {
-                    await Chisato.sendText(from, "*「 INSTAGRAM POST DOWNLOADER 」*", message);
-                    for (let i = 0; i < data.images.length; i++) {
-                        Chisato.sendImage(from, data.images[i][i][0].download, `• Size: ${data.images[i][i][0].size}`);
+                if (data.type === "post") {
+                    await Chisato.sendText(
+                        from,
+                        `*「 INSTAGRAM POST DOWNLOADER 」*\n\n• Type: ${data.type}\n\n• Total: ${data.result.length}`,
+                        message
+                    );
+                    for (let i = 0; i < data.result.length; i++) {
+                        if (data.result[i].type === "image")
+                            await Chisato.sendImage(from, data.result[i], `• Type: ${data.result[i].type}`);
+                        else if (data.result[i].type === "video")
+                            await Chisato.sendVideo(from, data.result[i], false, `• Type: ${data.result[i].type}`);
                     }
-                } else {
-                    Chisato.sendVideo(from, data.video, false, "*「 INSTAGRAM POST DOWNLOADER 」*", message);
                 }
             })
             .catch((e) => {
