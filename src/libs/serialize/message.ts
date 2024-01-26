@@ -116,11 +116,11 @@ export const message = async (Chisato: Chisato, message: WAMessage): Promise<Mes
                     : m.quoted.type === "extendedTextMessage"
                     ? m.quoted.message[m.quoted.type].text
                     : m.quoted.type === "imageMessage"
-                    ? m.quoted.message[m.quoted.type].caption
+                    ? m.quoted.message[m.quoted.type].caption || "Image Message"
                     : m.quoted.type === "videoMessage"
-                    ? m.quoted.message[m.quoted.type].caption
+                    ? m.quoted.message[m.quoted.type].caption || "Video Message"
                     : m.quoted.type === "locationMessage"
-                    ? m.quoted.message[m.quoted.type].comment
+                    ? m.quoted.message[m.quoted.type].comment || "Location Message"
                     : m.quoted.type === "listResponseMessage"
                     ? m.quoted.message[m.quoted.type].singleSelectReply.selectedRowId
                     : m.quoted.type === "templateButtonReplyMessage"
