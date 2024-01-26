@@ -4,8 +4,10 @@ import makeWASocket, {
     DisconnectReason,
     makeCacheableSignalKeyStore,
     fetchLatestWaWebVersion,
+    Chat,
 } from "baileys";
 import { Boom } from "@hapi/boom";
+import { Cron } from "croner";
 import fs from "fs";
 import clc from "cli-color";
 import cfonts from "cfonts";
@@ -23,7 +25,7 @@ import type { SocketConfig } from "../types/auth/connect";
 import * as handlers from "../handlers";
 
 /** Utils */
-import { converter, resetUserLimit } from "../utils";
+import { converter } from "../utils";
 import { Database, sendmessage, serialize } from "../libs";
 import { useMultiAuthState, useSingleAuthState } from "./auth";
 
@@ -304,6 +306,48 @@ export class Client {
                     commands.set(cmd.name, cmd);
                 });
             });
+        });
+    }
+
+    private reset() {
+        Cron("0 0 0 * * *", { timezone: this.config.timezone }, async () => {
+            // Reset user limit
+            await Database.user.updateMany({
+                where: {
+                    userId: {
+                        contains: "@s.whatsapp.net",
+                    },
+                    role: {
+                        in: ["free"],
+                    },
+                },
+                data: {
+                    limit: this.config.limit.command,
+                },
+            });
+
+            console.log(
+                clc.green.bold("[ ") +
+                    clc.white.bold("CRON") +
+                    clc.green.bold(" ] ") +
+                    clc.yellow.bold("Reset user limit...")
+            );
+        });
+
+        // Reset Store every 10 minutes
+        Cron("*/10 * * * * *", { timezone: this.config.timezone }, async () => {
+            store.chats.clear();
+            store.contacts = {};
+            store.messages = {};
+
+            console.log(
+                clc.green.bold("[ ") +
+                    clc.white.bold("CRON") +
+                    clc.green.bold(" ] ") +
+                    clc.yellow.bold("Reset Store...")
+            );
+
+            return store;
         });
     }
 }
