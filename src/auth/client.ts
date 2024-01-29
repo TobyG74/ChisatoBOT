@@ -4,7 +4,6 @@ import makeWASocket, {
     DisconnectReason,
     makeCacheableSignalKeyStore,
     fetchLatestWaWebVersion,
-    Chat,
 } from "baileys";
 import { Boom } from "@hapi/boom";
 import { Cron } from "croner";
@@ -313,9 +312,9 @@ export class Client {
     }
 
     private reset() {
-        Cron("0 0 0 * * *", { timezone: this.config.timezone }, async () => {
-            // Reset user limit
-            await Database.user.updateMany({
+        // Reset user limit
+        Cron("0 0 0 * * *", { timezone: this.config.timezone }, () => {
+            Database.user.updateMany({
                 where: {
                     userId: {
                         contains: "@s.whatsapp.net",
@@ -338,7 +337,7 @@ export class Client {
         });
 
         // Reset Store every 30 minutes
-        Cron("0 */30 * * * *", { timezone: this.config.timezone }, async () => {
+        Cron("0 */30 * * * *", { timezone: this.config.timezone }, () => {
             store.chats.clear();
             store.contacts = {};
             store.messages = {};
