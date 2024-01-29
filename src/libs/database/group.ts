@@ -15,10 +15,12 @@ export class Group {
                 if (await this.get(groupId)) return;
                 const groupData = await Chisato.groupMetadata(groupId).catch(() => void 0);
                 if (!groupData) return;
-                delete groupData.id;
-                delete groupData.subjectOwner;
-                delete groupData.subjectTime;
-                delete groupData.descId;
+                for (const key of Object.keys(groupData))
+                    if (
+                        ["id", "subjectOwner", "subjectTime", "descId", "inviteCode", "author"].includes(key) &&
+                        groupData[key] === undefined
+                    )
+                        delete groupData[key];
                 groupData.ephemeralDuration = groupData.ephemeralDuration || 0;
                 const metadata = await Database.group.upsert({
                     where: { groupId },
