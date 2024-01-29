@@ -1,6 +1,6 @@
 {
     "name": "chisato-bot",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "WhatsApp Bot Multi-Device using Baileys",
     "main": "start.js",
     "scripts": {
@@ -20,7 +20,7 @@
         "@tobyg74/tiktok-api-dl": "^1.0.13",
         "awesome-phonenumber": "^3.2.0",
         "axios": "^1.5.2",
-        "baileys": "github:tobyg74/baileys",
+        "baileys": "github:TobyG74/baileys",
         "cfonts": "^3.1.1",
         "cheerio": "^1.0.0-rc.12",
         "cli-color": "^2.0.3",
