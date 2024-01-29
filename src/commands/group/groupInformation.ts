@@ -15,7 +15,6 @@ export default <ConfigCommands>{
             `• Description : ${groupMetadata.desc || "-"}\n` +
             `• Member Count : ${groupMetadata.participants.length}\n` +
             `• Group Owner : @${groupMetadata.owner.split("@")[0]}\n` +
-            `• Group Owner : ${groupMetadata.owner || "-"}\n` +
             `• Group Admins : ${groupAdmins.length}\n`;
         for (let i = 0; i < groupAdmins.length; i++) {
             str += `└ @${groupAdmins[i].id.split("@")[0]}\n`;
