@@ -20,14 +20,14 @@ export default <ConfigCommands>{
                 if (data.type === "post") {
                     await Chisato.sendText(
                         from,
-                        `*「 INSTAGRAM POST DOWNLOADER 」*\n\n• Type: ${data.type}\n\n• Total: ${data.result.length}`,
+                        `*「 INSTAGRAM POST DOWNLOADER 」*\n\n• Type: ${data.type}\n• Total: ${data.result.length}\n*Please wait, your video or image is being sent...*`,
                         message
                     );
                     for (let i = 0; i < data.result.length; i++) {
                         if (data.result[i].type === "image")
-                            await Chisato.sendImage(from, data.result[i], `• Type: ${data.result[i].type}`);
+                            await Chisato.sendImage(from, data.result[i].url, `• Type: ${data.result[i].type}`);
                         else if (data.result[i].type === "video")
-                            await Chisato.sendVideo(from, data.result[i], false, `• Type: ${data.result[i].type}`);
+                            await Chisato.sendVideo(from, data.result[i].url, false, `• Type: ${data.result[i].type}`);
                     }
                 }
             })
