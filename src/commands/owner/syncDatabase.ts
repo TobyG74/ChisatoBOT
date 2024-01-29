@@ -28,6 +28,9 @@ export default <ConfigCommands>{
                 groupMetadata.size = groupMetadata.size ? groupMetadata.size : groupMetadata.participants.length;
                 await Database.Group.update(groupDatabaseIDs[i], {
                     ...groupMetadata,
+                }).catch(async () => {
+                    await Database.Group.delete(groupDatabaseIDs[i]);
+                    await Database.Group.upsert(Chisato, groupDatabaseIDs[i]);
                 });
             } else {
                 await Database.Group.delete(groupDatabaseIDs[i]);

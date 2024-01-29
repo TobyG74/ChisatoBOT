@@ -15,7 +15,7 @@ model Group {
   creation            Int
   owner               String?
   desc                String?
-  joinApprovalMode    Boolean    
+  joinApprovalMode    Boolean?    @default(false)    
   restrict            Boolean
   announce            Boolean
   isCommunity         Boolean
