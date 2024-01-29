@@ -23,7 +23,7 @@ export default <ConfigCommands>{
             case "on":
                 if (groupSetting?.memberAddMode)
                     return Chisato.sendText(from, `GroupAddMode is still set to All Participants`, message);
-                await Chisato.groupSettingUpdate(from, "all_member_add");
+                await Chisato.groupMemberAddMode(from, "all_member_add");
                 await Database.Group.update(from, {
                     memberAddMode: true,
                 });
@@ -31,7 +31,7 @@ export default <ConfigCommands>{
             case "off":
                 if (!groupSetting?.memberAddMode)
                     return Chisato.sendText(from, `GroupAddMode is still set to Admin!`, message);
-                await Chisato.groupSettingUpdate(from, "admin_add");
+                await Chisato.groupMemberAddMode(from, "admin_add");
                 await Database.Group.update(from, {
                     memberAddMode: false,
                 });

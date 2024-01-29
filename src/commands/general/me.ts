@@ -12,12 +12,12 @@ export default <ConfigCommands>{
             `• Name : ${message.pushName}\n` +
             `• Status : ${fetchStatus?.status || "-"}\n` +
             `└• Set At : ${fetchStatus?.setAt || "-"}\n` +
-            `• Number : ${sender.replace(/@c.us/g, "")}\n` +
+            `• Number : ${sender.replace(/@s.whatsapp.net/g, "")}\n` +
             `• Limit : ${
                 isOwner ? "unlimited" : userMetadata.role === "premium" ? "unlimited" : userMetadata.limit
             }\n` +
             `• Role : ${isOwner ? "owner" : userMetadata.role}\n`;
-        `• Banned : ${groupSettingData.banned.includes(sender) ? "YES" : "NO"}\n`;
+        `• Banned : ${groupSettingData.banned?.includes(sender) ? "YES" : "NO"}\n`;
         try {
             const profile = await Chisato.profilePictureUrl(sender, "image");
             await Chisato.sendImage(from, profile, caption, message);

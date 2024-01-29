@@ -21,9 +21,9 @@ export default <ConfigCommands>{
         const groupSetting = await Database.Group.get(from);
         switch (args[0]) {
             case "on":
-                if (groupSetting?.approval)
+                if (groupSetting?.joinApprovalMode)
                     return Chisato.sendText(from, `GroupAddMode is still set to All Participants`, message);
-                await Chisato.groupSettingUpdate(from, "all_member_add");
+                await Chisato.groupJoinApprovalMode(from, "on");
                 await Database.Group.update(from, {
                     approval: true,
                 });
@@ -33,9 +33,9 @@ export default <ConfigCommands>{
                     message
                 );
             case "off":
-                if (!groupSetting?.approval)
+                if (!groupSetting?.joinApprovalMode)
                     return Chisato.sendText(from, `GroupAddMode is still set to Admin!`, message);
-                await Chisato.groupSettingUpdate(from, "admin_add");
+                await Chisato.groupJoinApprovalMode(from, "off");
                 await Database.Group.update(from, {
                     approval: false,
                 });
