@@ -95,6 +95,7 @@ String.prototype.toUpper = function () {
         .trim();
 };
 
+let tryConnect = 0;
 export class Client {
     private sendmessage = sendmessage;
     private config: Config;
@@ -172,6 +173,26 @@ export class Client {
                             this.connect(socketConfig);
                         }
                         break;
+                    case DisconnectReason.forbidden:
+                        if (tryConnect < 2) {
+                            Chisato.log("status", `${reason}`, "Forbidden! Try to reconnecting...");
+                            this.connect(socketConfig);
+                        } else {
+                            Chisato.log("status", `${reason}`, "Forbidden! Please re-scan QR!");
+                            await clearState();
+                        }
+                        break;
+                    case DisconnectReason.unavailableService:
+                        {
+                            if (tryConnect < 2) {
+                                Chisato.log("status", `${reason}`, "Unavailable Service! Try to reconnecting...");
+                                this.connect(socketConfig);
+                            } else {
+                                Chisato.log("status", `${reason}`, "Unavailable Service! Please re-scan QR!");
+                                await clearState();
+                            }
+                        }
+                        break;
                     case DisconnectReason.loggedOut:
                         {
                             Chisato.log("status", `${reason}`, "Session has been Logged Out! Please re-scan QR!");
@@ -186,18 +207,30 @@ export class Client {
                         break;
                     case DisconnectReason.badSession:
                         {
-                            Chisato.log("status", `${reason}`, "Bad Session! Please re-scan QR!");
-                            await clearState();
+                            if (tryConnect < 2) {
+                                Chisato.log("status", `${reason}`, "Bad Session! Try to reconnecting...");
+                                this.connect(socketConfig);
+                            } else {
+                                Chisato.log("status", `${reason}`, "Bad Session! Please re-scan QR!");
+                                await clearState();
+                            }
                         }
                         break;
                     default:
                         {
                             Chisato.log("status", `${reason}`, "Another Reason! Try to re-scan QR!");
-                            await clearState();
+                            if (tryConnect < 2) {
+                                this.connect(socketConfig);
+                            } else {
+                                await clearState();
+                            }
                         }
                         break;
                 }
             } else if (connection === "open") {
+                tryConnect = 0;
+
+                /** Logger */
                 cfonts.say(Chisato.user.name || "WhatsApp BOT", this.config.cfonts);
                 Chisato.log("connect", "Success Connected!");
                 Chisato.log("connect", "Creator : Tobz");
