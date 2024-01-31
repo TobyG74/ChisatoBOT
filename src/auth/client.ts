@@ -175,6 +175,7 @@ export class Client {
                         break;
                     case DisconnectReason.forbidden:
                         if (tryConnect < 2) {
+                            tryConnect++;
                             Chisato.log("status", `${reason}`, "Forbidden! Try to reconnecting...");
                             this.connect(socketConfig);
                         } else {
@@ -185,6 +186,7 @@ export class Client {
                     case DisconnectReason.unavailableService:
                         {
                             if (tryConnect < 2) {
+                                tryConnect++;
                                 Chisato.log("status", `${reason}`, "Unavailable Service! Try to reconnecting...");
                                 this.connect(socketConfig);
                             } else {
@@ -208,6 +210,7 @@ export class Client {
                     case DisconnectReason.badSession:
                         {
                             if (tryConnect < 2) {
+                                tryConnect++;
                                 Chisato.log("status", `${reason}`, "Bad Session! Try to reconnecting...");
                                 this.connect(socketConfig);
                             } else {
@@ -218,10 +221,12 @@ export class Client {
                         break;
                     default:
                         {
-                            Chisato.log("status", `${reason}`, "Another Reason! Try to re-scan QR!");
                             if (tryConnect < 2) {
+                                tryConnect++;
+                                Chisato.log("status", `${reason}`, "Another Reason! Try to reconnecting...");
                                 this.connect(socketConfig);
                             } else {
+                                Chisato.log("status", `${reason}`, "Another Reason! Try to re-scan QR!");
                                 await clearState();
                             }
                         }
