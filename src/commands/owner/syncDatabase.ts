@@ -24,8 +24,8 @@ export default <ConfigCommands>{
                 delete groupMetadata.subjectOwner;
                 delete groupMetadata.subjectTime;
                 delete groupMetadata.descId;
-                groupMetadata.ephemeralDuration = groupMetadata.ephemeralDuration ? groupMetadata.ephemeralDuration : 0;
-                groupMetadata.size = groupMetadata.size ? groupMetadata.size : groupMetadata.participants.length;
+                groupMetadata.ephemeralDuration = groupMetadata.ephemeralDuration || 0;
+                9;
                 await Database.Group.update(groupDatabaseIDs[i], {
                     ...groupMetadata,
                 }).catch(async () => {
