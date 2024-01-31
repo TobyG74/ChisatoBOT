@@ -287,13 +287,13 @@ export const groupUpdate = async (Chisato: Chisato, message: GroupSerialize) => 
                 if (participant.split("@")[0] === botNumber.split("@")[0]) {
                     await Group.delete(from);
                     await GroupSetting.delete(from);
-                }
-                getMetadata(from).then(async (res) => {
-                    await Group.update(from, {
-                        size: res?.size || res?.participants?.length || 0,
-                        participants: res.participants,
+                } else
+                    getMetadata(from).then(async (res) => {
+                        await Group.update(from, {
+                            size: res?.size || res?.participants?.length || 0,
+                            participants: res.participants,
+                        });
                     });
-                });
                 break;
         }
     } catch (e) {
