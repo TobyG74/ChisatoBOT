@@ -1,13 +1,13 @@
 {
     "name": "chisato-bot",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "WhatsApp Bot Multi-Device using Baileys",
     "main": "start.js",
     "scripts": {
         "build": "tsc --build",
-        "start": "node ./dist/start",
-        "pm2:start": "pm2 start dist/start.js && pm2 flush start && pm2 logs start",
-        "pm2:restart": "pm2 reload start && pm2 flush start && pm2 logs start"
+        "start": "node ./dist/auth/connect.js",
+        "pm2:start": "pm2 start dist/auth/connect.js && pm2 flush connect && pm2 logs connect",
+        "pm2:restart": "pm2 reload connect && pm2 flush connect && pm2 logs connect"
     },
     "prisma": {
         "schema": "./prisma/schema.prisma"
@@ -31,6 +31,7 @@
         "form-data": "^4.0.0",
         "path": "^0.12.7",
         "twitter-downloader": "^1.1.1",
+        "typed-emitter": "^2.1.0",
         "util": "^0.12.4",
         "wa-sticker-formatter": "^4.4.4",
         "yt-search": "^2.10.3"
