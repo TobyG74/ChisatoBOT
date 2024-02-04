@@ -32,15 +32,3 @@ declare type GroupSerialize = {
     message: proto.IMessage;
     expiration: number;
 };
-
-declare type CallSerialize = {
-    chatId: string;
-    from: string;
-    isGroup?: boolean;
-    id: string;
-    date: Date;
-    isVideo?: boolean;
-    status: "offer" | "ringing" | "timeout" | "reject" | "accept";
-    offline: boolean;
-    latencyMs?: number;
-};

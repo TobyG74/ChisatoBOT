@@ -23,6 +23,18 @@ model Group {
   memberAddMode       Boolean
   participants        Participant[]
   ephemeralDuration   Int?        @default(0)
+  settings            Settings
+}
+
+type Settings {
+  notify              Boolean     @default(false)
+  welcome             Boolean     @default(true)
+  leave               Boolean     @default(true)
+  mute                Boolean     @default(false)
+  antilink            Antilink    
+  antibot             Boolean     @default(false)
+  antiviewonce        Boolean     @default(false)
+  banned              String[]
 }
 
 type Participant {
@@ -33,10 +45,11 @@ type Participant {
 model User {
   id      String  @id @default(auto()) @map("_id") @db.ObjectId
   userId  String  @unique
+  name    String?
   limit   Int         
   role    Role    @default(free)
   expired Int     @default(0)
-  afk     Afk?
+  afk     Afk
 }
 
 type Afk {
@@ -50,28 +63,25 @@ enum Role {
   premium
 }
 
-model GroupSetting {
-  id                  String      @id @default(auto()) @map("_id") @db.ObjectId
-  groupId             String      @unique
-  notify              Boolean     @default(false)
-  welcome             Boolean     @default(true)
-  leave               Boolean     @default(true)
-  mute                Boolean     @default(false)
-  antilink            Antilink    
-  antibot             Boolean     @default(false)
-  antiviewonce        Boolean     @default(false)
-  banned              String[]
-}
-
 type Antilink {
-  status Boolean 
-  mode   Mode    
-  list   String[]   
+  status Boolean? @default(false)
+  mode   Mode     @default(kick)
+  list   AntilinkList[] @default([whatsapp])
 }
 
 enum Mode {
   kick
   delete
+}
+
+enum AntilinkList {
+  youtube
+  instagram
+  facebook
+  whatsapp
+  twitter
+  tiktok
+  all
 }
 
 model Session {

@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "unbanned",
@@ -9,7 +9,7 @@ export default <ConfigCommands>{
     isGroup: true,
     isGroupAdmin: true,
     async run({ Chisato, from, message, Database }) {
-        let user = await Database.GroupSetting.get(from);
+        let user = await Database.Group.getSettings(from);
         const checkUserBanned = (userId: string) => {
             if (!user.banned.includes(userId)) {
                 return Chisato.sendText(from, `@${userId.split("@")[0]} is not on the banned list!`, message, {
@@ -20,7 +20,7 @@ export default <ConfigCommands>{
         if (message.quoted) {
             checkUserBanned(message.quoted.sender);
             user.banned = user.banned.filter((value) => value != message.quoted.sender);
-            await Database.GroupSetting.update(from, { banned: user.banned }).then(() => {
+            await Database.Group.updateSettings(from, { banned: user.banned }).then(() => {
                 Chisato.sendText(
                     from,
                     `Successfully unbanned @${message.quoted.sender.split("@")[0]} from this Group!`,
@@ -35,7 +35,7 @@ export default <ConfigCommands>{
             for (let i in message.mentions) {
                 checkUserBanned(message.mentions[i]);
                 user.banned = user.banned.filter((value) => value != message.mentions[i]);
-                await Database.GroupSetting.update(from, { banned: user.banned }).then(() => {
+                await Database.Group.updateSettings(from, { banned: user.banned }).then(() => {
                     caption += `@${message.mentions[i].split("@")[0]} `;
                 });
             }

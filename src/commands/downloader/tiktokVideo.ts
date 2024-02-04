@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import { TiktokDL } from "@tobyg74/tiktok-api-dl";
 import { TiktokAPIResponse } from "@tobyg74/tiktok-api-dl/lib/types/tiktokApi";
 import { isURL } from "../../libs";

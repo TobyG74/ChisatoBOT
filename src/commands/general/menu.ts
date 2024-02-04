@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import { commands } from "../../libs";
 import fs from "fs";
 

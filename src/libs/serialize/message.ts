@@ -1,8 +1,8 @@
 import { WAMessage } from "baileys";
-import { Chisato } from "../../types/client";
-import { MessageSerialize } from "../../types/serialize";
+import { MessageSerialize } from "../../types/structure/serialize";
+import { Client } from "..";
 
-export const message = async (Chisato: Chisato, message: WAMessage): Promise<MessageSerialize> => {
+export const message = async (Chisato: Client, message: WAMessage): Promise<MessageSerialize> => {
     const m = <MessageSerialize>{};
     if (message.message) {
         m.key = message.key;

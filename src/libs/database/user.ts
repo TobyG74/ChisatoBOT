@@ -1,4 +1,4 @@
-import { Database } from "..";
+import { Client, Database } from "..";
 import { User as UserType } from "@prisma/client";
 import fs from "fs";
 
@@ -10,10 +10,10 @@ export class User {
      * @param userId
      * @returns {Promise<UserType>}
      */
-    public upsert = (Chisato, userId: string): Promise<UserType> =>
+    public upsert = (Chisato: Client, userId: string, pushName: string): Promise<UserType> =>
         new Promise(async (resolve, reject) => {
             try {
-                if (await this.get(userId)) return;
+                if (await this.get(userId, pushName)) return;
                 const isTeam = this.config.teamNumber.includes(userId.split("@")[0]);
                 const metadata = await Database.user.upsert({
                     where: { userId },
@@ -50,12 +50,13 @@ export class User {
      * @param userId
      * @returns {Promise<UserType>}
      */
-    public get = (userId: string): Promise<UserType> =>
+    public get = (userId: string, pushName?: string): Promise<UserType> =>
         new Promise(async (resolve, reject) => {
             try {
                 const metadata = await Database.user.findUnique({
                     where: { userId },
                 });
+                if (metadata?.name !== pushName) await this.update(userId, { name: pushName });
                 resolve(metadata);
             } catch (err) {
                 resolve(null);

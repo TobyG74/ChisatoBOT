@@ -1,5 +1,5 @@
 import fs from "fs";
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "grouppicture",

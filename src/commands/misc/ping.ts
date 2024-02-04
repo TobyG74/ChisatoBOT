@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import moment from "moment-timezone";
 
 const ping = function (timestamp: number, now: number) {

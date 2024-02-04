@@ -1,11 +1,8 @@
-import { Group, GroupSetting, Participant, User } from "@prisma/client";
-import { Chisato } from "./client";
+import { Group, Participant, User } from "@prisma/client";
+import { Chisato } from "./auth/client";
 import { MessageSerialize } from "./serialize";
-import {
-    Group as GroupDatabaseType,
-    GroupSetting as GroupSettingDatabaseType,
-    User as UserDatabaseType,
-} from "../libs/database";
+import { Group as GroupDatabaseType, User as UserDatabaseType } from "../../libs/database";
+import { Client } from "../../libs";
 
 declare type ConfigCommands = {
     name: string;
@@ -29,7 +26,7 @@ declare type ConfigCommands = {
 };
 
 type CommandsObject = {
-    Chisato?: Chisato;
+    Chisato?: Client;
     from?: string;
     sender?: string;
     args?: string[];
@@ -61,7 +58,6 @@ type CommandsObject = {
 
 declare type Database = {
     Group: GroupDatabaseType;
-    GroupSetting: GroupSettingDatabaseType;
     User: UserDatanaseType;
 };
 
@@ -69,7 +65,7 @@ declare type Commands = {
     cmd: ConfigCmd;
 };
 
-declare type ConfigEvents = {
+declare type ConfigSettings = {
     name: string;
     isGroup: booelean;
     isBotAdmin: boolean;
@@ -79,7 +75,7 @@ declare type ConfigEvents = {
 declare type EventsObject = {
     name?: string;
     time?: string;
-    Chisato?: Chisato;
+    Chisato?: Client;
     from?: string;
     sender?: string;
     body?: string;

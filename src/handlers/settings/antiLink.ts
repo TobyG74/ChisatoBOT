@@ -1,12 +1,12 @@
 import clc from "cli-color";
-import { ConfigEvents } from "../../types/commands";
+import { ConfigSettings } from "../../types/structure/commands";
 
-export default <ConfigEvents>{
+export default <ConfigSettings>{
     name: "antilink",
     isGroup: true,
     isBotAdmin: true,
     async run({ Chisato, time, pushName, groupName, body, from, sender, message, Database, isOwner, isGroupAdmin }) {
-        const { antilink } = await Database.GroupSetting.get(from);
+        const { antilink } = await Database.Group.getSettings(from);
         let regex: RegExp;
         let regexProfile: RegExp;
         if (antilink.status && !isOwner && !isGroupAdmin) {

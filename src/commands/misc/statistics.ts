@@ -1,9 +1,7 @@
-import type { ConfigCommands } from "../../types/commands";
-import path from "path";
-import fs from "fs";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 /** Database */
-import { Group, User, GroupSetting } from "../../libs/database";
+import { Group, User } from "../../libs/database";
 
 export default <ConfigCommands>{
     name: "stats",
@@ -12,17 +10,10 @@ export default <ConfigCommands>{
     description: "View the count from the database",
     async run({ Chisato, from, message }) {
         const group = new Group();
-        const groupSetting = new GroupSetting();
         const user = new User();
-        const filepath = path.join(__dirname, "../../..", `temp`);
-        const files = fs.readdirSync(filepath);
 
         const caption =
-            `「 *TOTAL DATABASE* 」\n\n` +
-            `• Group : ${await group.size()}\n` +
-            `• Group Setting : ${await groupSetting.size()}\n` +
-            `• User : ${await user.size()}\n` +
-            `• AI User : ${files.length}\n`;
+            `「 *TOTAL DATABASE* 」\n\n` + `• Group : ${await group.size()}\n` + `• User : ${await user.size()}\n`;
 
         await Chisato.sendText(from, caption, message);
     },

@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands.js";
+import type { ConfigCommands } from "../../types/structure/commands.js";
 
 export default <ConfigCommands>{
     name: "listblock",

@@ -3,4 +3,4 @@ export * from "./client/commands";
 export * from "../utils/fetch";
 export * from "../utils/function";
 export * from "./database/prisma";
-export * from "./client/sendmessage";
+export * from "./client/client";

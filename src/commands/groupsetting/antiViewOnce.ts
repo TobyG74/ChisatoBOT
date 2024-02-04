@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "antiviewonce",
@@ -16,15 +16,15 @@ export default <ConfigCommands>{
 *Turn off*
 • /antiviewonce off`,
     async run({ Chisato, from, args, message, Database, command }) {
-        const groupSetting = await Database.GroupSetting.get(from);
+        const groupSetting = await Database.Group.getSettings(from);
         if (args[0] === "on") {
             if (groupSetting?.antiviewonce) return Chisato.sendText(from, `Anti ViewOnce is already active!`, message);
-            await Database.GroupSetting.update(from, { antiviewonce: true });
+            await Database.Group.updateSettings(from, { antiviewonce: true });
             await Chisato.sendText(from, `Anti ViewOnce has been activated!`, message);
         } else if (args[0] === "off") {
             if (!groupSetting?.antiviewonce)
                 return Chisato.sendText(from, `Anti ViewOnce is already disabled!`, message);
-            await Database.GroupSetting.update(from, { antiviewonce: false });
+            await Database.Group.updateSettings(from, { antiviewonce: false });
             await Chisato.sendText(from, `Anti ViewOnce has been disabled!`, message);
         } else {
             await Chisato.sendText(from, `Example :\n${command.example}`, message);

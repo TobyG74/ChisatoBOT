@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import { converter } from "../../utils";
 
 /**
@@ -11,6 +11,9 @@ export default <ConfigCommands>{
     usage: "<reply>",
     category: "converter",
     description: "Convert Image to Anime",
+    limit: 5,
+    cooldown: 5,
+    isPremium: true,
     isProcess: true,
     async run({ Chisato, from, message }) {
         try {

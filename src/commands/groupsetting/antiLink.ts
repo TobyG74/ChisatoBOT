@@ -1,5 +1,5 @@
 import { Antilink } from "@prisma/client";
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "antilink",
@@ -39,7 +39,7 @@ export default <ConfigCommands>{
 *Reset List Link*
 • /antilink reset`,
     async run({ Chisato, from, args, message, Database, command }) {
-        const groupSetting = await Database.GroupSetting.get(from);
+        const groupSetting = await Database.Group.getSettings(from);
         const listLink = ["youtube", "facebook", "instagram", "whatsapp", "twitter", "tiktok", "all"];
         switch (args[0]) {
             case "add":
@@ -52,7 +52,7 @@ export default <ConfigCommands>{
                         message
                     );
                 if (args[1] === "all") {
-                    await Database.GroupSetting.update(from, {
+                    await Database.Group.updateSettings(from, {
                         antilink: {
                             status: true,
                             mode: groupSetting.antilink.mode,
@@ -60,7 +60,7 @@ export default <ConfigCommands>{
                         },
                     });
                 } else {
-                    await Database.GroupSetting.update(from, {
+                    await Database.Group.updateSettings(from, {
                         antilink: {
                             status: true,
                             mode: groupSetting.antilink.mode,
@@ -80,7 +80,7 @@ export default <ConfigCommands>{
                         message
                     );
                 if (args[1] === "all") {
-                    await Database.GroupSetting.update(from, {
+                    await Database.Group.updateSettings(from, {
                         antilink: {
                             status: false,
                             mode: groupSetting.antilink.mode,
@@ -88,7 +88,7 @@ export default <ConfigCommands>{
                         },
                     });
                 } else {
-                    await Database.GroupSetting.update(from, {
+                    await Database.Group.updateSettings(from, {
                         antilink: {
                             status: true,
                             mode: groupSetting.antilink.mode,
@@ -101,7 +101,7 @@ export default <ConfigCommands>{
             case "on":
                 if (groupSetting?.antilink.status)
                     return Chisato.sendText(from, `Anti Link is already active!`, message);
-                await Database.GroupSetting.update(from, {
+                await Database.Group.updateSettings(from, {
                     antilink: {
                         status: true,
                         mode: groupSetting.antilink.mode,
@@ -113,7 +113,7 @@ export default <ConfigCommands>{
             case "off":
                 if (!groupSetting?.antilink.status)
                     return Chisato.sendText(from, `Anti Link is already disabled!`, message);
-                await Database.GroupSetting.update(from, {
+                await Database.Group.updateSettings(from, {
                     antilink: {
                         status: false,
                         mode: groupSetting.antilink.mode,
@@ -124,7 +124,7 @@ export default <ConfigCommands>{
                 break;
             case "mode":
                 if (args[1] === "delete") {
-                    await Database.GroupSetting.update(from, {
+                    await Database.Group.updateSettings(from, {
                         antilink: {
                             status: groupSetting.antilink.status,
                             mode: "delete",
@@ -133,7 +133,7 @@ export default <ConfigCommands>{
                     });
                     await Chisato.sendText(from, `Anti Link mode has been set to delete!`, message);
                 } else if (args[1] === "kick") {
-                    await Database.GroupSetting.update(from, {
+                    await Database.Group.updateSettings(from, {
                         antilink: {
                             status: groupSetting.antilink.status,
                             mode: "kick",
@@ -146,7 +146,7 @@ export default <ConfigCommands>{
                 }
                 break;
             case "reset":
-                await Database.GroupSetting.update(from, {
+                await Database.Group.updateSettings(from, {
                     antilink: {
                         status: groupSetting.antilink.status,
                         mode: groupSetting.antilink.mode,

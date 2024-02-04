@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import { downloader, isURL } from "../../utils";
 
 export default <ConfigCommands>{

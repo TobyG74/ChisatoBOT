@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import { runtime } from "../../utils/function";
 
 export default <ConfigCommands>{

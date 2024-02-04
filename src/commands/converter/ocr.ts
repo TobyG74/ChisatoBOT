@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import { converter } from "../../utils";
 
 export default <ConfigCommands>{
@@ -7,6 +7,7 @@ export default <ConfigCommands>{
     usage: "<reply>",
     category: "converter",
     description: "Convert Image to Text",
+    cooldown: 3,
     isProcess: true,
     async run({ Chisato, from, message }) {
         let { quoted } = message;

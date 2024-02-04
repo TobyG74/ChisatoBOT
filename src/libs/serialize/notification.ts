@@ -1,7 +1,7 @@
-import { Chisato } from "../../types/client";
-import { GroupSerialize } from "../../types/serialize";
+import { Client } from "..";
+import { GroupSerialize } from "../../types/structure/serialize";
 
-export const notification = async (Chisato: Chisato, message: any): Promise<GroupSerialize> => {
+export const notification = async (Chisato: Client, message: any): Promise<GroupSerialize> => {
     const m = <GroupSerialize>{};
     if (message.attrs.type === "w:gp2") {
         m.from = message.attrs.from;

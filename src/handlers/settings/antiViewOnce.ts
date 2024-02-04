@@ -1,12 +1,12 @@
 import clc from "cli-color";
-import { ConfigEvents } from "../../types/commands";
+import { ConfigSettings } from "../../types/structure/commands";
 
-export default <ConfigEvents>{
+export default <ConfigSettings>{
     name: "antiviewonce",
     isGroup: true,
     isBotAdmin: true,
     async run({ Chisato, time, pushName, groupName, from, sender, message, Database, isOwner, isGroupAdmin }) {
-        const { antiviewonce } = await Database.GroupSetting.get(from);
+        const { antiviewonce } = await Database.Group.getSettings(from);
         let buffer: Buffer;
         if (antiviewonce && !isOwner && !isGroupAdmin) {
             if (message.message[message.type].viewOnce) {

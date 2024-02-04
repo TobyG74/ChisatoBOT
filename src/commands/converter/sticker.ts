@@ -1,4 +1,5 @@
-import type { ConfigCommands } from "../../types/commands";
+import { StickerTypes } from "wa-sticker-formatter";
+import type { ConfigCommands } from "../../types/structure/commands";
 import fs from "fs";
 
 export default <ConfigCommands>{
@@ -7,12 +8,13 @@ export default <ConfigCommands>{
     usage: "<option> (default|full|circle)",
     category: "converter",
     description: "Convert Image / Video to Sticker",
+    cooldown: 2,
     isProcess: true,
     async run({ Chisato, args, from, message }) {
         try {
             let { quoted } = message;
             let buffer: Buffer | null;
-            let type = args[0];
+            let type = args[0] as StickerTypes;
             const { stickers }: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
             if (message?.type === "imageMessage" || quoted?.type === "imageMessage") {
                 buffer = quoted !== null ? await quoted.download() : await message.download();
@@ -20,7 +22,7 @@ export default <ConfigCommands>{
                     from,
                     { pack: stickers.packname, author: stickers.author },
                     buffer,
-                    type,
+                    type || StickerTypes.DEFAULT,
                     message
                 );
                 buffer = null;
@@ -38,7 +40,7 @@ export default <ConfigCommands>{
                     from,
                     { pack: stickers.packname, author: stickers.author },
                     buffer,
-                    type,
+                    type || StickerTypes.DEFAULT,
                     message
                 );
                 buffer = null;

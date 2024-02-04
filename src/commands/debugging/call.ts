@@ -1,5 +1,5 @@
 import { encodeWAMessage } from "baileys";
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import crypto from "crypto";
 
 export default <ConfigCommands>{

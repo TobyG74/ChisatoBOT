@@ -1,6 +1,6 @@
 import { WAMessage } from "baileys";
-import { Chisato } from "../../types/client";
-import { GroupSerialize } from "../../types/serialize";
+import { Chisato } from "../../types/auth/chisato";
+import { GroupSerialize } from "../../types/structure/serialize";
 
 export const group = async (message: WAMessage): Promise<GroupSerialize> => {
     const m = <GroupSerialize>{};

@@ -7,17 +7,19 @@ import util from "util";
 import { exec } from "child_process";
 
 /** Types */
-import { Chisato } from "../types/client";
-import { MessageSerialize } from "../types/serialize";
+import { MessageSerialize } from "../types/structure/serialize";
 import { Participant, User } from "@prisma/client";
 
 /** Database */
-import { Group as GroupDatabase, GroupSetting as GroupSettingDatabase, User as UserDatabase } from "../libs/database";
+import { Group as GroupDatabase, User as UserDatabase } from "../libs/database";
 
 /** Utils */
 import * as utils from "../utils";
+
+/** Libs */
 import * as libs from "../libs";
-const { commands, events, cooldowns } = libs;
+import { Client } from "../libs";
+const { commands, settings, cooldowns } = libs;
 
 /** Eval Marker */
 const Axios = axios;
@@ -27,7 +29,7 @@ const Database = libs.Database;
 const Utils = utils;
 const Libs = libs;
 
-export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize, store: any) => {
+export const messageUpsert = async (Chisato: Client, message: MessageSerialize) => {
     try {
         const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
         const time = moment().format("HH:mm:ss DD/MM");
@@ -74,17 +76,16 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         /** Database Class */
         const Group = new GroupDatabase();
         const User = new UserDatabase();
-        const GroupSetting = new GroupSettingDatabase();
 
         /** User */
         let blockList: string[] = [];
         blockList = await Chisato.fetchBlocklist().catch(() => blockList);
-        const userMetadata: User = sender && ((await User.get(sender)) ?? (await User.upsert(Chisato, sender)));
+        const userMetadata: User =
+            sender && ((await User.get(sender, pushName)) ?? (await User.upsert(Chisato, sender, pushName)));
 
         /** Group */
-        const groupSettingData =
-            isGroup && ((await GroupSetting.get(from)) ?? (await GroupSetting.upsert(Chisato, from)));
         const groupMetadata = isGroup && ((await Group.get(from)) ?? (await Group.upsert(Chisato, from)));
+        const groupSettingData = isGroup && groupMetadata.settings;
         const groupName = isGroup && groupMetadata.subject;
         const groupDescription = isGroup && groupMetadata.desc;
         const groupParticipants: Participant[] = isGroup && groupMetadata.participants;
@@ -110,8 +111,8 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
         /** Check User Premium */
         if (userMetadata.role === "premium") {
             if (userMetadata.expired < Date.now()) {
-                await User.update(sender, { role: "free", expired: 0 });
-                Chisato.sendText(sender, `Your premium has expired!`, message);
+                await Chisato.sendText(sender, `Your premium has expired!`, message);
+                return User.update(sender, { role: "free", expired: 0 });
             }
         }
 
@@ -342,7 +343,6 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
                     isBotAdmin,
                     Database: {
                         Group,
-                        GroupSetting,
                         User,
                     },
                     groupName,
@@ -367,10 +367,9 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
 
         /** Check Afk from user */
         if (isAfk && isGroup) {
-            User.update(sender, { afk: { status: false, reason: null, since: 0 } });
             const afkData = userMetadata?.afk;
             const since = afkData?.since && Libs.getRemaining(afkData.since);
-            Chisato.sendText(
+            await Chisato.sendText(
                 from,
                 `*「 AFK 」*\n\n@${sender.split("@")[0]} has been back from AFK since ${since}`,
                 message,
@@ -378,6 +377,7 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
                     mentions: [sender],
                 }
             );
+            return User.update(sender, { afk: { status: false, reason: null, since: 0 } });
         }
 
         /** Check Afk with Mentions User */
@@ -450,37 +450,37 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
                 .finally(() => Chisato.log("exec", body.replace("$ ", "").replace(/\n/g, " ").slice(0, 50)));
         }
 
-        /** All Events from Bot Messages */
-        events.forEach(async (event) => {
-            if (event.isGroup && !isGroup) return;
-            if (event.isBotAdmin && !isBotAdmin) {
-                if (event.name === "antilink") {
-                    if (groupSettingData[event.name].status) {
-                        await GroupSetting.update(from, {
-                            [event.name]: {
+        /** All Settings from Group Messages */
+        settings.forEach(async (setting) => {
+            if (setting.isGroup && !isGroup) return;
+            if (setting.isBotAdmin && !isBotAdmin) {
+                if (setting.name === "antilink") {
+                    if (groupSettingData[setting.name].status) {
+                        await Group.update(from, {
+                            [setting.name]: {
                                 status: false,
-                                mode: groupSettingData[event.name].mode,
-                                list: groupSettingData[event.name].list,
+                                mode: groupSettingData[setting.name].mode,
+                                list: groupSettingData[setting.name].list,
                             },
                         });
                         return await Chisato.sendText(
                             from,
-                            `Hello, Currently the bot is not a Group Admin. ${event.name} will be turned off automatically`
+                            `Hello, Currently the bot is not a Group Admin. ${setting.name} will be turned off automatically`
                         );
                     }
                 } else {
-                    if (groupSettingData[event.name]) {
-                        await GroupSetting.update(from, { [event.name]: false });
+                    if (groupSettingData[setting.name]) {
+                        await Group.updateSettings(from, { [setting.name]: false });
                         return await Chisato.sendText(
                             from,
-                            `Hello, Currently the bot is not a Group Admin. ${event.name} will be turned off automatically`
+                            `Hello, Currently the bot is not a Group Admin. ${setting.name} will be turned off automatically`
                         );
                     }
                 }
             }
-            if (typeof event.run === "function")
-                event.run({
-                    name: event.name,
+            if (typeof setting.run === "function")
+                setting.run({
+                    name: setting.name,
                     time,
                     Chisato,
                     prefix,
@@ -491,7 +491,6 @@ export const messageUpsert = async (Chisato: Chisato, message: MessageSerialize,
                     message,
                     Database: {
                         Group,
-                        GroupSetting,
                         User,
                     },
                     isOwner,

@@ -1,9 +1,9 @@
 import moment from "moment-timezone";
 import fs from "fs";
-import { Chisato } from "../../types/client";
-import { CallSerialize } from "../../types/serialize";
+import { Client } from "../../libs";
+import { WACallEvent } from "baileys";
 
-export const antiCall = async (Chisato: Chisato, message: CallSerialize) => {
+export const antiCall = async (Chisato: Client, message: WACallEvent) => {
     const { ownerNumber, call }: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
     const { chatId, from, id, date, offline, status, isVideo, isGroup } = message;
     const isOwner = ownerNumber.includes(from.split("@")[0]);

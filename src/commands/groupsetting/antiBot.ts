@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "antibot",
@@ -16,14 +16,14 @@ export default <ConfigCommands>{
 *Turn off*
 • /antibot off`,
     async run({ Chisato, from, args, message, Database, command }) {
-        const groupSetting = await Database.GroupSetting.get(from);
+        const groupSetting = await Database.Group.getSettings(from);
         if (args[0] === "on") {
             if (groupSetting?.antibot) return Chisato.sendText(from, `Anti Bot is already active!`, message);
-            await Database.GroupSetting.update(from, { antibot: true });
+            await Database.Group.updateSettings(from, { antibot: true });
             await Chisato.sendText(from, `Anti Bot has been activated!`, message);
         } else if (args[0] === "off") {
             if (!groupSetting?.antibot) return Chisato.sendText(from, `Anti Bot is already disabled!`, message);
-            await Database.GroupSetting.update(from, { antibot: false });
+            await Database.Group.updateSettings(from, { antibot: false });
             await Chisato.sendText(from, `Anti Bot has been disabled!`, message);
         } else {
             await Chisato.sendText(from, `Example :\n${command.example}`, message);

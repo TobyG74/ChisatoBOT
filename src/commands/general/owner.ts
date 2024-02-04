@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 import fs from "fs";
 
 const config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));

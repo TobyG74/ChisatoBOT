@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "unmute",
@@ -8,9 +8,9 @@ export default <ConfigCommands>{
     isGroup: true,
     isGroupAdmin: true,
     async run({ Chisato, from, message, Database }) {
-        let index = await Database.GroupSetting.get(from);
+        let index = await Database.Group.getSettings(from);
         if (index.mute) {
-            await Database.GroupSetting.update(from, { mute: false });
+            await Database.Group.updateSettings(from, { mute: false });
             await Chisato.sendText(from, "Successfully unmuted bot", message);
         } else {
             await Chisato.sendText(from, "Bot has been unmuted", message);

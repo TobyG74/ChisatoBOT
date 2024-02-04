@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "gsetting",
@@ -12,9 +12,9 @@ export default <ConfigCommands>{
             `「 ${groupMetadata["restrict"] ? "✅" : "❌"} 」 Restrict\n` +
             `「 ${groupMetadata["announce"] ? "✅" : "❌"} 」 Announcement\n` +
             `「 ${groupMetadata["memberAddMode"] ? "✅" : "❌"} 」 Member Add Mode\n` +
-            `「 ${groupMetadata["joinApprovalMode"] ? "✅" : "❌"} 」 Approve New Members\n\n` +
+            `「 ${groupMetadata["joinApprovalMode"] ? "✅" : "❌"} 」 Approve New Members\n` +
             `「 ${groupMetadata["isCommunity"] ? "✅" : "❌"} 」 is Community\n` +
-            `「 ${groupMetadata["isCommunityAnnounce"] ? "✅" : "❌"} 」 is Community Announce\n` +
+            `「 ${groupMetadata["isCommunityAnnounce"] ? "✅" : "❌"} 」 is Community Announce\n\n` +
             `*「 GROUP PRIVACY SETTINGS 」*\n\n` +
             `「 ${groupSettingData["antibot"] ? "✅" : "❌"} 」 Anti Bot\n` +
             `「 ${groupSettingData["antiviewonce"] ? "✅" : "❌"} 」 Anti View Once\n` +

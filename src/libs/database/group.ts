@@ -1,6 +1,5 @@
-import { Database } from "..";
-import { Chisato } from "../../types/client";
-import { Group as GroupType } from "@prisma/client";
+import { Client, Database } from "..";
+import { Group as GroupType, Settings } from "@prisma/client";
 
 export class Group {
     /**
@@ -9,7 +8,7 @@ export class Group {
      * @param groupId
      * @returns {Promise<GroupType>}
      */
-    public upsert = (Chisato: Chisato, groupId: string): Promise<GroupType> =>
+    public upsert = (Chisato: Client, groupId: string): Promise<GroupType> =>
         new Promise(async (resolve, reject) => {
             try {
                 if (await this.get(groupId)) return;
@@ -18,6 +17,8 @@ export class Group {
                 for (const key of Object.keys(groupData))
                     if (["id", "subjectOwner", "subjectTime", "descId", "inviteCode", "author"].includes(key))
                         delete groupData[key];
+                groupData.settings = groupData.settings || {};
+                groupData.settings.antilink = groupData.settings?.antilink || {};
                 groupData.ephemeralDuration = groupData.ephemeralDuration || 0;
                 const metadata = await Database.group.upsert({
                     where: { groupId },
@@ -63,6 +64,26 @@ export class Group {
         });
 
     /**
+     * Get Group Settings from Database
+     * @param groupId
+     * @returns {Promise<Settings>}
+     */
+    public getSettings = (groupId: string): Promise<Settings> =>
+        new Promise(async (resolve, reject) => {
+            try {
+                const metadata = await Database.group.findUnique({
+                    where: { groupId },
+                    select: {
+                        settings: true,
+                    },
+                });
+                resolve(metadata.settings);
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+    /**
      * Update Group Metadata from Database
      * @param groupId
      * @param data
@@ -76,6 +97,32 @@ export class Group {
                     data: { ...data },
                 });
                 resolve(metadata);
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+    /**
+     * Update Group Settings from Database
+     * @param groupId
+     * @param data {Settings}
+     * @returns {Promise<Settings>}
+     */
+    public updateSettings = (groupId: string, data: any): Promise<Settings> =>
+        new Promise(async (resolve, reject) => {
+            try {
+                const metadata = await Database.group.update({
+                    where: { groupId },
+                    data: {
+                        settings: {
+                            update: data,
+                        },
+                    },
+                    select: {
+                        settings: true,
+                    },
+                });
+                resolve(metadata.settings);
             } catch (err) {
                 reject(err);
             }

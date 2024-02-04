@@ -1,12 +1,12 @@
 import clc from "cli-color";
-import { ConfigEvents } from "../../types/commands";
+import { ConfigSettings } from "../../types/structure/commands";
 
-export default <ConfigEvents>{
+export default <ConfigSettings>{
     name: "antibot",
     isGroup: true,
     isBotAdmin: true,
     async run({ Chisato, time, groupName, from, sender, pushName, message, Database, isOwner, isGroupAdmin }) {
-        const { antibot } = await Database.GroupSetting.get(from);
+        const { antibot } = await Database.Group.getSettings(from);
         if (antibot && !isOwner && !isGroupAdmin) {
             if (
                 (message.key.id.startsWith("BAE5") && message.key.id.length === 16) ||

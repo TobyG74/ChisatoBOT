@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/commands";
+import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
     name: "memberleave",
@@ -21,19 +21,19 @@ export default <ConfigCommands>{
                 "Hello, Currently Chisato is not a group admin. Please make the group admin so that the notify command works!",
                 message
             );
-        let index = await Database.GroupSetting.get(from);
+        let index = await Database.Group.getSettings(from);
         if (args[0] === "on") {
             if (index.leave) {
                 await Chisato.sendText(from, "Leave Group has been previously activated", message);
             } else {
-                await Database.GroupSetting.update(from, { leave: true });
+                await Database.Group.updateSettings(from, { leave: true });
                 await Chisato.sendText(from, "Successfully activated Leave Group", message);
             }
         } else if (args[0] === "off") {
             if (!index.leave) {
                 await Chisato.sendText(from, "Leave Group has not been activated previously", message);
             } else {
-                await Database.GroupSetting.update(from, { leave: false });
+                await Database.Group.updateSettings(from, { leave: false });
                 await Chisato.sendText(from, "Successfully deactivated Leave Group", message);
             }
         }

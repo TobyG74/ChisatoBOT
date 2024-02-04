@@ -1,15 +1,15 @@
 import { proto } from "baileys";
-import { Chisato } from "../types/client";
-import { GroupSerialize } from "../types/serialize";
-import { Group as GroupDatabase, GroupSetting as GroupSettingDatabase } from "../libs/database";
+import { GroupSerialize } from "../types/structure/serialize";
+import { Group as GroupDatabase } from "../libs/database";
+import { Client } from "../libs";
 
-export const groupUpdate = async (Chisato: Chisato, message: GroupSerialize) => {
+export const groupUpdate = async (Chisato: Client, message: GroupSerialize) => {
     try {
         const { parameters, key, from, timestamp, participant, type, message: msg, expiration } = message;
         let caption: string;
 
         const Group = new GroupDatabase();
-        const GroupSetting = new GroupSettingDatabase();
+        const GroupSetting = await Group.getSettings(from);
         const botNumber = Chisato.decodeJid(Chisato.user.id);
         const groupMetadata = (await Group.get(from)) ?? (await Group.upsert(Chisato, from));
         const groupName = groupMetadata.subject;
@@ -19,10 +19,10 @@ export const groupUpdate = async (Chisato: Chisato, message: GroupSerialize) => 
             ?.filter((v) => v.admin !== null)
             .map((v) => v.id)
             .includes(botNumber);
-        const isNotify = (await GroupSetting.get(from))?.notify ?? (await GroupSetting.upsert(Chisato, from))?.notify;
-        const isWelcome = (await GroupSetting.get(from))?.welcome;
-        const isLeave = (await GroupSetting.get(from))?.leave;
-        const isBanned = (await GroupSetting.get(from))?.banned?.includes(participant);
+        const isNotify = GroupSetting?.notify;
+        const isWelcome = GroupSetting?.welcome;
+        const isLeave = GroupSetting?.leave;
+        const isBanned = GroupSetting?.banned?.includes(participant);
 
         /** Get Group Participants */
         const getMetadata = async (gid: string) => {
@@ -286,7 +286,6 @@ export const groupUpdate = async (Chisato: Chisato, message: GroupSerialize) => 
                 }
                 if (participant.split("@")[0] === botNumber.split("@")[0]) {
                     await Group.delete(from);
-                    await GroupSetting.delete(from);
                 } else
                     getMetadata(from).then(async (res) => {
                         await Group.update(from, {
