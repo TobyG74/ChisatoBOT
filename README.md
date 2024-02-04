@@ -302,6 +302,13 @@ type ConfigCommands = {
                 <bold>Alphanum404</bold>
             </a>
         </td>
+        <td align="center" valign="top" width="14.28%">
+            <a href="https://github.com/dutakey">
+                <img src="https://avatars.githubusercontent.com/u/85216552?v=4?s=100" width="100px">
+                <br>
+                <bold>DutaKey</bold>
+            </a>
+        </td>
     </tr>
 </table>
 
