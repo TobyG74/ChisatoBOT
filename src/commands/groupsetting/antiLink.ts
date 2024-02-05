@@ -1,4 +1,4 @@
-import { Antilink } from "@prisma/client";
+import { AntilinkList } from "@prisma/client";
 import type { ConfigCommands } from "../../types/structure/commands";
 
 export default <ConfigCommands>{
@@ -43,7 +43,7 @@ export default <ConfigCommands>{
         const listLink = ["youtube", "facebook", "instagram", "whatsapp", "twitter", "tiktok", "all"];
         switch (args[0]) {
             case "add":
-                if (groupSetting?.antilink.list.includes(args[1]))
+                if (!groupSetting?.antilink.list.includes(args[1] as AntilinkList))
                     return Chisato.sendText(from, `Link ${args[1]} already in list!`, message);
                 if (!listLink.includes(args[1]))
                     return Chisato.sendText(
@@ -71,7 +71,7 @@ export default <ConfigCommands>{
                 await Chisato.sendText(from, `Link ${args[1]} has been added to list!`, message);
                 break;
             case "del":
-                if (!groupSetting?.antilink.list.includes(args[1]))
+                if (!groupSetting?.antilink.list.includes(args[1] as AntilinkList))
                     return Chisato.sendText(from, `Link ${args[1]} not in list!`, message);
                 if (!listLink.includes(args[1]))
                     return Chisato.sendText(
