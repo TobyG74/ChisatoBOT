@@ -29,6 +29,7 @@
         "file-type": "16.5.4",
         "fluent-ffmpeg": "^2.1.2",
         "form-data": "^4.0.0",
+        "node-fetch": "^2.6.11",
         "path": "^0.12.7",
         "twitter-downloader": "^1.1.1",
         "typed-emitter": "^2.1.0",
