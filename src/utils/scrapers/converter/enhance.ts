@@ -28,7 +28,7 @@ export async function enhanceImage(store: Buffer, name: string): Promise<Buffer>
 
             resolve(Buffer.from(response.data));
         } catch (error) {
-            reject(new Error("Request failed"));
+            reject(error);
         }
     });
 }
