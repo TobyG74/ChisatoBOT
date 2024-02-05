@@ -58,7 +58,7 @@ type CommandsObject = {
 
 declare type Database = {
     Group: GroupDatabaseType;
-    User: UserDatanaseType;
+    User: UserDatabaseType;
 };
 
 declare type Commands = {
