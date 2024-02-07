@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default <ConfigCommands>{
     name: "groupinfo",
     alias: ["ginfo", "groupinformation"],
-    category: "group setting",
+    category: "group",
     description: "View Group Information.",
     isGroup: true,
     async run({ Chisato, from, message }) {
@@ -12,9 +12,11 @@ export default <ConfigCommands>{
         let str =
             `*「 GROUP INFORMATION 」*\n\n` +
             `• Name : ${groupMetadata.subject}\n` +
-            `• Description : ${groupMetadata.desc || "-"}\n` +
+            `└ 「 ${groupMetadata["isCommunity"] ? "✅" : "❌"} 」 is Community\n` +
+            `└ 「 ${groupMetadata["isCommunityAnnounce"] ? "✅" : "❌"} 」 is Community Announce\n\n`;
+        `• Description : ${groupMetadata.desc || "-"}\n` +
             `• Member Count : ${groupMetadata.participants.length}\n` +
-            `• Group Owner : @${groupMetadata.owner.split("@")[0]}\n` +
+            `• Group Owner : @${groupMetadata.owner?.split("@")[0] || "-"}\n` +
             `• Group Admins : ${groupAdmins.length}\n`;
         for (let i = 0; i < groupAdmins.length; i++) {
             str += `└ @${groupAdmins[i].id.split("@")[0]}\n`;
