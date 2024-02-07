@@ -296,6 +296,6 @@ export const groupUpdate = async (Chisato: Client, message: GroupSerialize) => {
                 break;
         }
     } catch (e) {
-        Chisato.log("error", "GROUP UPDATE : ", e);
+        Chisato.log("error", "GROUP UPDATE : " + e);
     }
 };
