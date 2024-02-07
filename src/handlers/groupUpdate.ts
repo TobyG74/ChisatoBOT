@@ -27,7 +27,7 @@ export const groupUpdate = async (Chisato: Client, message: GroupSerialize) => {
         /** Get Group Participants */
         const getMetadata = async (gid: string) => {
             try {
-                const metadata = await Chisato.groupMetadata(gid);
+                const metadata = await Chisato.groupMetadata(gid).catch(() => void 0);
                 return metadata;
             } catch {
                 await getMetadata(gid);
