@@ -1,6 +1,5 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { TiktokDL } from "@tobyg74/tiktok-api-dl";
-import { TiktokAPIResponse } from "@tobyg74/tiktok-api-dl/lib/types/tiktokApi";
+import Tiktok from "@tobyg74/tiktok-api-dl";
 import { isURL } from "../../libs";
 
 export default <ConfigCommands>{
@@ -20,11 +19,12 @@ Download All Images :
     async run({ Chisato, from, arg, prefix, command, message }) {
         const url = arg.split("|")[0];
         const slide = arg.split("|")[1];
-        if (!isURL(url)) return Chisato.sendText(from, "Please input a valid url!", message);
-        TiktokDL(url, {
+        if (!isURL(url))
+            return Chisato.sendText(from, "Please input a valid url!", message);
+        Tiktok.Downloader(url, {
             version: "v1",
         })
-            .then(async (res: TiktokAPIResponse) => {
+            .then(async (res) => {
                 if (res.status === "error") {
                     Chisato.log("error", command.name, res.message);
                     return Chisato.sendText(from, res.message, message);
@@ -49,6 +49,7 @@ Download All Images :
                         `• Create Time: ${res.result.createTime}\n` +
                         `• Description: ${res.result.description}\n\n` +
                         `*「 AUTHOR 」*\n\n` +
+                        `• UID: ${res.result.author.uid}\n` +
                         `• Username: ${res.result.author.username}\n` +
                         `• Nickname: ${res.result.author.nickname}\n` +
                         `• Bio: ${res.result.author.signature}\n` +
@@ -59,8 +60,8 @@ Download All Images :
                         `• Share: ${res.result.statistics.shareCount}\n` +
                         `• WhatsApp Share: ${res.result.statistics.whatsappShareCount}\n` +
                         `• Comment: ${res.result.statistics.commentCount}\n` +
-                        `• Like: ${res.result.statistics.likeCount}\n` +
-                        `• Favorite: ${res.result.statistics.favoriteCount}\n` +
+                        `• Like: ${res.result.statistics.diggCount}\n` +
+                        `• Favorite: ${res.result.statistics.collectCount}\n` +
                         `• Reupload: ${res.result.statistics.forwardCount}\n` +
                         `• Lose Comment: ${res.result.statistics.loseCommentCount}\n`;
                     await Chisato.sendText(from, str, message);
@@ -74,7 +75,12 @@ Download All Images :
                     } else {
                         let i = 1;
                         for (let img of res.result.images) {
-                            await Chisato.sendImage(from, img, `Image from slide ${i}`, message);
+                            await Chisato.sendImage(
+                                from,
+                                img,
+                                `Image from slide ${i}`,
+                                message
+                            );
                             i++;
                         }
                     }
@@ -84,7 +90,8 @@ Download All Images :
                 Chisato.log("error", command.name, e);
                 Chisato.sendText(
                     from,
-                    "There is an error. Please report it to the bot creator immediately!\nMessage : " + e,
+                    "There is an error. Please report it to the bot creator immediately!\nMessage : " +
+                        e,
                     message
                 );
             });
