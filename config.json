@@ -1,6 +1,6 @@
 {
-    "ownerNumber": ["YOUR_NUMBER"],
-    "teamNumber": [],
+    "ownerNumber": ["085727163657"],
+    "teamNumber": [085727163657],
     "timeZone": "Asia/Jakarta",
     "prefix": ".",
     "maintenance": [],
@@ -20,7 +20,7 @@
         "status": "reject"
     },
     "limit": {
-        "command": 30
+        "command": 100
     },
     "cfonts": {
         "font": "block",
