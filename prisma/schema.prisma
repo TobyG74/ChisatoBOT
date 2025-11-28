@@ -11,10 +11,18 @@ model Group {
   id                  String      @id @default(auto()) @map("_id") @db.ObjectId
   groupId             String      @unique
   subject             String
+  subjectOwnerPn      String?
+  addressingMode      String?
   size                Int
   creation            Int
   owner               String?
+  ownerPn             String?
+  owner_country_code  String?
   desc                String?
+  descOwner           String?
+  descOwnerPn         String?
+  descTime            Int?
+  linkedParent        String?
   joinApprovalMode    Boolean?    @default(false)    
   restrict            Boolean
   announce            Boolean
@@ -33,23 +41,25 @@ type Settings {
   mute                Boolean     @default(false)
   antilink            Antilink    
   antibot             Boolean     @default(false)
-  antiviewonce        Boolean     @default(false)
   banned              String[]
 }
 
 type Participant {
-  id    String?
-  admin String?
+  id          String?
+  admin       String?
+  lid         String?
+  phoneNumber String?
 }
 
 model User {
-  id      String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId  String  @unique
-  name    String?
-  limit   Int         
-  role    Role    @default(free)
-  expired Int     @default(0)
-  afk     Afk
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String  @unique
+  name     String?
+  limit    Int         
+  role     Role    @default(free)
+  expired  Int     @default(0)
+  isBanned Boolean @default(false)
+  afk      Afk
 }
 
 type Afk {
@@ -88,4 +98,13 @@ model Session {
   id        String  @id @default(auto()) @map("_id") @db.ObjectId
   sessionId String  @unique
   session   String?
+}
+
+model Admin {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  phoneNumber String   @unique
+  username    String   @unique
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

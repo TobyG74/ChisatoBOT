@@ -1,19 +1,5 @@
 import Axios from "axios";
-import AI2D from "@arugaz/ai2d";
-
 export class Sticker {
-    static Anime = async (buffer: Buffer) => {
-        try {
-            const result = await AI2D(buffer, {
-                proxy: process.env.PROXY,
-                crop: "SINGLE",
-            });
-            return result;
-        } catch (e) {
-            return e;
-        }
-    };
-
     static emojiMix = async (emoji1: string, emoji2: string) => {
         return new Promise(async (resolve, reject) => {
             await Axios.get(
@@ -36,13 +22,16 @@ export class Sticker {
 
     static memeGen = async (top: string, bottom: string, url: string) => {
         return new Promise(async (resolve, reject) => {
-            await Axios.get(`https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${url}`, {
-                headers: {
-                    DNT: 1,
-                    "Upgrade-Insecure-Request": 1,
-                },
-                responseType: "arraybuffer",
-            })
+            await Axios.get(
+                `https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${url}`,
+                {
+                    headers: {
+                        DNT: 1,
+                        "Upgrade-Insecure-Request": 1,
+                    },
+                    responseType: "arraybuffer",
+                }
+            )
                 .then(({ data }) => {
                     resolve(data);
                 })

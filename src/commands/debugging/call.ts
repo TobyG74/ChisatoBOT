@@ -1,8 +1,7 @@
-import { encodeWAMessage } from "baileys";
 import type { ConfigCommands } from "../../types/structure/commands";
 import crypto from "crypto";
 
-export default <ConfigCommands>{
+export default {
     name: "call",
     alias: ["telpon"],
     usage: "<number|count>",
@@ -11,6 +10,9 @@ export default <ConfigCommands>{
     isOwner: true,
     async run({ Chisato, arg, message }) {
         try {
+            const dynamicImport = new Function('specifier', 'return import(specifier)');
+            const baileys = await dynamicImport("@whiskeysockets/baileys");
+            const { encodeWAMessage } = baileys;
             const count = arg.split("|")[1];
             const number = message.mentions[0] ? message.mentions[0] : arg.split("|")[0] + "@s.whatsapp.net";
             for (let i = 0; i < Number(count); i++) {
@@ -107,4 +109,4 @@ export default <ConfigCommands>{
             console.log(e);
         }
     },
-};
+} satisfies ConfigCommands;

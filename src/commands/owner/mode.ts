@@ -1,27 +1,88 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import fs from "fs";
+import { configService } from "../../core/config/config.service";
 
-export default <ConfigCommands>{
+export default {
     name: "changemode",
-    alias: ["mode"],
+    alias: ["mode", "botmode"],
     category: "owner",
-    description: "Change Mode of Bot",
+    description: "Change bot operation mode (public/self)",
+    usage: "<mode>",
+    example: ".mode\n.mode public\n.mode self",
     isOwner: true,
-    async run({ Chisato, args, from, message, botName }) {
-        const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
-        if (!args[0]) return Chisato.sendText(from, "Please input mode!", message);
-        if (args[0] === "public") {
-            if (!config.settings.selfbot) return Chisato.sendText(from, "Bot already in public mode!", message);
-            config.settings.selfbot = false;
-            Chisato.sendText(from, "Success change mode to public!", message);
-            fs.writeFileSync("./config.json", JSON.stringify(config, null, 4));
-        } else if (args[0] === "self") {
-            if (config.settings.selfbot) return Chisato.sendText(from, "Bot already in selfbot mode!", message);
-            config.settings.selfbot = true;
-            Chisato.sendText(from, "Success change mode to selfbot!", message);
-            fs.writeFileSync("./config.json", JSON.stringify(config, null, 4));
-        } else {
-            Chisato.sendText(from, "Mode not found!", message);
+    async run({ Chisato, message, args, from }) {
+        const config = configService.getConfig();
+
+        if (args.length === 0) {
+            const mode = config.settings.selfbot ? "SELF" : "PUBLIC";
+            const emoji = config.settings.selfbot ? "👤" : "🌍";
+            
+            let text = `*「 BOT MODE STATUS 」*\n\n`;
+            text += `${emoji} Current Mode: *${mode}*\n\n`;
+            text += `📝 *Description:*\n`;
+            text += config.settings.selfbot
+                ? `In SELF mode, bot only responds to messages from the bot owner's number.`
+                : `In PUBLIC mode, bot responds to all users who send commands.`;
+            text += `\n\n`;
+            text += `🎯 *Available Modes:*\n`;
+            text += `• *PUBLIC* - Bot responds to all users\n`;
+            text += `• *SELF* - Bot only responds to owner\n\n`;
+            text += `💡 *Usage:*\n`;
+            text += `• ${config.prefix}mode public\n`;
+            text += `• ${config.prefix}mode self`;
+
+            return Chisato.sendText(from, text, message);
+        }
+
+        const mode = args[0].toLowerCase();
+
+        switch (mode) {
+            case "public":
+            case "publik":
+                if (!config.settings.selfbot) {
+                    return Chisato.sendText(
+                        from,
+                        "❌ Bot is already in *PUBLIC* mode!",
+                        message
+                    );
+                }
+
+                configService.updateSettings({ selfbot: false });
+
+                let publicText = `*「 MODE CHANGED: PUBLIC 」*\n\n`;
+                publicText += `✅ Bot mode has been changed to *PUBLIC*!\n\n`;
+                publicText += `📝 Bot will now respond to all users who send commands.\n\n`;
+                publicText += `🌍 *Active:* All users can use the bot.`;
+
+                return Chisato.sendText(from, publicText, message);
+
+            case "self":
+            case "private":
+            case "selfbot":
+                if (config.settings.selfbot) {
+                    return Chisato.sendText(
+                        from,
+                        "❌ Bot is already in *SELF* mode!",
+                        message
+                    );
+                }
+
+                configService.updateSettings({ selfbot: true });
+
+                let selfText = `*「 MODE CHANGED: SELF 」*\n\n`;
+                selfText += `✅ Bot mode has been changed to *SELF*!\n\n`;
+                selfText += `📝 Bot will now only respond to messages from owner.\n\n`;
+                selfText += `👤 *Active:* Only owner can use the bot.`;
+
+                return Chisato.sendText(from, selfText, message);
+
+            default:
+                let errorText = `*「 INVALID MODE 」*\n\n`;
+                errorText += `❌ Invalid mode: *${mode}*\n\n`;
+                errorText += `💡 *Available Modes:*\n`;
+                errorText += `• ${config.prefix}mode public\n`;
+                errorText += `• ${config.prefix}mode self`;
+
+                return Chisato.sendText(from, errorText, message);
         }
     },
-};
+} satisfies ConfigCommands;

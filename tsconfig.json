@@ -14,8 +14,29 @@
         "resolveJsonModule": true,
         "rootDir": "src",
         "skipLibCheck": true,
-        "target": "ES2020"
+        "target": "ES2020",
+        "strict": false,
+        "noImplicitAny": false,
+        "strictNullChecks": false,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": false,
+        "noImplicitReturns": false,
+        "noFallthroughCasesInSwitch": true,
+        "incremental": false,
+        "declaration": false,
+        "declarationMap": false,
+        "sourceMap": false,
+        "baseUrl": ".",
+        "paths": {
+            "@core/*": ["src/core/*"],
+            "@modules/*": ["src/modules/*"],
+            "@shared/*": ["src/shared/*"],
+            "@libs/*": ["src/libs/*"],
+            "@infrastructure/*": ["src/infrastructure/*"],
+            "@types/*": ["src/types/*"]
+        }
     },
-    "exclude": ["node_modules"],
+    "exclude": ["node_modules", "dist"],
     "include": ["./src/**/*.ts", "./src/**/*.json"]
 }

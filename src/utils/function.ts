@@ -1,143 +1,68 @@
-import { randomBytes } from "crypto";
-import fs from "fs";
+/**
+ * Legacy function exports - maintained for backward compatibility
+ *
+ * @deprecated These functions are now available in organized modules:
+ * - Validators: For validation functions (isJSON, isURL, etc.)
+ * - Formatters: For formatting functions (runtime, convertMsToTime, etc.)
+ * - FileUtils: For file operations (getFilesize, getRandom, etc.)
+ * - ArrayUtils: For array operations (removeDuplicateArray, etc.)
+ *
+ * Please migrate to new modular utilities in /core directory
+ */
 
-export const isJSON = (str: string) => {
-    try {
-        JSON.parse(str);
-    } catch {
-        return false;
-    }
-    return true;
-};
+import { Validators } from "./core/validators";
+import { Formatters } from "./core/formatters";
+import { FileUtils, ArrayUtils } from "./core/file-utils";
 
-export const isURL = (str: any) => {
-    let url: URL;
-    try {
-        url = new URL(str);
-    } catch {
-        return false;
-    }
-    return url.protocol === "http:" || url.protocol === "https:";
-};
+// ===== Validation Functions =====
+/** @deprecated Use Validators.isJSON() */
+export const isJSON = (str: string): boolean => Validators.isJSON(str);
 
-export const generateRandomNumber = (length) => {
-    if (length <= 0) {
-        return "";
-    }
+/** @deprecated Use Validators.isURL() */
+export const isURL = (str: any): boolean => Validators.isURL(str);
 
-    let result = "";
-    for (let i = 0; i < length; i++) {
-        result += Math.floor(Math.random() * 10);
-    }
+// ===== File Functions =====
+/** @deprecated Use FileUtils.randomNumber() */
+export const generateRandomNumber = (length: number): string =>
+    FileUtils.randomNumber(length);
 
-    return result;
-};
+/** @deprecated Use FileUtils.getExtension() */
+export const fileformat = (url: string): string => FileUtils.getExtension(url);
 
-export const fileformat = (url: string) => {
-    const array = url.split("/");
-    return array[array.length - 1].split(".")[1];
-};
+/** @deprecated Use FileUtils.getFileSize() */
+export const getFilesize = (filename: string): string =>
+    FileUtils.getFileSize(filename);
 
-export const runtime = (seconds: number) => {
-    seconds = Number(seconds);
-    var d = Math.floor(seconds / (3600 * 24));
-    var h = Math.floor((seconds % (3600 * 24)) / 3600);
-    var m = Math.floor((seconds % 3600) / 60);
-    var s = Math.floor(seconds % 60);
-    var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
-    var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
-    var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
-    var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
-    return dDisplay + hDisplay + mDisplay + sDisplay;
-};
+/** @deprecated Use FileUtils.randomFilename() */
+export const getRandom = (ext: string): string => FileUtils.randomFilename(ext);
 
-export const removeDuplicateArray = (array = []) => {
-    const arr = new Set(array);
-    const uniqueArray = [];
-    for (const value of arr) {
-        if (uniqueArray.indexOf(value) === -1) {
-            uniqueArray.push(value);
-        }
-    }
-    return uniqueArray;
-};
+/** @deprecated Use FileUtils.sleep() */
+export const sleep = (ms: number): Promise<void> => FileUtils.sleep(ms);
 
-export const toMB = (size: number) => {
-    return size / 1024 ** 2;
-};
+// ===== Formatting Functions =====
+/** @deprecated Use Formatters.runtime() */
+export const runtime = (seconds: number): string => Formatters.runtime(seconds);
 
-const padTo2Digits = (num: number) => {
-    return num.toString().padStart(2, "0");
-};
+/** @deprecated Use Formatters.bytesToMB() */
+export const toMB = (size: number): number => Formatters.bytesToMB(size);
 
-export const getFilesize = (filename: string) => {
-    const stats = fs.statSync(filename);
-    let bytes = stats.size;
-    let size: string;
-    if (bytes >= 1073741824) {
-        size = (bytes / 1073741824).toFixed(2) + " GB";
-    } else if (bytes >= 1048576) {
-        size = (bytes / 1048576).toFixed(2) + " MB";
-    } else if (bytes >= 1024) {
-        size = (bytes / 1024).toFixed(2) + " KB";
-    } else if (bytes > 1) {
-        size = bytes + " bytes";
-    } else if (bytes == 1) {
-        size = bytes + " byte";
-    } else {
-        size = "0 bytes";
-    }
-    return size;
-};
+/** @deprecated Use Formatters.msToTime() */
+export const convertMsToTime = (milliseconds: number): string =>
+    Formatters.msToTime(milliseconds);
 
-export const convertMsToTime = (milliseconds: number) => {
-    let seconds = Math.floor(milliseconds / 1000);
-    let minutes = Math.floor(seconds / 60);
-    let hours = Math.floor(minutes / 60);
+/** @deprecated Use Formatters.secToDuration() */
+export const convertSecToDuration = (seconds: number): string =>
+    Formatters.secToDuration(seconds);
 
-    seconds = seconds % 60;
-    minutes = minutes % 60;
-    hours = hours % 24;
+/** @deprecated Use Formatters.secToTime() */
+export const convertSecToTime = (seconds: number): string =>
+    Formatters.secToTime(seconds);
 
-    return `${padTo2Digits(hours)}:${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
-};
+/** @deprecated Use Formatters.timeRemaining() */
+export const getRemaining = (time: number): string =>
+    Formatters.timeRemaining(time);
 
-export const convertSecToDuration = (seconds: number) => {
-    let minutes = Math.floor(seconds / 60);
-
-    seconds = seconds % 60;
-
-    return `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
-};
-
-export const convertSecToTime = (seconds: number) => {
-    let minutes = Math.floor(seconds / 60);
-    let hours = Math.floor(minutes / 60);
-
-    seconds = seconds % 60;
-
-    return `${padTo2Digits(hours)}:${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
-};
-
-export const getRemaining = (time: number) => {
-    const total = Date.now() - time;
-    const seconds = Math.floor((total / 1000) % 60);
-    const minutes = Math.floor((total / 1000 / 60) % 60);
-    const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
-    const days = Math.floor(total / (1000 * 60 * 60 * 24));
-
-    return (
-        (days ? (days > 1 ? days + " days " : days == 1 ? " day " : "") : "") +
-        (hours ? (hours > 1 ? hours + " hours " : hours == 1 ? " hour " : "") : "") +
-        (minutes ? (minutes > 1 ? minutes + " minutes " : minutes == 1 ? " minute " : "") : "") +
-        (seconds ? (seconds > 1 ? seconds + " seconds " : seconds == 1 ? " second " : "") : "")
-    );
-};
-
-export const getRandom = (ext: string) => {
-    return randomBytes(7).toString("hex").toUpperCase() + ext;
-};
-
-export const sleep = (ms: number) => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-};
+// ===== Array Functions =====
+/** @deprecated Use ArrayUtils.removeDuplicates() */
+export const removeDuplicateArray = <T = any>(array: T[] = []): T[] =>
+    ArrayUtils.removeDuplicates(array);

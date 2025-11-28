@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "block",
     alias: ["addblock"],
     usage: "<tag>",
@@ -44,4 +44,4 @@ export default <ConfigCommands>{
             Chisato.sendText(from, "Please tag user or reply message!", message);
         }
     },
-};
+} satisfies ConfigCommands;

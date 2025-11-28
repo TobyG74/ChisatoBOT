@@ -5,7 +5,7 @@ const ping = function (timestamp: number, now: number) {
     return moment.duration(now - Number(moment(timestamp * 1000))).asSeconds();
 };
 
-export default <ConfigCommands>{
+export default {
     name: "ping",
     alias: ["speed"],
     category: "misc",
@@ -18,4 +18,4 @@ export default <ConfigCommands>{
             },
         });
     },
-};
+} satisfies ConfigCommands;

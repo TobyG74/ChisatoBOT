@@ -1,4 +1,4 @@
 export * from "./convert";
 export * from "./ocr";
-export * from "./textConvert";
+export * from "./text-convert";
 export * from "./sticker";

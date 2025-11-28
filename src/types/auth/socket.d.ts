@@ -8,7 +8,7 @@ import {
     WABrowserDescription,
     WAVersion,
     proto,
-} from "baileys";
+} from "@whiskeysockets/baileys";
 import { UserFacingSocketConfig } from "baileys/Socket";
 
 type Config = {

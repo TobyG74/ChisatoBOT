@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "leave",
     alias: ["keluar", "out", "bye"],
     usage: "<text>",
@@ -14,4 +14,4 @@ export default <ConfigCommands>{
             Database.Group.delete(from);
         });
     },
-};
+} satisfies ConfigCommands;

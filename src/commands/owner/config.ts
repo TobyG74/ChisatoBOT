@@ -1,14 +1,17 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 import fs from "fs";
 
-export default <ConfigCommands>{
+export default {
     name: "config",
     alias: ["botconfig"],
     category: "owner",
     description: "See Bot Config",
     isOwner: true,
     async run({ Chisato, from, message, botName }) {
-        const config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+        const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+        const { version } = JSON.parse(
+            fs.readFileSync("./package.json", "utf-8")
+        );
         let caption = `*「 CONFIG 」*
 
 ★ Owner Number : [`;
@@ -22,7 +25,7 @@ export default <ConfigCommands>{
         caption +=
             `]\n` +
             `★ Bot Name : ${botName}\n` +
-            `└「 ${config.version} 」 Version\n` +
+            `└「 ${version} 」 Version\n` +
             `└「 ${config.prefix} 」 Prefix\n` +
             `★ Stickers :\n` +
             `└★ Packname : ${config.stickers.packname}\n` +
@@ -33,6 +36,7 @@ export default <ConfigCommands>{
             `└「 ${config.settings.useCooldown ? "✅" : "❌"} 」 Use Cooldown\n` +
             `└「 ${config.settings.autoReadMessage ? "✅" : "❌"} 」 Auto Read Message\n` +
             `└「 ${config.settings.autoReadStatus ? "✅" : "❌"} 」 Auto Read Status\n` +
+            `└「 ${config.settings.autoCorrect ? "✅" : "❌"} 」 Auto Correct\n` +
             `└「 ${config.settings.selfbot ? "✅" : "❌"} 」 Selfbot\n` +
             `★ Call :\n` +
             `└「 ${config.call.status} 」 Anti Call\n` +
@@ -40,4 +44,4 @@ export default <ConfigCommands>{
             `└「 ${config.limit.command} 」 Command\n`;
         await Chisato.sendText(from, caption, message);
     },
-};
+} satisfies ConfigCommands;

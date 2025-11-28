@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ChisatoBot Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap");
+
+            :root {
+                --neon-pink: #ff006e;
+                --neon-blue: #00d9ff;
+                --neon-purple: #b967ff;
+                --neon-yellow: #fffb00;
+                --neon-green: #05ffa1;
+                --dark-bg: #0a0e27;
+                --darker-bg: #050810;
+                --card-bg: #151932;
+                --border-color: rgba(185, 103, 255, 0.3);
+            }
+
+            * {
+                font-family: "Orbitron", sans-serif;
+            }
+
+            body {
+                background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
+                background-attachment: fixed;
+            }
+
+            .neon-text {
+                text-shadow: 0 0 10px currentColor, 0 0 20px currentColor,
+                    0 0 30px currentColor;
+            }
+
+            .card {
+                transition: all 0.3s ease;
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .card::before {
+                content: "";
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(
+                    45deg,
+                    var(--neon-pink),
+                    var(--neon-blue),
+                    var(--neon-purple)
+                );
+                border-radius: inherit;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                z-index: -1;
+            }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(185, 103, 255, 0.4);
+            }
+
+            .card:hover::before {
+                opacity: 0.2;
+            }
+
+            .sidebar-active {
+                background: linear-gradient(
+                    90deg,
+                    rgba(255, 0, 110, 0.2),
+                    rgba(0, 217, 255, 0.2)
+                );
+                border-left: 3px solid var(--neon-pink);
+                box-shadow: 0 0 15px rgba(255, 0, 110, 0.3);
+            }
+
+            .nav-link:hover {
+                background: rgba(185, 103, 255, 0.1);
+                box-shadow: 0 0 10px rgba(185, 103, 255, 0.2);
+            }
+
+            .glow-button {
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .glow-button:hover {
+                box-shadow: 0 0 20px currentColor;
+                transform: scale(1.05);
+            }
+
+            .grid-bg {
+                background-image: linear-gradient(
+                        rgba(185, 103, 255, 0.1) 1px,
+                        transparent 1px
+                    ),
+                    linear-gradient(
+                        90deg,
+                        rgba(185, 103, 255, 0.1) 1px,
+                        transparent 1px
+                    );
+                background-size: 50px 50px;
+            }
+
+            .scan-line {
+                position: fixed;
+                width: 100%;
+                height: 2px;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--neon-blue),
+                    transparent
+                );
+                animation: scan 4s linear infinite;
+                pointer-events: none;
+                z-index: 9999;
+            }
+
+            @keyframes scan {
+                0% {
+                    top: 0;
+                }
+                100% {
+                    top: 100%;
+                }
+            }
+
+            @keyframes pulse-glow {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.5;
+                }
+            }
+
+            .pulse-glow {
+                animation: pulse-glow 2s ease-in-out infinite;
+            }
+
+            input,
+            select,
+            table {
+                background: rgba(21, 25, 50, 0.8) !important;
+                border-color: var(--border-color) !important;
+                color: var(--neon-blue) !important;
+            }
+
+            input::placeholder {
+                color: rgba(0, 217, 255, 0.5) !important;
+            }
+
+            option {
+                background: #0a0e27 !important;
+                color: #00d9ff !important;
+            }
+
+            table thead {
+                background: rgba(185, 103, 255, 0.1) !important;
+            }
+
+            table tbody tr:hover {
+                background: rgba(255, 0, 110, 0.1) !important;
+            }
+
+            canvas {
+                background: transparent !important;
+            }
+
+            ::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: var(--darker-bg);
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: linear-gradient(
+                    var(--neon-pink),
+                    var(--neon-purple)
+                );
+                border-radius: 5px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(
+                    var(--neon-blue),
+                    var(--neon-green)
+                );
+            }
+
+            /* Responsive Styles */
+            #sidebar {
+                transition: transform 0.3s ease;
+            }
+
+            @media (max-width: 768px) {
+                #sidebar {
+                    transform: translateX(-100%);
+                    z-index: 50;
+                }
+
+                #sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0 !important;
+                }
+
+                #mobile-overlay {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 40;
+                }
+
+                #mobile-overlay.show {
+                    display: block;
+                }
+
+                .grid-bg {
+                    background-size: 30px 30px;
+                }
+
+                .card:hover {
+                    transform: translateY(-2px);
+                }
+            }
+
+            @media (min-width: 769px) {
+                #hamburger-btn {
+                    display: none !important;
+                }
+            }
+
+            @media (max-width: 1024px) {
+                .text-3xl {
+                    font-size: 1.5rem !important;
+                }
+
+                .text-2xl {
+                    font-size: 1.25rem !important;
+                }
+            }
+
+            /* Modal Styles */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 100;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(5px);
+            }
+
+            .modal.show {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal-content {
+                background: var(--card-bg);
+                border: 2px solid var(--border-color);
+                border-radius: 12px;
+                padding: 2rem;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 0 50px rgba(185, 103, 255, 0.5);
+                animation: modalSlideIn 0.3s ease;
+            }
+
+            @keyframes modalSlideIn {
+                from {
+                    transform: translateY(-50px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .modal-close {
+                background: rgba(255, 0, 110, 0.2);
+                color: var(--neon-pink);
+                border: 1px solid var(--neon-pink);
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .modal-close:hover {
+                background: var(--neon-pink);
+                color: white;
+                box-shadow: 0 0 15px var(--neon-pink);
+            }
+
+            .form-checkbox {
+                width: 20px;
+                height: 20px;
+                accent-color: var(--neon-blue);
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body class="grid-bg">
+        <div class="scan-line"></div>
+
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay"></div>
+
+        <!-- Hamburger Menu Button (Mobile Only) -->
+        <button
+            id="hamburger-btn"
+            class="fixed top-4 left-4 z-50 p-3 rounded-lg glow-button"
+            style="
+                background: linear-gradient(45deg, #ff006e, #b967ff);
+                color: white;
+                display: block;
+            "
+        >
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div
+            class="fixed left-0 top-0 h-full w-64 shadow-lg"
+            style="
+                background: linear-gradient(180deg, #0a0e27 0%, #1a1a3e 100%);
+                border-right: 2px solid rgba(185, 103, 255, 0.3);
+            "
+            id="sidebar"
+        >
+            <!-- Close Button (Mobile Only) -->
+            <button
+                id="close-sidebar-btn"
+                class="absolute top-4 right-4 p-2 rounded-lg md:hidden"
+                style="color: #ff006e; background: rgba(255, 0, 110, 0.2)"
+            >
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <div
+                class="p-6 border-b"
+                style="border-color: rgba(185, 103, 255, 0.3)"
+            >
+                <h1
+                    class="text-xl md:text-2xl font-bold neon-text"
+                    style="color: #ff006e"
+                >
+                    <i class="fas fa-robot pulse-glow"></i> ChisatoBot
+                </h1>
+                <p class="text-xs md:text-sm" style="color: #00d9ff">
+                    Monitoring Dashboard
+                </p>
+            </div>
+
+            <nav class="p-4">
+                <a
+                    href="#"
+                    class="nav-link flex items-center p-3 mb-2 rounded sidebar-active transition-all"
+                    data-view="overview"
+                    style="color: #00d9ff"
+                >
+                    <i class="fas fa-home w-6"></i>
+                    <span>Overview</span>
+                </a>
+                <a
+                    href="#"
+                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
+                    data-view="groups"
+                    style="color: #00d9ff; transition: all 0.3s"
+                >
+                    <i class="fas fa-users w-6"></i>
+                    <span>Groups</span>
+                </a>
+                <a
+                    href="#"
+                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
+                    data-view="users"
+                    style="color: #00d9ff; transition: all 0.3s"
+                >
+                    <i class="fas fa-user w-6"></i>
+                    <span>Users</span>
+                </a>
+                <a
+                    href="#"
+                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
+                    data-view="logs"
+                    style="color: #00d9ff; transition: all 0.3s"
+                >
+                    <i class="fas fa-file-alt w-6"></i>
+                    <span>Logs</span>
+                </a>
+                <a
+                    href="#"
+                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
+                    data-view="system"
+                    style="color: #00d9ff; transition: all 0.3s"
+                >
+                    <i class="fas fa-server w-6"></i>
+                    <span>System</span>
+                </a>
+                
+                <!-- Logout Button -->
+                <div class="mt-4 pt-4 border-t" style="border-color: rgba(185, 103, 255, 0.3)">
+                    <button
+                        onclick="logout()"
+                        class="nav-link flex items-center p-3 rounded hover:bg-opacity-20 transition-all w-full text-left"
+                        style="color: #ff006e; transition: all 0.3s"
+                    >
+                        <i class="fas fa-sign-out-alt w-6"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div
+            class="main-content md:ml-64 p-4 md:p-6 lg:p-8"
+            style="min-height: 100vh; background: #0a0e27"
+        >
+            <!-- Header -->
+            <div class="mb-6 md:mb-8 mt-16 md:mt-0">
+                <h2
+                    class="text-2xl md:text-3xl font-bold neon-text"
+                    style="color: #ff006e"
+                    id="page-title"
+                >
+                    Overview
+                </h2>
+                <p
+                    class="text-sm md:text-base"
+                    style="color: #b967ff"
+                    id="page-subtitle"
+                >
+                    Monitor your bot's performance and statistics
+                </p>
+            </div>
+
+            <!-- Content Area -->
+            <div id="content">
+                <!-- Overview View -->
+                <div id="view-overview" class="view-content">
+                    <!-- Stats Cards -->
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                    >
+                        <div class="card rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm" style="color: #00d9ff">
+                                        Total Users
+                                    </p>
+                                    <p
+                                        class="text-3xl font-bold neon-text"
+                                        style="color: #00d9ff"
+                                        id="stat-users"
+                                    >
+                                        -
+                                    </p>
+                                </div>
+                                <div
+                                    class="p-4 rounded-full"
+                                    style="background: rgba(0, 217, 255, 0.2)"
+                                >
+                                    <i
+                                        class="fas fa-user text-2xl pulse-glow"
+                                        style="color: #00d9ff"
+                                    ></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm" style="color: #05ffa1">
+                                        Total Groups
+                                    </p>
+                                    <p
+                                        class="text-3xl font-bold neon-text"
+                                        style="color: #05ffa1"
+                                        id="stat-groups"
+                                    >
+                                        -
+                                    </p>
+                                </div>
+                                <div
+                                    class="p-4 rounded-full"
+                                    style="background: rgba(5, 255, 161, 0.2)"
+                                >
+                                    <i
+                                        class="fas fa-users text-2xl pulse-glow"
+                                        style="color: #05ffa1"
+                                    ></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm" style="color: #b967ff">
+                                        Premium Users
+                                    </p>
+                                    <p
+                                        class="text-3xl font-bold neon-text"
+                                        style="color: #b967ff"
+                                        id="stat-premium"
+                                    >
+                                        -
+                                    </p>
+                                </div>
+                                <div
+                                    class="p-4 rounded-full"
+                                    style="background: rgba(185, 103, 255, 0.2)"
+                                >
+                                    <i
+                                        class="fas fa-crown text-2xl pulse-glow"
+                                        style="color: #b967ff"
+                                    ></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm" style="color: #fffb00">
+                                        Banned Users
+                                    </p>
+                                    <p
+                                        class="text-3xl font-bold neon-text"
+                                        style="color: #fffb00"
+                                        id="stat-banned"
+                                    >
+                                        -
+                                    </p>
+                                </div>
+                                <div
+                                    class="p-4 rounded-full"
+                                    style="background: rgba(255, 251, 0, 0.2)"
+                                >
+                                    <i
+                                        class="fas fa-ban text-2xl pulse-glow"
+                                        style="color: #fffb00"
+                                    ></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm" style="color: #ff006e">
+                                        Uptime
+                                    </p>
+                                    <p
+                                        class="text-2xl font-bold neon-text"
+                                        style="color: #ff006e"
+                                        id="stat-uptime"
+                                    >
+                                        -
+                                    </p>
+                                </div>
+                                <div
+                                    class="p-4 rounded-full"
+                                    style="background: rgba(255, 0, 110, 0.2)"
+                                >
+                                    <i
+                                        class="fas fa-clock text-2xl pulse-glow"
+                                        style="color: #ff006e"
+                                    ></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="card rounded-lg shadow-md p-6">
+                            <h3
+                                class="text-lg font-semibold mb-4 neon-text"
+                                style="color: #ff006e"
+                            >
+                                User Distribution
+                            </h3>
+                            <canvas id="userChart"></canvas>
+                        </div>
+
+                        <div class="card rounded-lg shadow-md p-6">
+                            <h3
+                                class="text-lg font-semibold mb-4 neon-text"
+                                style="color: #00d9ff"
+                            >
+                                Group Settings
+                            </h3>
+                            <canvas id="groupSettingsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card rounded-lg shadow-md p-6">
+                        <h3
+                            class="text-lg font-semibold mb-4 neon-text"
+                            style="color: #b967ff"
+                        >
+                            System Information
+                        </h3>
+                        <div
+                            id="system-info"
+                            class="space-y-2 text-sm"
+                            style="color: #00d9ff"
+                        >
+                            <p>
+                                <strong style="color: #ff006e"
+                                    >Memory Usage:</strong
+                                >
+                                <span id="memory-usage">-</span>
+                            </p>
+                            <p>
+                                <strong style="color: #ff006e"
+                                    >Platform:</strong
+                                >
+                                <span id="platform">-</span>
+                            </p>
+                            <p>
+                                <strong style="color: #ff006e"
+                                    >Node Version:</strong
+                                >
+                                <span id="node-version">-</span>
+                            </p>
+                            <p>
+                                <strong style="color: #ff006e"
+                                    >Process ID:</strong
+                                >
+                                <span id="pid">-</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups View -->
+                <div id="view-groups" class="view-content hidden">
+                    <div class="card rounded-lg shadow-md p-4 md:p-6">
+                        <div
+                            class="flex flex-col md:flex-row gap-2 md:gap-0 md:justify-between md:items-center mb-4"
+                        >
+                            <input
+                                type="text"
+                                id="search-groups"
+                                placeholder="Search groups..."
+                                class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
+                                style="
+                                    background: rgba(21, 25, 50, 0.8);
+                                    border-color: rgba(185, 103, 255, 0.3);
+                                    color: #00d9ff;
+                                    box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+                                "
+                            />
+                            <div class="flex gap-2">
+                                <button
+                                    id="refresh-groups"
+                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
+                                    style="
+                                        background: linear-gradient(
+                                            45deg,
+                                            #ff006e,
+                                            #b967ff
+                                        );
+                                        color: white;
+                                    "
+                                >
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span class="hidden sm:inline"
+                                        >Refresh</span
+                                    >
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full" style="color: #00d9ff">
+                                <thead>
+                                    <tr
+                                        style="
+                                            background: rgba(
+                                                185,
+                                                103,
+                                                255,
+                                                0.1
+                                            );
+                                            border-bottom: 2px solid
+                                                rgba(185, 103, 255, 0.3);
+                                        "
+                                    >
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Group Name
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Participants
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Settings
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Created
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="groups-table">
+                                    <tr>
+                                        <td
+                                            colspan="4"
+                                            class="text-center py-4"
+                                            style="color: #00d9ff"
+                                        >
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div
+                            id="groups-pagination"
+                            class="mt-4 flex justify-center space-x-2"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Users View -->
+                <div id="view-users" class="view-content hidden">
+                    <div class="card rounded-lg shadow-md p-4 md:p-6">
+                        <div
+                            class="flex flex-col md:flex-row gap-2 md:gap-0 md:justify-between md:items-center mb-4"
+                        >
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="text"
+                                    id="search-users"
+                                    placeholder="Search users..."
+                                    class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
+                                    style="
+                                        background: rgba(21, 25, 50, 0.8);
+                                        border-color: rgba(185, 103, 255, 0.3);
+                                        color: #00d9ff;
+                                        box-shadow: 0 0 10px
+                                            rgba(0, 217, 255, 0.2);
+                                    "
+                                />
+                                <select
+                                    id="filter-role"
+                                    class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
+                                    style="
+                                        background: rgba(21, 25, 50, 0.8);
+                                        border-color: rgba(185, 103, 255, 0.3);
+                                        color: #00d9ff;
+                                        box-shadow: 0 0 10px
+                                            rgba(0, 217, 255, 0.2);
+                                    "
+                                >
+                                    <option value="">All Roles</option>
+                                    <option value="free">Free</option>
+                                    <option value="premium">Premium</option>
+                                </select>
+                                <select
+                                    id="filter-banned"
+                                    class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
+                                    style="
+                                        background: rgba(21, 25, 50, 0.8);
+                                        border-color: rgba(185, 103, 255, 0.3);
+                                        color: #00d9ff;
+                                        box-shadow: 0 0 10px
+                                            rgba(0, 217, 255, 0.2);
+                                    "
+                                >
+                                    <option value="">All Status</option>
+                                    <option value="banned">Banned</option>
+                                    <option value="active">Active</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2">
+                                <button
+                                    id="add-user-btn"
+                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
+                                    style="
+                                        background: linear-gradient(
+                                            45deg,
+                                            #05ffa1,
+                                            #00d9ff
+                                        );
+                                        color: #0a0e27;
+                                    "
+                                >
+                                    <i class="fas fa-plus"></i>
+                                    <span class="hidden sm:inline"
+                                        >Add User</span
+                                    >
+                                </button>
+                                <button
+                                    id="refresh-users"
+                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
+                                    style="
+                                        background: linear-gradient(
+                                            45deg,
+                                            #ff006e,
+                                            #b967ff
+                                        );
+                                        color: white;
+                                    "
+                                >
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span class="hidden sm:inline"
+                                        >Refresh</span
+                                    >
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full" style="color: #00d9ff">
+                                <thead>
+                                    <tr
+                                        style="
+                                            background: rgba(
+                                                185,
+                                                103,
+                                                255,
+                                                0.1
+                                            );
+                                            border-bottom: 2px solid
+                                                rgba(185, 103, 255, 0.3);
+                                        "
+                                    >
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            User ID
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Name
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Role
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Limit
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Status
+                                        </th>
+                                        <th
+                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
+                                            style="color: #ff006e"
+                                        >
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table">
+                                    <tr>
+                                        <td
+                                            colspan="6"
+                                            class="text-center py-4"
+                                            style="color: #00d9ff"
+                                        >
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div
+                            id="users-pagination"
+                            class="mt-4 flex justify-center space-x-2"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Logs View -->
+                <div id="view-logs" class="view-content hidden">
+                    <div class="card rounded-lg shadow-md p-4 md:p-6">
+                        <div
+                            class="flex flex-col md:flex-row gap-2 md:gap-0 md:justify-between md:items-center mb-4"
+                        >
+                            <select
+                                id="filter-log-level"
+                                class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
+                                style="
+                                    background: rgba(21, 25, 50, 0.8);
+                                    border-color: rgba(185, 103, 255, 0.3);
+                                    color: #00d9ff;
+                                    box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+                                "
+                            >
+                                <option value="">All Levels</option>
+                                <option value="info">Info</option>
+                                <option value="warn">Warning</option>
+                                <option value="error">Error</option>
+                            </select>
+                            <div class="flex gap-2">
+                                <button
+                                    id="refresh-logs"
+                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
+                                    style="
+                                        background: linear-gradient(
+                                            45deg,
+                                            #00d9ff,
+                                            #05ffa1
+                                        );
+                                        color: white;
+                                    "
+                                >
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span class="hidden sm:inline"
+                                        >Refresh</span
+                                    >
+                                </button>
+                                <button
+                                    id="clear-logs"
+                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
+                                    style="
+                                        background: linear-gradient(
+                                            45deg,
+                                            #ff006e,
+                                            #ff4500
+                                        );
+                                        color: white;
+                                    "
+                                >
+                                    <i class="fas fa-trash"></i>
+                                    <span class="hidden sm:inline">Clear</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            id="logs-container"
+                            class="space-y-2 max-h-96 overflow-y-auto"
+                        >
+                            <p class="text-center" style="color: #b967ff">
+                                Loading logs...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System View -->
+                <div id="view-system" class="view-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card rounded-lg shadow-md p-6">
+                            <h3
+                                class="text-lg font-semibold mb-4 neon-text"
+                                style="color: #ff006e"
+                            >
+                                Memory Usage
+                            </h3>
+                            <canvas id="memoryChart"></canvas>
+                        </div>
+
+                        <div class="card rounded-lg shadow-md p-6">
+                            <h3
+                                class="text-lg font-semibold mb-4 neon-text"
+                                style="color: #00d9ff"
+                            >
+                                System Details
+                            </h3>
+                            <div
+                                id="system-details"
+                                class="space-y-3"
+                                style="color: #00d9ff"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Modal -->
+        <div id="user-modal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h2
+                        class="text-xl font-bold neon-text"
+                        style="color: #ff006e"
+                    >
+                        <span id="user-modal-title">Add User</span>
+                    </h2>
+                    <button class="modal-close" onclick="closeUserModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="user-form" class="space-y-4">
+                    <input type="hidden" id="user-form-mode" value="create" />
+                    <div>
+                        <label class="block mb-2" style="color: #00d9ff"
+                            >User ID (Phone Number)</label
+                        >
+                        <input
+                            type="text"
+                            id="user-userId"
+                            required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                            placeholder="628123456789@s.whatsapp.net"
+                            style="
+                                background: rgba(21, 25, 50, 0.8);
+                                border-color: rgba(185, 103, 255, 0.3);
+                                color: #00d9ff;
+                            "
+                        />
+                    </div>
+                    <div>
+                        <label class="block mb-2" style="color: #00d9ff"
+                            >Name</label
+                        >
+                        <input
+                            type="text"
+                            id="user-name"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                            placeholder="User Name"
+                            style="
+                                background: rgba(21, 25, 50, 0.8);
+                                border-color: rgba(185, 103, 255, 0.3);
+                                color: #00d9ff;
+                            "
+                        />
+                    </div>
+                    <div>
+                        <label class="block mb-2" style="color: #00d9ff"
+                            >Role</label
+                        >
+                        <select
+                            id="user-role"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                            style="
+                                background: rgba(21, 25, 50, 0.8);
+                                border-color: rgba(185, 103, 255, 0.3);
+                                color: #00d9ff;
+                            "
+                        >
+                            <option value="free">Free</option>
+                            <option value="premium">Premium</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2" style="color: #00d9ff"
+                            >Limit</label
+                        >
+                        <input
+                            type="number"
+                            id="user-limit"
+                            value="20"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                            style="
+                                background: rgba(21, 25, 50, 0.8);
+                                border-color: rgba(185, 103, 255, 0.3);
+                                color: #00d9ff;
+                            "
+                        />
+                    </div>
+                    <div>
+                        <label class="block mb-2" style="color: #00d9ff"
+                            >Expired (timestamp, 0 for never)</label
+                        >
+                        <input
+                            type="number"
+                            id="user-expired"
+                            value="0"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                            style="
+                                background: rgba(21, 25, 50, 0.8);
+                                border-color: rgba(185, 103, 255, 0.3);
+                                color: #00d9ff;
+                            "
+                        />
+                    </div>
+                    <div class="flex gap-2 justify-end">
+                        <button
+                            type="button"
+                            onclick="closeUserModal()"
+                            class="px-4 py-2 rounded-lg"
+                            style="
+                                background: rgba(185, 103, 255, 0.2);
+                                color: #b967ff;
+                                border: 1px solid #b967ff;
+                            "
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 rounded-lg glow-button"
+                            style="
+                                background: linear-gradient(
+                                    45deg,
+                                    #05ffa1,
+                                    #00d9ff
+                                );
+                                color: #0a0e27;
+                            "
+                        >
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Group Settings Modal -->
+        <div id="group-modal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h2
+                        class="text-xl font-bold neon-text"
+                        style="color: #ff006e"
+                    >
+                        Edit Group Settings
+                    </h2>
+                    <button class="modal-close" onclick="closeGroupModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="group-form" class="space-y-4">
+                    <input type="hidden" id="group-groupId" />
+                    <div>
+                        <label class="block mb-2" style="color: #00d9ff"
+                            >Group Name</label
+                        >
+                        <input
+                            type="text"
+                            id="group-name"
+                            disabled
+                            class="w-full px-4 py-2 border rounded-lg opacity-60"
+                            style="
+                                background: rgba(21, 25, 50, 0.8);
+                                border-color: rgba(185, 103, 255, 0.3);
+                                color: #00d9ff;
+                            "
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <label
+                            class="flex items-center gap-2"
+                            style="color: #00d9ff"
+                        >
+                            <input
+                                type="checkbox"
+                                id="group-antilink"
+                                class="form-checkbox"
+                            />
+                            <span>Antilink</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-2"
+                            style="color: #00d9ff"
+                        >
+                            <input
+                                type="checkbox"
+                                id="group-antibot"
+                                class="form-checkbox"
+                            />
+                            <span>Antibot</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-2"
+                            style="color: #00d9ff"
+                        >
+                            <input
+                                type="checkbox"
+                                id="group-welcome"
+                                class="form-checkbox"
+                            />
+                            <span>Welcome Message</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-2"
+                            style="color: #00d9ff"
+                        >
+                            <input
+                                type="checkbox"
+                                id="group-notify"
+                                class="form-checkbox"
+                            />
+                            <span>Notifications</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-2"
+                            style="color: #00d9ff"
+                        >
+                            <input
+                                type="checkbox"
+                                id="group-mute"
+                                class="form-checkbox"
+                            />
+                            <span>Mute</span>
+                        </label>
+                    </div>
+                    <div class="flex gap-2 justify-end">
+                        <button
+                            type="button"
+                            onclick="closeGroupModal()"
+                            class="px-4 py-2 rounded-lg"
+                            style="
+                                background: rgba(185, 103, 255, 0.2);
+                                color: #b967ff;
+                                border: 1px solid #b967ff;
+                            "
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 rounded-lg glow-button"
+                            style="
+                                background: linear-gradient(
+                                    45deg,
+                                    #05ffa1,
+                                    #00d9ff
+                                );
+                                color: #0a0e27;
+                            "
+                        >
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="/js/dashboard.js"></script>
+    </body>
+</html>

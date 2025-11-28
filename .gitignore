@@ -11,3 +11,6 @@ temp/*
 package-lock.json
 yarn.lock
 bun.lock
+tsconfig.tsbuildinfo
+pnpm-lock.yaml
+pnpm-workspace.yaml

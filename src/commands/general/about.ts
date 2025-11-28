@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "about",
     alias: ["infobot", "sc", "base"],
     category: "general",
@@ -19,4 +19,4 @@ export default <ConfigCommands>{
             "• ctOS\nhttps://github.com/alphanum404\n";
         await Chisato.sendText(from, caption, message);
     },
-};
+} satisfies ConfigCommands;

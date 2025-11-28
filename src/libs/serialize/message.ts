@@ -1,9 +1,13 @@
-import { WAMessage } from "baileys";
+import type { WAMessage } from "@whiskeysockets/baileys";
 import { MessageSerialize } from "../../types/structure/serialize";
 import { Client } from "..";
 
-export const message = async (Chisato: Client, message: WAMessage): Promise<MessageSerialize> => {
+export const message = async (
+    Chisato: Client,
+    message: WAMessage
+): Promise<MessageSerialize> => {
     const m = <MessageSerialize>{};
+    if (!message) return m;
     if (message.message) {
         m.key = message.key;
         m.id = message.key.id;
@@ -12,7 +16,9 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
         m.isGroup = m.from.endsWith("@g.us");
         m.message = message.message;
         m.type = Object.keys(m.message).find(
-            (type) => type !== "senderKeyDistributionMessage" && type !== "messageContextInfo"
+            (type) =>
+                type !== "senderKeyDistributionMessage" &&
+                type !== "messageContextInfo"
         );
         if (
             [
@@ -26,7 +32,10 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                 "editedMessage",
             ].includes(m.type)
         ) {
-            m.message = m.message[m.type].message;
+            m.message = m.message[m.type]?.message;
+            if (!m.message) {
+                return m;
+            }
             m.type = Object.keys(m.message)[0];
         }
         m.expiration = m.message[m.type].expiration || 0;
@@ -34,9 +43,9 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
         m.pushName = message.pushName;
         m.mentions = m.message[m.type]?.contextInfo?.mentionedJid || [];
         m.sender = m.isGroup
-            ? Chisato.decodeJid(m.key.participant)
+            ? await Chisato.decodeJid(m.key.participantAlt)
             : m.fromMe
-            ? Chisato.decodeJid(Chisato.user.id)
+            ? await Chisato.decodeJid(Chisato.user.phoneNumber)
             : m.from;
         m.body =
             m.type === "conversation"
@@ -51,8 +60,9 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                 ? m.message[m.type].comment
                 : m.type === "listResponseMessage"
                 ? m.message[m.type].singleSelectReply.selectedRowId
-                : m.type === "templateButtonReplyMessage" && m.message.templateButtonReplyMessage
-                ? m.message[m.type].selectedId
+                : m.type === "templateButtonReplyMessage" &&
+                  m.message.templateButtonReplyMessage.selectedId
+                ? m.message.templateButtonReplyMessage.selectedId
                 : m.type === "buttonsResponseMessage"
                 ? m.message[m.type].selectedButtonId
                 : m.type === "reactionMessage"
@@ -75,14 +85,18 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                 ? "Buttons Message"
                 : m.type === "listMessage"
                 ? "List Message"
+                : m.type === "interactiveMessage"
+                ? "Interactive Message"
                 : "-";
-        m.args = m.body.trim().split(/ +/).slice(1);
-        m.arg = m.body.substring(m.body.indexOf(" ") + 1);
+        m.args = m.body?.trim().split(/ +/).slice(1) || [];
+        m.arg = m.body ? m.body.substring(m.body.indexOf(" ") + 1) : "";
         m.query = m.args.join(" ");
         m.download = () => Chisato.downloadMediaMessage(m);
         m.quoted = <MessageSerialize>{};
         if (m.message[m.type]?.contextInfo?.quotedMessage) {
-            m.quoted.type = Object.keys(m.message[m.type].contextInfo.quotedMessage)[0];
+            m.quoted.type = Object.keys(
+                m.message[m.type].contextInfo.quotedMessage
+            )[0];
             m.quoted.message = m.message[m.type].contextInfo.quotedMessage;
             if (
                 [
@@ -99,10 +113,13 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                 m.quoted.message = m.quoted.message[m.quoted.type].message;
                 m.quoted.type = Object.keys(m.quoted.message)[0];
             }
-            m.quoted.sender = Chisato.decodeJid(m.message[m.type].contextInfo.participant);
+            m.quoted.sender = await Chisato.decodeJid(
+                m.message[m.type].contextInfo.participant
+            );
+            const botJid = await Chisato.decodeJid(Chisato.user.id);
             m.quoted.key = {
                 id: m.message[m.type].contextInfo.stanzaId,
-                fromMe: m.quoted.sender === Chisato.decodeJid(Chisato.user.id),
+                fromMe: m.quoted.sender === botJid,
                 remoteJid: m.sender || m.from,
                 participant: m.sender,
             };
@@ -120,9 +137,11 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                     : m.quoted.type === "videoMessage"
                     ? m.quoted.message[m.quoted.type].caption || "Video Message"
                     : m.quoted.type === "locationMessage"
-                    ? m.quoted.message[m.quoted.type].comment || "Location Message"
+                    ? m.quoted.message[m.quoted.type].comment ||
+                      "Location Message"
                     : m.quoted.type === "listResponseMessage"
-                    ? m.quoted.message[m.quoted.type].singleSelectReply.selectedRowId
+                    ? m.quoted.message[m.quoted.type].singleSelectReply
+                          .selectedRowId
                     : m.quoted.type === "templateButtonReplyMessage"
                     ? m.quoted.message[m.quoted.type].selectedId
                     : m.quoted.type === "buttonsResponseMessage"
@@ -136,7 +155,8 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                     : m.quoted.type === "contactMessage"
                     ? "Contact Message"
                     : m.quoted.type === "documentMessage"
-                    ? m.quoted.message[m.quoted.type]?.caption || "Document Message"
+                    ? m.quoted.message[m.quoted.type]?.caption ||
+                      "Document Message"
                     : m.quoted.type === "productMessage"
                     ? "Product Message"
                     : m.quoted.type === "pollCreationMessage"
@@ -148,9 +168,13 @@ export const message = async (Chisato: Client, message: WAMessage): Promise<Mess
                     : m.quoted.type === "listMessage"
                     ? "List Message"
                     : "-";
-            m.quoted.mentions = m.quoted.message[m.quoted.type]?.contextInfo?.mentionedJid || [];
+            m.quoted.mentions =
+                m.quoted.message[m.quoted.type]?.contextInfo?.mentionedJid ||
+                [];
             m.quoted.args = m.quoted.body.trim().split(/ +/).slice(1);
-            m.quoted.arg = m.quoted.body.substring(m.quoted.body.indexOf(" ") + 1);
+            m.quoted.arg = m.quoted.body.substring(
+                m.quoted.body.indexOf(" ") + 1
+            );
             m.quoted.query = m.quoted.args.join(" ");
             m.quoted.download = () => Chisato.downloadMediaMessage(m.quoted);
         } else m.quoted = null;

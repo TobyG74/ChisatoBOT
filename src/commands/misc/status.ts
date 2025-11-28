@@ -5,7 +5,7 @@ const formatUsage = (bytes: number) => {
     return `${Math.round((bytes / 1024 / 1024) * 100) / 100}`;
 };
 
-export default <ConfigCommands>{
+export default {
     name: "status",
     alias: ["memory", "cpu"],
     category: "misc",
@@ -40,4 +40,4 @@ export default <ConfigCommands>{
             `┗━━「 *${botName}* 」`;
         await Chisato.sendText(from, caption, message);
     },
-};
+} satisfies ConfigCommands;

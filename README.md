@@ -21,6 +21,21 @@
 
 </div>
 
+## Author
+
+<div align="center" style="display: flex; justify-content: center; gap: 40px;">
+    <a href="https://github.com/TobyG74">
+        <img src="https://avatars.githubusercontent.com/u/32604979?v=4?s=100" width="100px"/>
+        <br>
+        <bold>TobyG74</bold>
+    </a>
+    <a href="https://github.com/nugraizy">
+        <img src="https://avatars.githubusercontent.com/u/69896924?v=4?s=100" width="100px">
+        <br>
+        <bold>Nugraizy</bold>
+    </a>
+</div>
+
 ## Description
 
 <p align="center">
@@ -30,7 +45,6 @@
 -   Chisato is a WhatsApp bot with various functions
 -   There are various features available on Chisato BOT
 -   ChisatoBOT has a beautiful terminal logger
--   Full Installation Tutorial [Click Here](https://mega.nz/file/Qjs0mK5a#eHw6I57tqKks8H_7SJ3gLICY849801Hg3LxJuSIL2mw)
 
 ## Table of Contents
 
@@ -55,12 +69,20 @@ If you have problems, you can [open an issue](https://github.com/TobyG74/Chisato
 
 ### Setup Your Mongodb
 
--   Login to the [MongoDB](https://account.mongodb.com/account/login) website
--   Create your Database
--   Next, select the Database that you created again or click (Database > Connect > Drivers > Copy Your Application Code)
--   Paste the mongodb code that you copied into the .env file and don't forget to change `<password>` to your database password
+-   Create a Mongodb Database. You can use [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or use a local database
+-   Get your Mongodb connection string. Example : `mongodb+srv://username:password@cluster0.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`
+-   Replace `username`, `password`, and `myFirstDatabase` with your database credentials
+-   Copy the connection string, and paste it into the `DATABASE_URL` in your `.env` file
 
 ### Setup Your `.env` File
+
+```
+DATABASE_URL=
+DASHBOARD_PORT=3000
+JWT_SECRET=
+PROXY=
+OCR_APIKEY=
+```
 
 -   Edit your [.env](https://github.com/TobyG74/ChisatoBOT/blob/master/.env.example) file
 -   Rename `.env.example` to `.env`
@@ -116,33 +138,48 @@ npm start
 
 ## Documentation
 
+### Dashboard
+
+-   You can access the dashboard at `http://localhost:3000` (if you use another port, adjust accordingly)
+-   First you need to register your account by chatting with the bot and using the command `.adminpanel` (make sure your number is in the owner or team number in the config.json)
+-   After registering, you can log in to the dashboard
+
+<p align="center">
+    <img src="media/dashboard.png" width="600" alt="logo">
+</p>
+
 ### Configuration File [config.json](https://github.com/TobyG74/ChisatoBOT/blob/master/config.json)
 
 -   `ownerNotifyOnline` to send a message to the Owner whenever the Bot is Online
 -   `useLimit` for limit configuration, if `true` then every time the command will use the limit
 -   `useCooldown` for cooldown configuration, if `true` then every time the command will use the cooldown
+-   `selfbot` to make the bot only respond to the owner's number
+-   `autoReadMessage` to make the bot automatically read messages
+-   `autoReadStatus` to make the bot automatically read status updates
+-   `autoCorrect` for correcting wrong commands
 
 ```json
 {
-    "ownerNumber": ["YOUR_NUMBER"],
+    "ownerNumber": ["YOUR_NUMBER_HERE"],
     "teamNumber": [],
     "timeZone": "Asia/Jakarta",
     "prefix": ".",
-    "maintenance": [], // List Maintenance Command
+    "maintenance": [],
     "stickers": {
         "author": "Instagram : ini.tobz",
         "packname": "Made by ChisatoBOT"
     },
     "settings": {
         "ownerNotifyOnline": false,
-        "selfbot": false,
         "useLimit": false,
-        "useCooldown": true,
-        "autoReadMessage": true,
-        "autoReadStatus": true
+        "useCooldown": false,
+        "selfbot": false,
+        "autoReadMessage": false,
+        "autoReadStatus": false,
+        "autoCorrect": true
     },
     "call": {
-        "status": "reject" // reject, block, off
+        "status": "reject"
     },
     "limit": {
         "command": 30
@@ -150,7 +187,10 @@ npm start
     "cfonts": {
         "font": "block",
         "align": "center",
-        "colors": ["green", "yellow"],
+        "colors": [
+            "green",
+            "yellow"
+        ],
         "background": "transparent",
         "letterSpacing": 0,
         "lineHeight": 0,
@@ -172,7 +212,7 @@ npm start
 type ConfigCommands = {
     name: string;
     alias: string[];
-    usage: string;
+    usage?: string;
     category: string;
     description: string;
     cooldown?: number; // in seconds
@@ -186,7 +226,6 @@ type ConfigCommands = {
     isGroupAdmin?: boolean;
     isGroupOwner?: boolean;
     isBotAdmin?: boolean;
-    isProcess?: boolean;
     run: (args: CommandsObject) => unknown;
 };
 ```
@@ -229,24 +268,10 @@ type ConfigCommands = {
 <table>
     <tr>
         <td align="center" valign="top" width="14.28%">
-            <a href="https://github.com/TobyG74">
-                <img src="https://avatars.githubusercontent.com/u/32604979?v=4?s=100" width="100px"/>
-                <br>
-                <bold>TobyG74</bold>
-            </a>
-        </td>
-        <td align="center" valign="top" width="14.28%">
             <a href="https://github.com/arugaz">
                 <img src="https://avatars.githubusercontent.com/u/53950128?v=4?s=100" width="100px">
                 <br>
                 <bold>Arugaz</bold>
-            </a>
-        </td>
-        <td align="center" valign="top" width="14.28%">
-            <a href="https://github.com/nugraizy">
-                <img src="https://avatars.githubusercontent.com/u/69896924?v=4?s=100" width="100px">
-                <br>
-                <bold>Nugraizy</bold>
             </a>
         </td>
         <td align="center" valign="top" width="14.28%">

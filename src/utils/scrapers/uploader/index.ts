@@ -1,1 +1,1 @@
-export * from "./telegraph";
+export * from "./telegraph.scraper";

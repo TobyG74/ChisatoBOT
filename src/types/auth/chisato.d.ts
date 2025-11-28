@@ -1,4 +1,4 @@
-import { WASocket } from "baileys";
+import type { WASocket } from "@whiskeysockets/baileys";
 
 declare type ChisatoMediaUpload = string | Buffer | Readable;
 

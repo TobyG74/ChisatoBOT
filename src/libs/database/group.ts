@@ -8,22 +8,62 @@ export class Group {
      * @param groupId
      * @returns {Promise<GroupType>}
      */
-    public upsert = (Chisato: Client, groupId: string): Promise<GroupType> =>
+    public upsert = (
+        Chisato: Client,
+        groupId: string
+    ): Promise<GroupType | null> =>
         new Promise(async (resolve, reject) => {
             try {
-                if (await this.get(groupId)) return;
-                const groupData = await Chisato.groupMetadata(groupId).catch(() => void 0);
-                if (!groupData) return;
-                for (const key of Object.keys(groupData))
-                    if (["id", "subjectOwner", "subjectTime", "descId", "inviteCode", "author"].includes(key))
-                        delete groupData[key];
-                groupData.settings = groupData.settings || {};
-                groupData.settings.antilink = groupData.settings?.antilink || {};
-                groupData.ephemeralDuration = groupData.ephemeralDuration || 0;
+                const existing = await this.get(groupId);
+                if (existing) {
+                    resolve(existing);
+                    return;
+                }
+                const groupData = await Chisato.groupMetadata?.(groupId).catch(
+                    () => void 0
+                );
+                if (!groupData) {
+                    resolve(null);
+                    return;
+                }
+
+                const excludeFields = [
+                    "id",
+                    "subjectOwner",
+                    "subjectTime",
+                    "descId",
+                    "inviteCode",
+                    "author",
+                    "settings",
+                    "addressingMode",
+                    "subjectOwnerPn",
+                    "ownerPn",
+                    "descOwner",
+                    "descOwnerPn",
+                    "descTime",
+                    "linkedParent",
+                    "notify",
+                    "owner_country_code",
+                ];
+
+                for (const key of Object.keys(groupData)) {
+                    if (excludeFields.includes(key)) {
+                        delete (groupData as any)[key];
+                    }
+                }
+
+                (groupData as any).ephemeralDuration =
+                    (groupData as any).ephemeralDuration || 0;
                 const metadata = await Database.group.upsert({
                     where: { groupId },
-                    create: { groupId, ...groupData },
-                    update: { groupId, ...groupData },
+                    create: {
+                        groupId,
+                        ...(groupData as any),
+                    },
+                    update: { groupId, ...(groupData as any) },
+                    include: {
+                        settings: true,
+                    },
                 });
                 Chisato.log("info", `Added New Group Metadata ${groupId}`);
                 resolve(metadata);
@@ -37,7 +77,7 @@ export class Group {
      * @param groupId
      * @returns {Promise<GroupType>}
      */
-    public get = (groupId: string): Promise<GroupType> =>
+    public get = (groupId: string): Promise<GroupType | null> =>
         new Promise(async (resolve, reject) => {
             try {
                 const metadata = await Database.group.findUnique({
@@ -77,6 +117,10 @@ export class Group {
                         settings: true,
                     },
                 });
+                if (!metadata || !metadata.settings) {
+                    reject(new Error("Group settings not found"));
+                    return;
+                }
                 resolve(metadata.settings);
             } catch (err) {
                 reject(err);

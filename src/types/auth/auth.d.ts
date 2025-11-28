@@ -1,4 +1,4 @@
-import { AuthenticationState } from "baileys";
+import type { AuthenticationState } from "@whiskeysockets/baileys";
 
 declare type AuthState = {
     state: AuthenticationState;

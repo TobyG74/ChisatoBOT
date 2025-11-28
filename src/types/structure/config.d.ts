@@ -26,6 +26,7 @@ declare type Settings = {
     selfbot: boolean;
     autoReadMessage: boolean;
     autoReadStatus: boolean;
+    autoCorrect: boolean;
 };
 
 declare type Limit = {

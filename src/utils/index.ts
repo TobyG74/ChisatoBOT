@@ -1,5 +1,12 @@
+// Core utilities (recommended)
+export * from "./core";
+
+// Scrapers
 export * as converter from "./scrapers/converter";
-export * as downloader from "./scrapers/downloader";
 export * as wallpaper from "./scrapers/wallpaper";
+export * as uploader from "./scrapers/uploader";
+export * as news from "./scrapers/news";
+
+// Legacy exports (deprecated but maintained for compatibility)
 export * from "./function";
 export * from "./fetch";

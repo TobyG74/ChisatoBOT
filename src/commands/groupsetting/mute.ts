@@ -1,8 +1,9 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "mute",
     alias: ["mutebot"],
+    usage: "",
     category: "group setting",
     description: "Mute bot in group",
     isGroup: true,
@@ -16,4 +17,4 @@ export default <ConfigCommands>{
             await Chisato.sendText(from, "Bot has been muted", message);
         }
     },
-};
+} satisfies ConfigCommands;

@@ -1,18 +1,22 @@
-declare type IGDownloader = {
-    status: string;
-    p: string;
-    v: string;
-    data: string;
-};
+declare type InstagramMediaType = "image" | "video";
 
-declare type InstagramDownloader = {
-    status: number;
-    message?: string;
-    type?: string;
-    result?: ResultInstagram[];
-};
-
-type ResultInstagram = {
-    type: string;
+declare type InstagramImageQuality = {
+    quality: string; 
     url: string;
-};
+}
+
+declare type InstagramImageItem = {
+    id: string;
+    qualities: InstagramImageQuality[];
+    defaultUrl: string;
+}
+
+declare type InstagramVideoItem = {
+    url: string;
+}
+
+declare type InstagramResult = {
+    type: InstagramMediaType;
+    images?: InstagramImageItem[];
+    video?: InstagramVideoItem;
+}

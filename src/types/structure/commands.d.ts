@@ -7,7 +7,7 @@ import { Client } from "../../libs";
 declare type ConfigCommands = {
     name: string;
     alias: string[];
-    usage: string;
+    usage?: string;
     category: string;
     description: string;
     cooldown?: number; // in seconds
@@ -21,7 +21,6 @@ declare type ConfigCommands = {
     isGroupAdmin?: boolean;
     isGroupOwner?: boolean;
     isBotAdmin?: boolean;
-    isProcess?: boolean;
     run: (args: CommandsObject) => unknown;
 };
 
@@ -59,6 +58,20 @@ type CommandsObject = {
 declare type Database = {
     Group: GroupDatabaseType;
     User: UserDatabaseType;
+};
+
+declare type GroupSetting = {
+    notify: boolean;
+    welcome: boolean;
+    leave: boolean;
+    mute: boolean;
+    antilink: {
+        status?: boolean;
+        mode: "kick" | "delete";
+        list: string[];
+    };
+    antibot: boolean;
+    banned: string[];
 };
 
 declare type Commands = {

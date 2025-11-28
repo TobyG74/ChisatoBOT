@@ -1,12 +1,7 @@
 console.clear();
-import makeWASocket, {
-    DisconnectReason,
-    makeCacheableSignalKeyStore,
-    fetchLatestWaWebVersion,
+import type {
+    DisconnectReason as DisconnectReasonType,
     proto,
-    downloadContentFromMessage,
-    toBuffer,
-    jidDecode,
     AnyMessageContent,
     WAProto,
     WACallEvent,
@@ -14,21 +9,24 @@ import makeWASocket, {
     WAMediaUpload,
     WASocket,
     Contact,
-} from "baileys";
+    WAMessage,
+} from "@whiskeysockets/baileys";
 import { Boom } from "@hapi/boom";
 import { Cron } from "croner";
 import fs from "fs";
 import clc from "cli-color";
 import cfonts from "cfonts";
 import EventEmitter from "events";
-import moment from "moment";
+import moment from "moment-timezone";
 import Pino from "pino";
 import path from "path";
 import Sticker from "wa-sticker-formatter";
 import PhoneNumber from "awesome-phonenumber";
+import qrcode from "qrcode-terminal";
+import util from "util";
 
 /** Config */
-import { commands, settings } from "./commands";
+import { commands } from "./commands";
 
 /** Types */
 import type { SocketConfig } from "../../types/auth/socket";
@@ -39,76 +37,15 @@ import type { Readable } from "stream";
 import type { MessageSerialize } from "../../types/structure/serialize";
 
 /** Utils */
-import { converter } from "../../utils";
-import { Database, generateRandomNumber, isURL } from "..";
-import { useMultiAuthState, useSingleAuthState } from "../../auth/auth";
+import { Database, Validators, FileUtils } from "..";
+import { useMultiAuthState, useSingleAuthState } from "../../auth";
 import { fromBuffer } from "file-type";
+
+/** Extensions */
+import "../../shared/extensions/string.extensions";
 
 /** Livs */
 import { User as UserDatabase, Group as GroupDatabase } from "../database";
-
-declare global {
-    interface String {
-        toLower(): string;
-        toBold(): string;
-        toUpper(): string;
-        format(...args: any[]): string;
-    }
-}
-
-String.prototype.toBold = function () {
-    return this.split("")
-        .map(function (v) {
-            return converter.TextConvert("bold-sans", v);
-        })
-        .join("")
-        .trim();
-};
-
-String.prototype.format = function (...args: any[]) {
-    let a: string = this.toString(),
-        b;
-    for (b in args) {
-        a = a.replace(/%[a-z]/, args[b]);
-    }
-    return a;
-};
-
-String.prototype.toLower = function () {
-    return this.split(this.includes("-") ? "-" : " ")
-        .map(function (v) {
-            return v.charAt(0).toLowerCase() + v.slice(1);
-        })
-        .join(" ")
-        .trim();
-};
-
-String.prototype.toUpper = function () {
-    return this.split(this.includes("-") ? "-" : " ")
-        .map(function (v) {
-            return v.charAt(0).toUpperCase() + v.slice(1);
-        })
-        .join(" ")
-        .trim();
-};
-
-String.prototype.toLower = function () {
-    return this.split(this.includes("-") ? "-" : " ")
-        .map(function (v) {
-            return v.charAt(0).toLowerCase() + v.slice(1);
-        })
-        .join(" ")
-        .trim();
-};
-
-String.prototype.toUpper = function () {
-    return this.split(this.includes("-") ? "-" : " ")
-        .map(function (v) {
-            return v.charAt(0).toLowerCase() + v.slice(1);
-        })
-        .join(" ")
-        .trim();
-};
 
 type Events = {
     "group.update": (creds: proto.IWebMessageInfo) => void;
@@ -118,6 +55,17 @@ type Events = {
 };
 
 let tryConnect = 0;
+
+let baileysModule: any = null;
+
+async function getBaileys() {
+    if (!baileysModule) {
+        const dynamicImport = new Function('specifier', 'return import(specifier)');
+        baileysModule = await dynamicImport("@whiskeysockets/baileys");
+    }
+    return baileysModule;
+}
+
 export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>) {
     private config: Config;
     private package: any;
@@ -131,7 +79,6 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         moment.tz.setDefault(this.config.timezone);
         this.time = moment().format("DD/MM HH:mm:ss");
         this.readcommands();
-        this.readevents();
     }
 
     /** Connect to Whatsapp */
@@ -146,9 +93,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             return process.exit(0);
         }
 
-        const { version, isLatest } = await fetchLatestWaWebVersion(null);
+        const baileys = await getBaileys();
+        const { default: makeWASocket, fetchLatestWaWebVersion, makeCacheableSignalKeyStore, DisconnectReason, downloadContentFromMessage, toBuffer, jidDecode } = baileys;
+
+        const { version, isLatest } = await fetchLatestWaWebVersion({} as any);
         const { state, saveCreds, clearState } =
-            (this.socketConfig?.session === "single" && (await useSingleAuthState(Database))) ||
+            (this.socketConfig?.session === "single" &&
+                (await useSingleAuthState(Database))) ||
             (await useMultiAuthState(Database));
 
         /** Chisato as Client */
@@ -157,62 +108,118 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             version,
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, Pino({ level: "silent" }).child({ level: "silent" })),
+                keys: makeCacheableSignalKeyStore(
+                    state.keys,
+                    Pino({ level: "silent" }).child({ level: "silent" })
+                ),
             },
         });
 
         /** Connection Update */
-        Chisato.ev.on("connection.update", async (connections) => {
-            const { lastDisconnect, connection } = connections;
+        Chisato.ev?.on("connection.update", async (connections) => {
+            const { lastDisconnect, connection, qr } = connections;
+
+            if (qr) {
+                const hasAuthenticatedSession =
+                    state.creds.me?.id !== undefined;
+
+                if (!hasAuthenticatedSession) {
+                    this.log(
+                        "connect",
+                        "QR Code received! Please scan the QR code below:"
+                    );
+                    qrcode.generate(qr, { small: true });
+                } else {
+                    this.log(
+                        "connect",
+                        "Re-authenticating with saved session, skipping QR display..."
+                    );
+                }
+            }
+
             if (connection === "connecting") {
-                this.log("connect", `Successfully Registered ${commands.size} Commands!`);
-                this.log("connect", `Successfully Registered ${settings.size} Group Settings!`);
+                this.log(
+                    "connect",
+                    `Successfully Registered ${commands.size} Commands!`
+                );
             } else if (connection === "close") {
-                let reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+                let reason = new Boom(lastDisconnect?.error)?.output
+                    ?.statusCode;
                 switch (reason) {
                     case DisconnectReason.restartRequired:
                         {
-                            this.log("status", `${reason}`, "Restarting...");
-                            this.connect();
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Restart required, reconnecting in 2s..."
+                            );
+                            setTimeout(() => this.connect(), 2000);
                         }
                         break;
                     case DisconnectReason.connectionLost:
                         {
-                            this.log("status", `${reason}`, "Connection Lost! Reconnecting...");
-                            this.connect();
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Connection Lost! Reconnecting in 1s..."
+                            );
+                            setTimeout(() => this.connect(), 1000);
                         }
                         break;
                     case DisconnectReason.connectionClosed:
                         {
-                            this.log("status", `${reason}`, "Connection Closed! Reconnecting...");
-                            this.connect();
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Connection Closed! Reconnecting in 1s..."
+                            );
+                            setTimeout(() => this.connect(), 1000);
                         }
                         break;
                     case DisconnectReason.connectionReplaced:
                         {
-                            this.log("status", `${reason}`, "Connection Replaced! Reconnecting...");
-                            this.connect();
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Connection Replaced! Another device connected."
+                            );
                         }
                         break;
                     case DisconnectReason.timedOut:
                         {
-                            this.log("status", `${reason}`, "Timed Out! Reconnecting...");
-                            this.connect();
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Timed Out! Reconnecting in 2s..."
+                            );
+                            setTimeout(() => this.connect(), 2000);
                         }
                         break;
                     case DisconnectReason.loggedOut:
                         {
-                            this.log("status", `${reason}`, "Session has been Logged Out! Please re-scan QR!");
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Session has been Logged Out! Please re-scan QR!"
+                            );
                             await clearState();
                         }
                         break;
                     case DisconnectReason.forbidden:
                         if (tryConnect < 2) {
                             tryConnect++;
-                            this.log("status", `${reason}`, "Forbidden! Try to reconnecting...");
-                            this.connect();
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                `Forbidden! Retry attempt ${tryConnect}/2 in 3s...`
+                            );
+                            setTimeout(() => this.connect(), 3000);
                         } else {
-                            this.log("status", `${reason}`, "Forbidden! Please re-scan QR!");
+                            this.log(
+                                "status",
+                                `${reason}`,
+                                "Forbidden! Max retries reached. Please re-scan QR!"
+                            );
                             await clearState();
                         }
                         break;
@@ -220,10 +227,18 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log("status", `${reason}`, "Unavailable Service! Try to reconnecting...");
-                                this.connect();
+                                this.log(
+                                    "status",
+                                    `${reason}`,
+                                    `Unavailable Service! Retry attempt ${tryConnect}/2 in 3s...`
+                                );
+                                setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log("status", `${reason}`, "Unavailable Service! Please re-scan QR!");
+                                this.log(
+                                    "status",
+                                    `${reason}`,
+                                    "Unavailable Service! Max retries reached. Please re-scan QR!"
+                                );
                                 await clearState();
                             }
                         }
@@ -232,10 +247,18 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log("status", `${reason}`, "Multidevice Mismatch! Try to reconnecting...");
-                                this.connect();
+                                this.log(
+                                    "status",
+                                    `${reason}`,
+                                    `Multidevice Mismatch! Retry attempt ${tryConnect}/2 in 3s...`
+                                );
+                                setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log("status", `${reason}`, "Multidevice Mismatch! Please re-scan QR!");
+                                this.log(
+                                    "status",
+                                    `${reason}`,
+                                    "Multidevice Mismatch! Max retries reached. Please re-scan QR!"
+                                );
                                 await clearState();
                             }
                         }
@@ -244,10 +267,18 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log("status", `${reason}`, "Bad Session! Try to reconnecting...");
-                                this.connect();
+                                this.log(
+                                    "status",
+                                    `${reason}`,
+                                    `Bad Session! Retry attempt ${tryConnect}/2 in 3s...`
+                                );
+                                setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log("status", `${reason}`, "Bad Session! Please re-scan QR!");
+                                this.log(
+                                    "status",
+                                    `${reason}`,
+                                    "Bad Session! Max retries reached. Please re-scan QR!"
+                                );
                                 await clearState();
                             }
                         }
@@ -256,10 +287,18 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log("status", `${reason}`, "Another Reason! Try to reconnecting...");
-                                this.connect();
+                                this.log(
+                                    "status",
+                                    `${reason || "Unknown"}`,
+                                    `Connection error! Retry attempt ${tryConnect}/2 in 3s...`
+                                );
+                                setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log("status", `${reason}`, "Another Reason! Try to re-scan QR!");
+                                this.log(
+                                    "status",
+                                    `${reason || "Unknown"}`,
+                                    "Max retries reached. Please re-scan QR!"
+                                );
                                 await clearState();
                             }
                         }
@@ -269,11 +308,14 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 tryConnect = 0;
 
                 /** Logger */
-                cfonts.say(this.user.name || "WhatsApp BOT", this.config.cfonts);
+                const userName = this.user?.name || "WhatsApp BOT";
+                const userId = this.user?.id?.split(":")[0] || "Unknown";
+                cfonts.say(userName, this.config.cfonts);
                 this.log("connect", "Success Connected!");
+                this.log("connect", "Bot is ready to receive messages");
                 this.log("connect", "Creator : Tobz");
-                this.log("connect", `Name    : ${this.user.name !== undefined ? this.user.name : this.package.name}`);
-                this.log("connect", `Number  : ${this.user.id.split(":")[0]}`);
+                this.log("connect", `Name    : ${userName}`);
+                this.log("connect", `Number  : ${userId}`);
                 this.log("connect", `Version : ${this.package.version}`);
                 this.log("connect", `WA Web Version : ${version}`);
                 this.log("connect", `Latest  : ${isLatest ? "YES" : "NO"}`);
@@ -282,30 +324,43 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 this.reset();
 
                 /** Sending Online Notification to Owner */
-                if (this.config.settings.ownerNotifyOnline && this.config.ownerNumber.length !== 0) {
+                if (
+                    this.config.settings.ownerNotifyOnline &&
+                    this.config.ownerNumber.length !== 0 &&
+                    this.user
+                ) {
                     const str =
-                        `「 *${this.user.name}* 」\n\n` +
-                        `• Name    : ${this.user.name !== undefined ? this.user.name : this.package.name}` +
-                        `• Number  : ${this.user.id.split(":")[0]}\n` +
+                        `「 *${userName}* 」\n\n` +
+                        `• Name    : ${userName}` +
+                        `• Number  : ${userId}\n` +
                         `• Version : ${this.package.version}\n` +
                         `• WA Web Version : ${version}\n` +
                         `• Latest  : ${isLatest ? "YES" : "NO"}\n`;
-                    this.log("connect", "Sending Online Notification to Owner...");
+                    this.log(
+                        "connect",
+                        "Sending Online Notification to Owner..."
+                    );
                     for (let owner of this.config.ownerNumber) {
                         await this.sendText(owner + "@s.whatsapp.net", str);
                     }
-                    this.log("connect", "Success Sending Online Notification to Owner!");
+                    this.log(
+                        "connect",
+                        "Success Sending Online Notification to Owner!"
+                    );
                 }
             }
         });
 
         /** Creds Update */
-        Chisato.ev.on("creds.update", saveCreds);
+        Chisato.ev?.on("creds.update", saveCreds);
 
         /** Message Event */
-        Chisato.ev.on("messages.upsert", async ({ messages }) => {
+        Chisato.ev?.on("messages.upsert", async ({ messages }) => {
             for (const message of messages) {
-                if (message.message?.protocolMessage?.type === 3 || message?.messageStubType) {
+                if (
+                    message.message?.protocolMessage?.type === 3 ||
+                    message?.messageStubType
+                ) {
                     this.emit("group.update", message);
                 } else {
                     this.emit("messages.upsert", message);
@@ -314,7 +369,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         });
 
         /** Call Event */
-        Chisato.ev.on("call", async (calls) => {
+        Chisato.ev?.on("call", async (calls) => {
             for (const call of calls) {
                 this.emit("call", call);
             }
@@ -346,25 +401,49 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             "labels.edit",
             "labels.association",
         ])
-            Chisato.ev.removeAllListeners(ev as keyof BaileysEventMap);
+            Chisato.ev?.removeAllListeners(ev as keyof BaileysEventMap);
 
         for (const key of Object.keys(Chisato)) {
-            this[key as keyof Client] = Chisato[key as keyof Chisato];
-            if (!["ev", "ws"].includes(key)) delete Chisato[key as keyof Chisato];
+            (this as any)[key] = (Chisato as any)[key];
+            if (!["ev", "ws"].includes(key)) delete (Chisato as any)[key];
         }
-    }
 
-    /** Read All Group Settings */
-    private readevents() {
-        const dir = path.join(__dirname, "../..", "handlers/settings");
-        const readdir = fs
-            .readdirSync(dir)
-            .filter((file) => !file.includes("antiCall"))
-            .filter((file) => file.endsWith(".js"));
-        readdir.forEach(async (file) => {
-            const setting = await (await import(`${dir}/${file}`)).default;
-            settings.set(setting.name, setting);
-        });
+        const { TemplateBuilder } = require("../interactive/TemplateBuilder");
+        (this as any).TemplateBuilder = TemplateBuilder;
+
+        const originalRelayMessage = (this as any).relayMessage.bind(this);
+        (this as any).relayMessage = async (
+            jid: string,
+            message: any,
+            opts?: any
+        ) => {
+            const hasInteractive =
+                message?.viewOnceMessage?.message?.interactiveMessage;
+
+            if (hasInteractive && (!opts || !opts.additionalNodes)) {
+                const additionalNodes: any[] = [];
+                additionalNodes.push({
+                    tag: "biz",
+                    attrs: {},
+                    content: [
+                        {
+                            tag: "interactive",
+                            attrs: { type: "native_flow", v: "1" },
+                            content: [
+                                {
+                                    tag: "native_flow",
+                                    attrs: { v: "9", name: "mixed" },
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                opts = { ...opts, additionalNodes };
+            }
+
+            return originalRelayMessage(jid, message, opts);
+        };
     }
 
     /** Read All Commands  */
@@ -372,18 +451,31 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         const dir = path.join(__dirname, "../..", "commands");
         const readdir = fs.readdirSync(dir);
         readdir.forEach((dirName) => {
-            const files = fs.readdirSync(`${dir}/${dirName}`).filter((file) => file.endsWith(".js"));
+            const files = fs
+                .readdirSync(`${dir}/${dirName}`)
+                .filter((file) => file.endsWith(".js"));
             files.forEach(async (file) => {
-                let cmd = await (await import(`${dir}/${dirName}/${file}`)).default;
+                let cmd = await (
+                    await import(`${dir}/${dirName}/${file}`)
+                ).default;
                 commands.set(cmd.name, cmd);
                 /** Detect File Changes */
                 fs.watchFile(`${dir}/${dirName}/${file}`, async () => {
                     console.log(
-                        clc.redBright(`[ ${clc.yellowBright("UPDATE")} ] ${clc.greenBright(file)} has been updated!`)
+                        clc.redBright(
+                            `[ ${clc.yellowBright(
+                                "UPDATE"
+                            )} ] ${clc.greenBright(file)} has been updated!`
+                        )
                     );
-                    delete require.cache[require.resolve(`${dir}/${dirName}/${file}`)];
+                    delete require.cache[
+                        require.resolve(`${dir}/${dirName}/${file}`)
+                    ];
                     commands.delete(cmd.name);
-                    cmd = await (await import(`${dir}/${dirName}/${file}`)).default;
+                    cmd = await (
+                        await import(`${dir}/${dirName}/${file}`)
+                    ).default;
+
                     commands.set(cmd.name, cmd);
                 });
             });
@@ -417,21 +509,40 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     }
 
     /** Beautify Logger */
-    public log = (type: "status" | "info" | "error" | "eval" | "exec" | "connect", text: string, text2?: string) => {
+    public log = (
+        type: "status" | "info" | "error" | "eval" | "exec" | "connect",
+        text: string | Error,
+        text2?: string | Error
+    ) => {
         switch (type.toLowerCase()) {
             case "status":
-                return console.log(clc.green.bold("["), clc.yellow.bold(text), clc.green.bold("]"), clc.blue(text2));
+                return console.log(
+                    clc.green.bold("["),
+                    clc.yellow.bold(text),
+                    clc.green.bold("]"),
+                    clc.blue(util.inspect(text2))
+                );
             case "info":
-                return console.log(clc.green.bold("["), clc.yellow.bold("INFO"), clc.green.bold("]"), clc.blue(text));
+                return console.log(
+                    clc.green.bold("["),
+                    clc.yellow.bold("INFO"),
+                    clc.green.bold("]"),
+                    clc.blue(util.inspect(text))
+                );
             case "error":
-                return console.log(clc.green.bold("["), clc.red.bold("ERROR"), clc.green.bold("]"), clc.blue(text));
+                return console.log(
+                    clc.green.bold("["),
+                    clc.red.bold("ERROR"),
+                    clc.green.bold("]"),
+                    clc.blue(util.inspect(text))
+                );
             case "eval":
                 return console.log(
                     clc.green.bold("["),
                     clc.magenta.bold("EVAL"),
                     clc.green.bold("]"),
                     clc.blue(this.time),
-                    clc.green(text)
+                    clc.green(util.inspect(text))
                 );
             case "exec":
                 return console.log(
@@ -439,7 +550,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                     clc.magenta.bold("EXEC"),
                     clc.green.bold("]"),
                     clc.blue(this.time),
-                    clc.green(text)
+                    clc.green(util.inspect(text))
                 );
             case "connect":
                 return console.log(clc.green.bold("[ ! ]"), clc.blue(text));
@@ -451,10 +562,17 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
      * @returns {Promise<Buffer>}
      */
 
-    public downloadMediaMessage = async (m: MessageSerialize): Promise<Buffer> => {
+    public downloadMediaMessage = async (
+        m: MessageSerialize
+    ): Promise<Buffer> => {
+        const baileys = await getBaileys();
+        const { downloadContentFromMessage, toBuffer } = baileys;
         const mime = m.message[m.type].mimetype || "";
         const messageType = mime.split("/")[0];
-        const stream = await downloadContentFromMessage(m.message[m.type], messageType);
+        const stream = await downloadContentFromMessage(
+            m.message[m.type],
+            messageType
+        );
         return await toBuffer(stream);
     };
 
@@ -471,13 +589,20 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         folder: string,
         attachExtension = true
     ): Promise<string> => {
+        const baileys = await getBaileys();
+        const { downloadContentFromMessage, toBuffer } = baileys;
         const mime = m.message[m.type].mimetype || "";
         const messageType = mime.split("/")[0];
         const pathfile = folder + `/${m.sender.split("@")[0]}_${Date.now()}`;
-        const stream = await downloadContentFromMessage(m.message[m.type], messageType);
-        let buffer = await toBuffer(stream);
+        const stream = await downloadContentFromMessage(
+            m.message[m.type],
+            messageType
+        );
+        let buffer: Buffer | null = await toBuffer(stream);
         const type = await fromBuffer(buffer);
-        const filePath = attachExtension ? pathfile + "." + type.ext : pathfile;
+        const filePath = attachExtension
+            ? pathfile + "." + (type?.ext || "bin")
+            : pathfile;
         fs.writeFileSync(filePath, buffer);
         buffer = null;
         return filePath;
@@ -531,12 +656,12 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 "🤗",
                 "😊",
             ],
-            id: generateRandomNumber(5),
+            id: FileUtils.randomNumber(5),
             quality: 15,
         });
-        return this.sendMessage(jid, await sticker.toMessage(), {
+        return this.sendMessage!(jid, await sticker.toMessage(), {
             quoted,
-        });
+        }) as Promise<WAMessage>;
     };
 
     /**
@@ -545,10 +670,18 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
      * @returns
      */
 
-    public decodeJid = (jid: string) => {
+    public decodeJid = async (jid: string | null | undefined) => {
+        if (!jid) return "";
         if (/:\d+@/gi.test(jid)) {
+            const baileys = await getBaileys();
+            const { jidDecode } = baileys;
             const decode = jidDecode(jid) || ({} as any);
-            return ((decode.user && decode.server && decode.user + "@" + decode.server) || jid).trim();
+            return (
+                (decode.user &&
+                    decode.server &&
+                    decode.user + "@" + decode.server) ||
+                jid
+            ).trim();
         } else return jid.trim();
     };
 
@@ -566,7 +699,11 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         quoted?: MessageSerialize,
         options?: Partial<AnyMessageContent>
     ): Promise<WAProto.WebMessageInfo> => {
-        return this.sendMessage(jid, { text: text, ...options }, { quoted });
+        return this.sendMessage!(
+            jid,
+            { text: text, ...options },
+            { quoted }
+        ) as Promise<WAProto.WebMessageInfo>;
     };
 
     /**
@@ -587,14 +724,18 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         options?: Partial<AnyMessageContent>
     ): Promise<WAProto.WebMessageInfo> => {
         let media: WAMediaUpload;
-        if (typeof image === "string" && isURL(image)) {
+        if (typeof image === "string" && Validators.isURL(image)) {
             media = { url: image };
         } else if (Buffer.isBuffer(image)) {
             media = image;
         } else {
             media = { stream: image as unknown as Readable };
         }
-        return this.sendMessage(jid, { image: media, caption: text, ...options }, { quoted });
+        return this.sendMessage!(
+            jid,
+            { image: media, caption: text, ...options },
+            { quoted }
+        ) as Promise<WAProto.WebMessageInfo>;
     };
 
     /**
@@ -617,18 +758,23 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         options?: Partial<AnyMessageContent>
     ): Promise<WAProto.WebMessageInfo> => {
         let media: WAMediaUpload;
-        if (typeof video === "string" && isURL(video)) {
+        if (typeof video === "string" && Validators.isURL(video)) {
             media = { url: video };
         } else if (Buffer.isBuffer(video)) {
             media = video;
         } else {
             media = { stream: video as unknown as Readable };
         }
-        return this.sendMessage(
+        return this.sendMessage!(
             jid,
-            { video: media, caption: text, gifPlayback: gifPlayback ? true : false, ...options },
+            {
+                video: media,
+                caption: text,
+                gifPlayback: gifPlayback ? true : false,
+                ...options,
+            },
             { quoted }
-        );
+        ) as Promise<WAProto.WebMessageInfo>;
     };
 
     /**
@@ -650,18 +796,23 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         options?: Partial<AnyMessageContent>
     ): Promise<WAProto.WebMessageInfo> => {
         let media: WAMediaUpload;
-        if (typeof audio === "string" && isURL(audio)) {
+        if (typeof audio === "string" && Validators.isURL(audio)) {
             media = { url: audio };
         } else if (Buffer.isBuffer(audio)) {
             media = audio;
         } else {
             media = { stream: audio as unknown as Readable };
         }
-        return this.sendMessage(
+        return this.sendMessage!(
             jid,
-            { audio: media, ptt: ptt, mimetype: !mimetype ? "audio/mp4" : mimetype, ...options },
+            {
+                audio: media,
+                ptt: ptt,
+                mimetype: !mimetype ? "audio/mp4" : mimetype,
+                ...options,
+            },
             { quoted }
-        );
+        ) as Promise<WAProto.WebMessageInfo>;
     };
 
     /**
@@ -671,10 +822,14 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
      * @param m
      */
 
-    public sendReaction = async (jid: string, emoji: string, m: proto.IMessageKey): Promise<WAProto.WebMessageInfo> => {
-        return this.sendMessage(jid, {
+    public sendReaction = async (
+        jid: string,
+        emoji: string,
+        m: proto.IMessageKey
+    ): Promise<WAProto.WebMessageInfo> => {
+        return this.sendMessage!(jid, {
             react: { text: emoji, key: m },
-        });
+        }) as Promise<WAProto.WebMessageInfo>;
     };
 
     /**
@@ -685,15 +840,23 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
      */
 
     public getName = async (jid: string) => {
-        var id = jid.endsWith("@s.whatsapp.net") ? this.decodeJid(jid) : this.decodeJid(jid) + "@s.whatsapp.net";
+        var id = jid.endsWith("@s.whatsapp.net")
+            ? await this.decodeJid(jid)
+            : (await this.decodeJid(jid)) + "@s.whatsapp.net";
         const User = new UserDatabase();
         const Group = new GroupDatabase();
         if (jid.endsWith("@g.us")) {
             const group = await Group.get(id);
-            return group?.subject || PhoneNumber("+" + id.split("@")[0]).getNumber("international");
+            return (
+                group?.subject ||
+                PhoneNumber("+" + id.split("@")[0]).getNumber("international")
+            );
         } else {
             const user = await User.get(id);
-            return user?.name || PhoneNumber("+" + id.split("@")[0]).getNumber("international");
+            return (
+                user?.name ||
+                PhoneNumber("+" + id.split("@")[0]).getNumber("international")
+            );
         }
     };
 
@@ -711,17 +874,19 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         quoted?: MessageSerialize,
         options?: Partial<AnyMessageContent>
     ): Promise<WAProto.WebMessageInfo> => {
-        const listContact = [];
+        const listContact: Array<{ displayName: string; vcard: string }> = [];
         for (let i of contacts) {
             const number = i.split("@")[0];
             const pushname = await this.getName(i);
-            const awesomeNumber = PhoneNumber("+" + number).getNumber("international");
+            const awesomeNumber = PhoneNumber("+" + number).getNumber(
+                "international"
+            );
             listContact.push({
                 displayName: pushname,
                 vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${pushname}\nFN:${pushname}\nitem1.TEL;waid=${number}:${awesomeNumber}\nitem1.X-ABLabel:Mobile\nEND:VCARD`,
             });
         }
-        return this.sendMessage(
+        return this.sendMessage!(
             jid,
             {
                 contacts: {
@@ -731,11 +896,203 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 ...options,
             },
             { quoted }
-        );
+        ) as Promise<WAProto.WebMessageInfo>;
     };
 
-    public register: Chisato["register"];
-    public requestRegistrationCode: Chisato["requestRegistrationCode"];
+    /**
+     * Sending Template Buttons Message
+     * @param {string} jid (group or private) number of the report
+     * @param {Buffer|string|Readable} image sending image with buffer or url
+     * @param {string} caption caption for the message
+     * @param {Array} templateButtons array of button objects (urlButton, callButton, quickReplyButton)
+     * @param {string} footer footer text for the message
+     * @param {object} quoted
+     * @param {object} options
+     * @returns
+     */
+    public sendTemplateButtons = async (
+        jid: string,
+        image: ChisatoMediaUpload | null,
+        caption: string,
+        templateButtons: Array<{
+            urlButton?: { displayText: string; url: string };
+            callButton?: { displayText: string; phoneNumber: string };
+            quickReplyButton?: { displayText: string; id: string };
+        }>,
+        footer?: string,
+        quoted?: MessageSerialize,
+        options?: Partial<AnyMessageContent>
+    ): Promise<WAProto.WebMessageInfo> => {
+        let media: WAMediaUpload | undefined;
+
+        if (image) {
+            if (typeof image === "string" && Validators.isURL(image)) {
+                media = { url: image };
+            } else if (Buffer.isBuffer(image)) {
+                media = image;
+            } else {
+                media = { stream: image as unknown as Readable };
+            }
+        }
+
+        const content: any = {
+            caption,
+            templateButtons: templateButtons.filter(
+                (btn) => Object.keys(btn).length > 0
+            ),
+            footer: footer || "",
+            ...options,
+        };
+
+        if (media) {
+            content.image = media;
+        }
+
+        return this.sendMessage!(jid, content, {
+            quoted,
+        }) as Promise<WAProto.WebMessageInfo>;
+    };
+
+    /**
+     * Sending Button Message with Hydrated Template (Legacy Support)
+     * @param {string} jid (group or private) number of the report
+     * @param {Buffer|string|Readable} image sending image with buffer or url
+     * @param {string} caption caption for the message
+     * @param {string} footer footer text for the message
+     * @param {Array} buttons array of button objects (urlButton, callButton, quickReplyButton)
+     * @param {object} quoted
+     * @param {object} options
+     * @returns
+     */
+    public sendButton = async (
+        jid: string,
+        image: ChisatoMediaUpload | null,
+        caption: string,
+        footer: string,
+        buttons: Array<{
+            urlButton?: { displayText: string; url: string };
+            callButton?: { displayText: string; phoneNumber: string };
+            quickReplyButton?: { displayText: string; id: string };
+        }>,
+        quoted?: MessageSerialize,
+        options?: Partial<AnyMessageContent>
+    ): Promise<WAProto.WebMessageInfo> => {
+        const baileys = await getBaileys();
+        const { generateWAMessageFromContent } = baileys;
+
+        let imageMessage: any = undefined;
+        if (image) {
+            let media: WAMediaUpload;
+            if (typeof image === "string" && Validators.isURL(image)) {
+                media = { url: image };
+            } else if (Buffer.isBuffer(image)) {
+                media = image;
+            } else {
+                media = { stream: image as unknown as Readable };
+            }
+
+            const prepared = await this.sendMessage!(jid, {
+                image: media,
+            });
+            if (prepared && prepared.message && prepared.message.imageMessage) {
+                imageMessage = prepared.message.imageMessage;
+            }
+        }
+
+        // Generate random template ID
+        const randomString = (length: number): string => {
+            const chars = "0123456789";
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return result;
+        };
+
+        const templateId = randomString(16);
+
+        // Convert buttons to hydrated format
+        const hydratedButtons = buttons
+            .map((btn, index) => {
+                if (btn.urlButton) {
+                    return {
+                        urlButton: {
+                            displayText: btn.urlButton.displayText,
+                            url: btn.urlButton.url,
+                        },
+                        index,
+                    };
+                } else if (btn.callButton) {
+                    return {
+                        callButton: {
+                            displayText: btn.callButton.displayText,
+                            phoneNumber: btn.callButton.phoneNumber,
+                        },
+                        index,
+                    };
+                } else if (btn.quickReplyButton) {
+                    return {
+                        quickReplyButton: {
+                            displayText: btn.quickReplyButton.displayText,
+                            id: btn.quickReplyButton.id,
+                        },
+                        index,
+                    };
+                }
+                return null;
+            })
+            .filter((btn) => btn !== null);
+
+        // Create message structure
+        const messageContent: any = {
+            viewOnceMessage: {
+                message: {
+                    templateMessage: {
+                        hydratedFourRowTemplate: {
+                            hydratedContentText: caption,
+                            hydratedFooterText: footer,
+                            templateId: templateId,
+                            hydratedButtons: hydratedButtons,
+                        },
+                        hydratedTemplate: {
+                            hydratedContentText: caption,
+                            hydratedFooterText: footer,
+                            templateId: templateId,
+                            hydratedButtons: hydratedButtons,
+                        },
+                    },
+                },
+            },
+        };
+
+        // Add image if provided
+        if (imageMessage) {
+            messageContent.viewOnceMessage.message.templateMessage.hydratedFourRowTemplate.imageMessage =
+                imageMessage;
+            messageContent.viewOnceMessage.message.templateMessage.hydratedTemplate.imageMessage =
+                imageMessage;
+        }
+
+        // Generate message
+        const msg = generateWAMessageFromContent(jid, messageContent, {
+            userJid: this.user?.id || jid,
+            quoted: quoted ? quoted.message : undefined,
+            ...options,
+        });
+
+        // Ensure msg has proper structure
+        if (!msg || !msg.key) {
+            throw new Error("Failed to generate message");
+        }
+
+        // Send message using relayMessage
+        await this.relayMessage!(jid, msg.message, {
+            messageId: msg.key.id,
+        });
+
+        return msg as WAProto.WebMessageInfo;
+    };
+
     public getOrderDetails: Chisato["getOrderDetails"];
     public getCatalog: Chisato["getCatalog"];
     public getCollections: Chisato["getCollections"];
@@ -750,7 +1107,6 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     public relayMessage: Chisato["relayMessage"];
     public sendReceipt: Chisato["sendReceipt"];
     public sendReceipts: Chisato["sendReceipts"];
-    public getButtonArgs: Chisato["getButtonArgs"];
     public readMessages: Chisato["readMessages"];
     public refreshMediaConn: Chisato["refreshMediaConn"];
     public waUploadToServer: Chisato["waUploadToServer"];
@@ -775,7 +1131,6 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     public groupMemberAddMode: Chisato["groupMemberAddMode"];
     public groupJoinApprovalMode: Chisato["groupJoinApprovalMode"];
     public groupFetchAllParticipating: Chisato["groupFetchAllParticipating"];
-    public processingMutex: Chisato["processingMutex"];
     public upsertMessage: Chisato["upsertMessage"];
     public appPatch: Chisato["appPatch"];
     public sendPresenceUpdate: Chisato["sendPresenceUpdate"];

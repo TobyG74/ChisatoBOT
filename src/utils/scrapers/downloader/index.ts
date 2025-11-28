@@ -1,3 +1,2 @@
-export * from "./instagram";
-export * from "./facebookVideo";
-export * from "./youtubeY2mate";
+export * from "./facebook.scraper";
+export * from "./instagram.scraper";

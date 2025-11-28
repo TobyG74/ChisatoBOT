@@ -2,15 +2,15 @@ import { StickerTypes } from "wa-sticker-formatter";
 import type { ConfigCommands } from "../../types/structure/commands";
 import fs from "fs";
 
-export default <ConfigCommands>{
+export default {
     name: "sticker",
     alias: ["stk", "stc", "stiker", "s"],
     usage: "<option> (default|full|circle)",
     category: "converter",
     description: "Convert Image / Video to Sticker",
     cooldown: 2,
-    isProcess: true,
     async run({ Chisato, args, from, message }) {
+        await Chisato.sendReaction(from, "⏳", message.key);
         try {
             let { quoted } = message;
             let buffer: Buffer | null;
@@ -45,14 +45,18 @@ export default <ConfigCommands>{
                 );
                 buffer = null;
             } else {
+                await Chisato.sendReaction(from, "❌", message.key);
                 await Chisato.sendText(
                     from,
                     "Please reply to the image / video that your want to use as Sticker!",
                     message
                 );
+                return;
             }
-        } catch (e) {
+            await Chisato.sendReaction(from, "✅", message.key);
+        } catch (error: any) {
+            await Chisato.sendReaction(from, "❌", message.key);
             Chisato.sendText(from, "There is an error. Please report it to the bot creator immediately!", message);
         }
     },
-};
+} satisfies ConfigCommands;

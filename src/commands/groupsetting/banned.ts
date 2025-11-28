@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "banned",
     alias: ["ban"],
     category: "group setting",
@@ -10,41 +10,68 @@ export default <ConfigCommands>{
     isGroupAdmin: true,
     async run({ Chisato, from, query, message, Database, sender }) {
         let user = await Database.Group.getSettings(from);
-        const checkUserBanned = (userId: string) => {
-            if (user.banned.includes(userId)) {
-                return Chisato.sendText(from, `@${userId.split("@")[0]} is already on the banned list!`, message, {
-                    mentions: [userId],
-                });
-            }
-        };
-        if (message.quoted) {
-            checkUserBanned(message.quoted.sender);
-            user.banned.push(message.quoted.sender);
-            await Database.Group.updateSettings(from, { banned: user.banned }).then(() => {
+
+        if (!user.banned) {
+            user.banned = [];
+        }
+
+        const checkUserBanned = (userId: string): boolean => {
+            if (user.banned?.includes(userId)) {
                 Chisato.sendText(
                     from,
-                    `Successfully banned @${message.quoted.sender.split("@")[0]} from this Group!`,
+                    `@${userId.split("@")[0]} is already on the banned list!`,
                     message,
                     {
-                        mentions: [message.quoted.sender],
+                        mentions: [userId],
                     }
                 );
+                return true;
+            }
+            return false;
+        };
+
+        if (message.quoted) {
+            if (checkUserBanned(message.quoted.sender)) {
+                return;
+            }
+            user.banned.push(message.quoted.sender);
+            await Database.Group.updateSettings(from, {
+                banned: user.banned,
             });
+            await Chisato.sendText(
+                from,
+                `Successfully banned @${
+                    message.quoted.sender.split("@")[0]
+                } from this Group!`,
+                message,
+                {
+                    mentions: [message.quoted.sender],
+                }
+            );
         } else if (message.mentions) {
-            let caption = `Successfully banned `;
-            for (let i in message.mentions) {
-                checkUserBanned(message.mentions[i]);
-                user.banned.push(message.mentions[i]);
-                await Database.Group.updateSettings(from, { banned: user.banned }).then(() => {
-                    caption += `@${message.mentions[i].split("@")[0]} `;
+            let bannedUsers: string[] = [];
+            for (let userId of message.mentions) {
+                if (!checkUserBanned(userId)) {
+                    user.banned.push(userId);
+                    bannedUsers.push(userId);
+                }
+            }
+            
+            if (bannedUsers.length > 0) {
+                await Database.Group.updateSettings(from, {
+                    banned: user.banned,
+                });
+                let caption = `Successfully banned ${bannedUsers.map(u => `@${u.split("@")[0]}`).join(", ")} from this Group!`;
+                await Chisato.sendText(from, caption, message, {
+                    mentions: bannedUsers,
                 });
             }
-            caption += `from this Group!`;
-            await Chisato.sendText(from, caption, message, {
-                mentions: message.mentions,
-            });
         } else {
-            Chisato.sendText(from, "Please tag user or reply message!", message);
+            await Chisato.sendText(
+                from,
+                "Please tag user or reply message!",
+                message
+            );
         }
     },
-};
+} satisfies ConfigCommands;

@@ -3,18 +3,27 @@ import { User as UserType } from "@prisma/client";
 import fs from "fs";
 
 export class User {
-    public config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+    public config: Config = JSON.parse(
+        fs.readFileSync("./config.json", "utf-8")
+    );
     /**
      * Add User Data to Database
      * @param Chisato
      * @param userId
      * @returns {Promise<UserType>}
      */
-    public upsert = (Chisato: Client, userId: string, pushName: string): Promise<UserType> =>
+    public upsert = (
+        Chisato: Client,
+        userId: string,
+        pushName: string
+    ): Promise<UserType> =>
         new Promise(async (resolve, reject) => {
             try {
                 if (await this.get(userId, pushName)) return;
-                const isTeam = this.config.teamNumber.includes(userId.split("@")[0]);
+                const isTeam = this.config.teamNumber.includes(
+                    userId.split("@")[0]
+                );
+                if (!userId) return;
                 const metadata = await Database.user.upsert({
                     where: { userId },
                     create: {
@@ -50,13 +59,17 @@ export class User {
      * @param userId
      * @returns {Promise<UserType>}
      */
-    public get = (userId: string, pushName?: string): Promise<UserType> =>
+    public get = (
+        userId: string,
+        pushName?: string
+    ): Promise<UserType | null> =>
         new Promise(async (resolve, reject) => {
             try {
                 const metadata = await Database.user.findUnique({
                     where: { userId },
                 });
-                if (metadata?.name !== pushName) await this.update(userId, { name: pushName });
+                if (metadata?.name !== pushName && pushName)
+                    await this.update(userId, { name: pushName });
                 resolve(metadata);
             } catch (err) {
                 resolve(null);
@@ -73,7 +86,7 @@ export class User {
                 const metadata = await Database.user.findMany();
                 resolve(metadata);
             } catch (err) {
-                resolve(null);
+                resolve([]);
             }
         });
 

@@ -2,7 +2,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 import { commands } from "../../libs";
 import fs from "fs";
 
-export default <ConfigCommands>{
+export default {
     name: "menu",
     alias: ["allmenu", "commands", "command", "cmd"],
     category: "general",
@@ -41,7 +41,7 @@ export default <ConfigCommands>{
                 .sort((a: ConfigCommands, b: string) => a.category.localeCompare(b))
                 .map(
                     (v: ConfigCommands, i: number) =>
-                        `┣${v.isOwner ? "★" : v.isGroupAdmin ? "➤" : "▷"} ${prefix}${
+                        `┣${v.isOwner ? "★" : v.isTeam ? "☆" : v.isGroupAdmin ? "➤" : "▷"} ${prefix}${
                             checkMaintenance(v.name) ? `~${v.name}~` : v.name
                         } ${v.usage ? v.usage : " "}`
                 )
@@ -50,4 +50,4 @@ export default <ConfigCommands>{
         caption += `┗━━「 *${botName}* 」`;
         await Chisato.sendText(from, caption, message);
     },
-};
+} satisfies ConfigCommands;

@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "afk",
     alias: ["awayfromkeyboard"],
     category: "group",
@@ -8,8 +8,12 @@ export default <ConfigCommands>{
     description: "AFK from group",
     isGroup: true,
     async run({ Chisato, from, query, message, Database, sender }) {
-        const user = await Database.User.get(from);
-        if (user?.afk) return Chisato.sendText(from, `You are already AFK!`, message);
+        const user = await Database.User.get(sender);
+
+        if (user?.afk?.status) {
+            return Chisato.sendText(from, `You are already AFK!`, message);
+        }
+
         await Database.User.update(sender, {
             afk: {
                 status: true,
@@ -17,6 +21,11 @@ export default <ConfigCommands>{
                 since: Date.now(),
             },
         });
-        return Chisato.sendText(from, `You are now AFK!`, message);
+
+        return Chisato.sendText(
+            from,
+            `✅ You are now AFK!\nReason: ${query || "No Reason"}`,
+            message
+        );
     },
-};
+} satisfies ConfigCommands;

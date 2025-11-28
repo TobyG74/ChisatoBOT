@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 
-export default <ConfigCommands>{
+export default {
     name: "getpicture",
     alias: ["getpic"],
     category: "group",
@@ -52,4 +52,4 @@ export default <ConfigCommands>{
             Chisato.sendText(from, "Please tag user or reply message!", message);
         }
     },
-};
+} satisfies ConfigCommands;

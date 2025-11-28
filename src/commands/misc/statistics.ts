@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 /** Database */
 import { Group, User } from "../../libs/database";
 
-export default <ConfigCommands>{
+export default {
     name: "stats",
     alias: ["statistics", "statistic", "stat"],
     category: "misc",
@@ -17,4 +17,4 @@ export default <ConfigCommands>{
 
         await Chisato.sendText(from, caption, message);
     },
-};
+} satisfies ConfigCommands;

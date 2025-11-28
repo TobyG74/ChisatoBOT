@@ -1,5 +1,7 @@
 {
-    "ownerNumber": ["YOUR_NUMBER"],
+    "ownerNumber": [
+        "6281311850715"
+    ],
     "teamNumber": [],
     "timeZone": "Asia/Jakarta",
     "prefix": ".",
@@ -14,7 +16,8 @@
         "useCooldown": true,
         "selfbot": false,
         "autoReadMessage": false,
-        "autoReadStatus": false
+        "autoReadStatus": false,
+        "autoCorrect": true
     },
     "call": {
         "status": "reject"
@@ -25,7 +28,10 @@
     "cfonts": {
         "font": "block",
         "align": "center",
-        "colors": ["green", "yellow"],
+        "colors": [
+            "green",
+            "yellow"
+        ],
         "background": "transparent",
         "letterSpacing": 0,
         "lineHeight": 0,

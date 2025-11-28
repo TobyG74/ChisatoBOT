@@ -1,13 +1,29 @@
 import type { PrismaClient } from "@prisma/client";
-import { BufferJSON, initAuthCreds, proto } from "baileys";
-import type { AuthenticationCreds, SignalDataTypeMap } from "baileys";
+import type { AuthenticationCreds, SignalDataTypeMap, proto } from "@whiskeysockets/baileys";
 import type { AuthState } from "../types/auth/auth";
 
-export const useMultiAuthState = async (Database: PrismaClient): Promise<AuthState> => {
-    const fixFileName = (fileName: string): string => fileName.replace(/\//g, "__")?.replace(/:/g, "-");
+// Dynamic import cache for baileys
+let baileysModule: any = null;
+
+async function getBaileys() {
+    if (!baileysModule) {
+        // Use Function constructor to prevent TypeScript from transforming dynamic import
+        const dynamicImport = new Function('specifier', 'return import(specifier)');
+        baileysModule = await dynamicImport("@whiskeysockets/baileys");
+    }
+    return baileysModule;
+}
+
+export const useMultiAuthState = async (
+    Database: PrismaClient
+): Promise<AuthState> => {
+    const fixFileName = (fileName: string): string =>
+        fileName.replace(/\//g, "__")?.replace(/:/g, "-");
 
     const writeData = async (data: unknown, fileName: string) => {
         try {
+            const baileys = await getBaileys();
+            const { BufferJSON } = baileys;
             const sessionId = fixFileName(fileName);
             const session = JSON.stringify(data, BufferJSON.replacer);
             await Database.session.upsert({
@@ -28,6 +44,8 @@ export const useMultiAuthState = async (Database: PrismaClient): Promise<AuthSta
 
     const readData = async (fileName: string) => {
         try {
+            const baileys = await getBaileys();
+            const { BufferJSON } = baileys;
             const sessionId = fixFileName(fileName);
             const data = await Database.session.findFirst({
                 where: {
@@ -51,19 +69,27 @@ export const useMultiAuthState = async (Database: PrismaClient): Promise<AuthSta
         } catch {}
     };
 
-    const creds: AuthenticationCreds = (await readData("creds")) || initAuthCreds();
+    const baileys = await getBaileys();
+    const { initAuthCreds, proto } = baileys;
+    const creds: AuthenticationCreds =
+        (await readData("creds")) || initAuthCreds();
 
     return {
         state: {
             creds,
             keys: {
                 get: async (type, ids) => {
-                    const data: { [_: string]: SignalDataTypeMap[typeof type] } = {};
+                    const data: {
+                        [_: string]: SignalDataTypeMap[typeof type];
+                    } = {};
                     await Promise.all(
                         ids.map(async (id) => {
                             let value = await readData(`${type}-${id}`);
                             if (type === "app-state-sync-key" && value)
-                                value = proto.Message.AppStateSyncKeyData.fromObject(value);
+                                value =
+                                    proto.Message.AppStateSyncKeyData.fromObject(
+                                        value
+                                    );
                             data[id] = value;
                         })
                     );
@@ -75,7 +101,11 @@ export const useMultiAuthState = async (Database: PrismaClient): Promise<AuthSta
                         for (const id in data[category]) {
                             const value: unknown = data[category][id];
                             const file = `${category}-${id}`;
-                            tasks.push(value ? writeData(value, file) : removeData(file));
+                            tasks.push(
+                                value
+                                    ? writeData(value, file)
+                                    : removeData(file)
+                            );
                         }
                     }
                     try {
@@ -97,7 +127,9 @@ export const useMultiAuthState = async (Database: PrismaClient): Promise<AuthSta
     };
 };
 
-export const useSingleAuthState = async (Database: PrismaClient): Promise<AuthState> => {
+export const useSingleAuthState = async (
+    Database: PrismaClient
+): Promise<AuthState> => {
     const KEY_MAP: { [T in keyof SignalDataTypeMap]: string } = {
         "pre-key": "preKeys",
         session: "sessions",
@@ -105,7 +137,13 @@ export const useSingleAuthState = async (Database: PrismaClient): Promise<AuthSt
         "app-state-sync-key": "appStateSyncKeys",
         "app-state-sync-version": "appStateVersions",
         "sender-key-memory": "senderKeyMemory",
+        "device-list": "deviceLists",
+        "lid-mapping": "lidMappings",
+        "tctoken": "tcTokens",
     };
+
+    const baileys = await getBaileys();
+    const { BufferJSON, initAuthCreds, proto } = baileys;
 
     let creds: AuthenticationCreds;
     let keys: unknown = {};
@@ -131,8 +169,14 @@ export const useSingleAuthState = async (Database: PrismaClient): Promise<AuthSt
 
     const saveCreds = async (): Promise<void> => {
         try {
-            const session = JSON.stringify({ creds, keys }, BufferJSON.replacer);
-            await Database.session.update({ where: { sessionId: "creds" }, data: { session } });
+            const session = JSON.stringify(
+                { creds, keys },
+                BufferJSON.replacer
+            );
+            await Database.session.update({
+                where: { sessionId: "creds" },
+                data: { session },
+            });
         } catch {}
     };
 
@@ -146,7 +190,10 @@ export const useSingleAuthState = async (Database: PrismaClient): Promise<AuthSt
                         const value: unknown = keys[key]?.[id];
                         if (value) {
                             if (type === "app-state-sync-key")
-                                dict[id] = proto.Message.AppStateSyncKeyData.fromObject(value);
+                                dict[id] =
+                                    proto.Message.AppStateSyncKeyData.fromObject(
+                                        value
+                                    );
                             dict[id] = value;
                         }
                         return dict;

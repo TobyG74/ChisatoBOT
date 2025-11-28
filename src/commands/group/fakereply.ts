@@ -1,7 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { generateWAMessageFromContent } from "baileys";
 
-export default <ConfigCommands>{
+export default {
     name: "fakereply",
     alias: ["freply"],
     usage: "<tag|faketext|yourtext>",
@@ -9,6 +8,9 @@ export default <ConfigCommands>{
     description: "Sending Fake Reply.",
     example: `• /freply @tag|Hello|Hi`,
     async run({ Chisato, from, message, command }) {
+        const dynamicImport = new Function('specifier', 'return import(specifier)');
+        const baileys = await dynamicImport("@whiskeysockets/baileys");
+        const { generateWAMessageFromContent } = baileys;
         const { arg } = message;
         let tag = arg.split("|")[0]; // Target Jid
         let text1 = arg.split("|")[1]; // Target Text
@@ -43,4 +45,4 @@ export default <ConfigCommands>{
             messageId: messages.key.id,
         });
     },
-};
+} satisfies ConfigCommands;

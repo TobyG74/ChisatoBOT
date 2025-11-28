@@ -1,8 +1,14 @@
-import { proto } from "baileys";
+import type { proto } from "@whiskeysockets/baileys";
 
 declare type MessageSerialize = {
     id: string;
-    key: proto.IMessageKey;
+    key: proto.IMessageKey & {
+        remoteJidAlt?: string;
+        participantAlt?: string;
+        server_id?: string;
+        addressingMode?: string;
+        isViewOnce?: boolean;
+    };
     from: string;
     fromMe: boolean;
     sender: string;
@@ -23,12 +29,24 @@ declare type MessageSerialize = {
 };
 
 declare type GroupSerialize = {
-    parameters: string[];
-    key: proto.IMessageKey;
+    parameters: any;
+    key: GroupUpdateMessageKey;
     from: string;
     timestamp: long;
     participant: string;
     type: WebMessageInfoStubType;
     message: proto.IMessage;
     expiration: number;
+    pushName: string;
+};
+
+declare type GroupUpdateMessageKey = proto.IMessageKey & {
+    id: string;
+    fromMe: boolean;
+    remoteJid: string;
+    remoteJidAlt: string;
+    participant: string;
+    participantAlt: string;
+    addressingMode: string;
+    isViewOnce: boolean;
 };
