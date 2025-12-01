@@ -16,7 +16,7 @@ import {
 import { AntiLinkHandler } from "../settings";
 import { StringUtils } from "../../../utils/core/string-utils";
 import path from "path";
-import { formatExample } from "src/utils";
+import { formatExample } from "src/utils/template-helper";
 
 export class MessageHandler {
     private Database = {
