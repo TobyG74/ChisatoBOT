@@ -4,7 +4,7 @@ import { converter } from "../../utils";
 export default {
     name: "ocr",
     alias: ["scantext"],
-    usage: "<reply>",
+    usage: "[reply]",
     category: "converter",
     description: "Convert Image to Text",
     cooldown: 3,

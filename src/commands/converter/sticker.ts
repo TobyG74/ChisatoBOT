@@ -1,20 +1,20 @@
-import { StickerTypes } from "wa-sticker-formatter";
 import type { ConfigCommands } from "../../types/structure/commands";
+import { StickerType } from "../../utils/converter/sticker";
 import fs from "fs";
 
 export default {
     name: "sticker",
     alias: ["stk", "stc", "stiker", "s"],
-    usage: "<option> (default|full|circle)",
+    usage: "[option] (default|full|circle)",
     category: "converter",
     description: "Convert Image / Video to Sticker",
     cooldown: 2,
-    async run({ Chisato, args, from, message }) {
+    async run({ Chisato, args, from, message, prefix }) {
         await Chisato.sendReaction(from, "⏳", message.key);
         try {
             let { quoted } = message;
             let buffer: Buffer | null;
-            let type = args[0] as StickerTypes;
+            let type = args[0] as StickerType;
             const { stickers }: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
             if (message?.type === "imageMessage" || quoted?.type === "imageMessage") {
                 buffer = quoted !== null ? await quoted.download() : await message.download();
@@ -22,7 +22,7 @@ export default {
                     from,
                     { pack: stickers.packname, author: stickers.author },
                     buffer,
-                    type || StickerTypes.DEFAULT,
+                    type || "default",
                     message
                 );
                 buffer = null;
@@ -40,23 +40,36 @@ export default {
                     from,
                     { pack: stickers.packname, author: stickers.author },
                     buffer,
-                    type || StickerTypes.DEFAULT,
+                    type || "default",
                     message
                 );
                 buffer = null;
             } else {
                 await Chisato.sendReaction(from, "❌", message.key);
-                await Chisato.sendText(
-                    from,
-                    "Please reply to the image / video that your want to use as Sticker!",
-                    message
-                );
+                let text = `*「 STICKER CONVERTER 」*\n\n`;
+                text += `🎨 Convert image or video to sticker!\n\n`;
+                text += `📝 *How to use:*\n`;
+                text += `1️⃣ Reply to an image/video with ${prefix}sticker\n`;
+                text += `2️⃣ Send image/video with caption ${prefix}sticker\n`;
+                text += `3️⃣ Add option: ${prefix}sticker [default|full|circle]\n\n`;
+                text += `💡 *Example:*\n`;
+                text += `• ${prefix}sticker (reply to image/video)\n`;
+                text += `• ${prefix}sticker full (full size sticker)\n`;
+                text += `• ${prefix}sticker circle (circle shaped sticker)\n\n`;
+                text += `⚠️ *Note:* Video maximum 10 seconds\n`;
+                text += `✨ Powered by ChisatoBOT`;
+                await Chisato.sendText(from, text, message);
                 return;
             }
             await Chisato.sendReaction(from, "✅", message.key);
         } catch (error: any) {
             await Chisato.sendReaction(from, "❌", message.key);
-            Chisato.sendText(from, "There is an error. Please report it to the bot creator immediately!", message);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            await Chisato.sendText(
+                from,
+                `❌ Failed to convert to sticker. Please try again.\n\nError: ${errorMessage}`,
+                message
+            );
         }
     },
 } satisfies ConfigCommands;
