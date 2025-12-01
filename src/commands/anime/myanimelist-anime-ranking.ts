@@ -11,7 +11,7 @@ export default {
     alias: ["malanimerank", "malanimeranking", "topanime"],
     category: "anime",
     description: "Looks for Top Ranked Anime on MyAnimeList",
-    usage: "<type>",
+    usage: "[type]",
     cooldown: 5,
     limit: 2,
     async run({ Chisato, from, message, args }) {

@@ -41,7 +41,7 @@ export default {
                         );
                     }
                 }
-            }  else if (message.message?.imageMessage) {
+            } else if (message.message?.imageMessage) {
                 imageBuffer = await Chisato.downloadMediaMessage(message);
             } else if (args.length > 0 && /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)/i.test(args[0])) {
                 imageUrl = args[0];
@@ -56,7 +56,6 @@ export default {
                 text += `• ${prefix}tracemoe (reply to anime screenshot)\n`;
                 text += `• ${prefix}tracemoe https://example.com/anime.jpg\n\n`;
                 text += `✨ Powered by trace.moe`;
-
                 return Chisato.sendText(from, text, message);
             }
 

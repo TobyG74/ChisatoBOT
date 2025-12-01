@@ -9,13 +9,11 @@ export default {
 	alias: ["nao", "sauce", "sos"],
 	category: "anime",
 	description: "Reverse image search untuk menemukan sumber anime dari gambar",
-	usage: "[reply image | image url]",
-	cooldown: 5,
-	limit: 2,
-	async run({ Chisato, message, args, from, prefix }) {
-		const scraper = new SauceNaoScraper();
-
-		try {
+    usage: "[reply image | image url]",
+    cooldown: 5,
+    limit: 2,
+    async run({ Chisato, message, args, from, prefix }) {
+        const scraper = new SauceNaoScraper();		try {
 			let imageBuffer: Buffer | null = null;
 			let imageUrl: string | null = null;
 
@@ -57,7 +55,6 @@ export default {
 				text += `• ${prefix}saucenao (reply ke gambar anime)\n`;
 				text += `• ${prefix}saucenao https://example.com/anime.jpg\n\n`;
 				text += `✨ Powered by saucenao.com`;
-
 				return Chisato.sendText(from, text, message);
 			}
 
