@@ -65,6 +65,10 @@ export const message = async (
                 ? m.message.templateButtonReplyMessage.selectedId
                 : m.type === "buttonsResponseMessage"
                 ? m.message[m.type].selectedButtonId
+                : m.type === "interactiveResponseMessage"
+                ? m.message[m.type].nativeFlowResponseMessage?.paramsJson
+                    ? JSON.parse(m.message[m.type].nativeFlowResponseMessage.paramsJson).id
+                    : m.message[m.type].nativeFlowResponseMessage?.name || "Interactive Response"
                 : m.type === "reactionMessage"
                 ? m.message[m.type].text
                 : m.type === "documentMessage"
