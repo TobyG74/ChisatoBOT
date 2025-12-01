@@ -3,12 +3,12 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "hidetag",
     alias: ["htag"],
-    usage: "<text>",
+    usage: "[text]",
     category: "group",
     description: "Tag / Mention All Group Members.",
     isGroup: true,
     isGroupAdmin: true,
-    example: `/hidetag Halo`,
+    example: `{prefix}{command.name} Halo`,
     async run({ Chisato, args, from }) {
         try {
             const groupMetadata = await Chisato.groupMetadata(from);

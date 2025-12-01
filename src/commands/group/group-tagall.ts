@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "tagall",
     alias: ["mentionall"],
-    usage: "<text>",
+    usage: "[text]",
     category: "group",
     description: "Tag / Mention All Group Members.",
     isGroup: true,

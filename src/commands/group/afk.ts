@@ -4,7 +4,7 @@ export default {
     name: "afk",
     alias: ["awayfromkeyboard"],
     category: "group",
-    usage: "<reason>",
+    usage: "[reason]",
     description: "AFK from group",
     isGroup: true,
     async run({ Chisato, from, query, message, Database, sender }) {

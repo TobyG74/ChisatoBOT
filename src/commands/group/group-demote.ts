@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "demote",
     alias: ["gdemote", "groupdemote"],
-    usage: "<tag|reply>",
+    usage: "[tag|reply]",
     category: "group",
     description: "Demote Member from Group Admin",
     isGroup: true,

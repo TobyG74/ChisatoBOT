@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "promote",
     alias: ["gpromote", "grouppromote"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "group",
     description: "Promote Member to Group Admin",
     isGroup: true,

@@ -4,7 +4,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "grouppicture",
     alias: ["gpicture"],
-    usage: "<reply>",
+    usage: "[reply]",
     category: "group",
     description: "Change Group Profile Picture.",
     isGroup: true,

@@ -4,7 +4,7 @@ export default {
     name: "getpicture",
     alias: ["getpic"],
     category: "group",
-    usage: "<tag>",
+    usage: "[tag]",
     description: "Get Picture Profile",
     async run({ Chisato, from, message }) {
         let picture: string;

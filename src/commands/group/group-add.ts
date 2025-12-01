@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "add",
     alias: ["gadd", "groupadd"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "group",
     description: "Add Member to Group",
     isGroup: true,

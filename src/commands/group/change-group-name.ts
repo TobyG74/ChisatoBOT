@@ -3,13 +3,13 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "groupname",
     alias: ["gcname", "gtitle", "gname"],
-    usage: "<text>",
+    usage: "[text]",
     category: "group",
     description: "Change Group Name",
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
-    example: `• /groupname Halo This is Group Name`,
+    example: `• {prefix}{command.name} Halo This is Group Name`,
     async run({ Chisato, query, from, message }) {
         await Chisato.groupUpdateSubject(from, query)
             .then(() => Chisato.sendText(from, `Successfully changed the group name to ${query}`, message))

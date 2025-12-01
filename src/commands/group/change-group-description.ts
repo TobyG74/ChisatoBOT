@@ -3,13 +3,13 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "groupdesc",
     alias: ["gcbio", "gdesc", "gbio"],
-    usage: "<text>",
+    usage: "[text]",
     category: "group",
     description: "Change Group Description",
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
-    example: `• /groupdesc Halo This is Group Description`,
+    example: `• {prefix}{command.name} Halo This is Group Description`,
     async run({ Chisato, query, from, message }) {
         await Chisato.groupUpdateDescription(from, query)
             .then(() => Chisato.sendText(from, `Successfully changed the group description to ${query}`, message))

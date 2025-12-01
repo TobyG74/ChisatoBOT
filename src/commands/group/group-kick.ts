@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "kick",
     alias: ["gkick", "groupkick"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "group",
     description: "Kick Member From Group",
     isGroup: true,

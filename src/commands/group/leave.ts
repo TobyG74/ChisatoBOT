@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "leave",
     alias: ["keluar", "out", "bye"],
-    usage: "<text>",
+    usage: "[text]",
     category: "group",
     description: "Leave from group",
     isGroup: true,
