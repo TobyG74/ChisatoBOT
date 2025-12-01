@@ -5,12 +5,21 @@ import { Validators } from "../../utils/core";
 export default {
     name: "tiktokvideo",
     alias: ["ttv", "tiktokv"],
-    usage: "<url>",
+    usage: "[url]",
     category: "downloader",
     description: "Download Video from Tiktok",
-    cooldown: 3,
-    limit: 1,
-    example: `• /tiktokvideo https://vt.tiktok.com/xxxxxxx`,
+    cooldown: 5,
+    limit: 2,
+    example: `*「 TIKTOK VIDEO DOWNLOADER 」*
+
+📥 Download TikTok videos!
+
+📝 *How to use:*
+{prefix}{command.name} <url>
+
+💡 *Example:*
+• {prefix}{command.name} https://vt.tiktok.com/xxxxxxx
+• {prefix}{command.alias} https://vm.tiktok.com/xxxxxxx`,
     async run({ Chisato, from, query, prefix, message, command }) {
         if (!query || !Validators.isURL(query)) {
             let text = `*「 TIKTOK VIDEO DOWNLOADER 」*\n\n`;

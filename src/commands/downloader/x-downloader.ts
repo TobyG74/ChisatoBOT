@@ -5,12 +5,12 @@ import { isURL } from "../../libs";
 export default {
     name: "xdownload",
     alias: ["xdl", "twitterdl", "twitterdownload"],
-    usage: "<url|slide>",
+    usage: "[url|slide]",
     category: "downloader",
     description: "Download Videos from Twitter",
     cooldown: 3,
     limit: 1,
-    example: `• /twitterdownload https://www.twitter.com/elonmusk/status/xxxxxx`,
+    example: `• {prefix}{command.name} https://www.twitter.com/elonmusk/status/xxxxxx`,
     async run({ Chisato, from, query, prefix, command, message }) {
         if (!query || !isURL(query)) {
             let text = `*「 X/TWITTER DOWNLOADER 」*\n\n`;

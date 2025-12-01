@@ -6,23 +6,24 @@ import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 export default {
     name: "facebook",
     alias: ["fb", "fbdl", "fbdownload"],
-    usage: "<url>",
+    usage: "[url]",
     category: "downloader",
     description: "Download Video from Facebook",
     cooldown: 5,
     limit: 2,
-    example: `• /facebook https://www.facebook.com/share/v/xxxxx/\n• /fbdl https://fb.watch/xxxxx/`,
+    example: `*「 FACEBOOK DOWNLOADER 」*
+
+📥 Download videos from Facebook!
+
+📝 *How to use:*
+{prefix}{command.name} [url]
+
+💡 *Example:*
+• {prefix}{command.name} https://www.facebook.com/share/v/xxxxx/
+• {prefix}{command.alias} https://fb.watch/xxxxx/`,
     async run({ Chisato, from, query, prefix, message, command }) {
         if (!query || !Validators.isURL(query)) {
-            let text = `*「 FACEBOOK DOWNLOADER 」*\n\n`;
-            text += `📥 Download videos from Facebook!\n\n`;
-            text += `📝 *How to use:*\n`;
-            text += `${prefix}${command.name} [url]\n\n`;
-            text += `💡 *Example:*\n`;
-            text += `• ${prefix}${command.name} https://www.facebook.com/share/v/xxxxx/\n`;
-            text += `• ${prefix}fbdl https://fb.watch/xxxxx/`;
-            
-            return Chisato.sendText(from, text, message);
+            return;
         }
 
         try {

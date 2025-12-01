@@ -6,23 +6,24 @@ import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 export default {
     name: "instagram",
     alias: ["ig", "igdl", "igdownload"],
-    usage: "<url>",
+    usage: "[url]",
     category: "downloader",
     description: "Download Image or Video from Instagram",
     cooldown: 5,
     limit: 2,
-    example: `• /instagram https://www.instagram.com/p/xxxxx/\n• /ig https://www.instagram.com/reel/xxxxx/`,
+    example: `*「 INSTAGRAM DOWNLOADER 」*
+
+📥 Download images or videos from Instagram!
+
+📝 *How to use:*
+{prefix}{command.name} [url]
+
+💡 *Example:*
+• {prefix}{command.name} https://www.instagram.com/p/xxxxx/
+• {prefix}{command.alias} https://www.instagram.com/reel/xxxxx/`,
     async run({ Chisato, from, query, prefix, message, command }) {
         if (!query || !Validators.isURL(query)) {
-            let text = `*「 INSTAGRAM DOWNLOADER 」*\n\n`;
-            text += `📥 Download images or videos from Instagram!\n\n`;
-            text += `📝 *How to use:*\n`;
-            text += `${prefix}${command.name} [url]\n\n`;
-            text += `💡 *Example:*\n`;
-            text += `• ${prefix}${command.name} https://www.instagram.com/p/xxxxx/\n`;
-            text += `• ${prefix}ig https://www.instagram.com/reel/xxxxx/`;
-            
-            return Chisato.sendText(from, text, message);
+            return;
         }
 
         try {

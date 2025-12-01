@@ -5,12 +5,12 @@ import { Validators } from "../../utils/core";
 export default {
     name: "tiktokaudio",
     alias: ["tta", "tiktokmp3"],
-    usage: "<url>",
+    usage: "[url]",
     category: "downloader",
     description: "Download Audio from Tiktok",
     cooldown: 3,
     limit: 1,
-    example: `• /tiktokaudio https://vt.tiktok.com/xxxxxxx`,
+    example: `• {prefix}{command.name} https://vt.tiktok.com/xxxxxxx`,
     async run({ Chisato, from, query, prefix, message, command }) {
         if (!query || !Validators.isURL(query)) {
             let text = `*「 TIKTOK AUDIO DOWNLOADER 」*\n\n`;

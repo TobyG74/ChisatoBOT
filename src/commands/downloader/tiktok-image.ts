@@ -5,7 +5,7 @@ import { Validators } from "../../utils/core";
 export default {
     name: "tiktokimage",
     alias: ["tti", "tiktoki", "tiktokslide", "tiktoks"],
-    usage: "<url|slide>",
+    usage: "[url|slide]",
     category: "downloader",
     description: "Download Images from Tiktok",
     cooldown: 3,
