@@ -5,6 +5,8 @@ import { Database } from "../../infrastructure/database";
 
 const JWT_SECRET = process.env.JWT_SECRET || "chisato-dashboard-secret-key";
 const JWT_EXPIRES_IN = "7d";
+// Session expires after 30 minutes of inactivity
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 interface LoginBody {
     username: string;
@@ -43,6 +45,12 @@ export async function authRoutes(fastify: FastifyInstance) {
                     message: "Invalid username or password",
                 });
             }
+
+            // Update last activity timestamp
+            await Database.admin.update({
+                where: { id: admin.id },
+                data: { lastActivity: new Date() },
+            });
 
             const token = jwt.sign(
                 {
@@ -92,6 +100,34 @@ export async function authRoutes(fastify: FastifyInstance) {
                 username: string;
                 phoneNumber: string;
             };
+
+            // Check session expiry based on lastActivity
+            const admin = await Database.admin.findUnique({
+                where: { id: decoded.id },
+            });
+
+            if (!admin) {
+                return reply.status(401).send({
+                    success: false,
+                    message: "User not found",
+                });
+            }
+
+            const timeSinceLastActivity = Date.now() - admin.lastActivity.getTime();
+
+            if (timeSinceLastActivity > SESSION_TIMEOUT_MS) {
+                return reply.status(401).send({
+                    success: false,
+                    message: "Session expired due to inactivity",
+                    sessionExpired: true,
+                });
+            }
+
+            // Update last activity
+            await Database.admin.update({
+                where: { id: admin.id },
+                data: { lastActivity: new Date() },
+            });
 
             return reply.send({
                 success: true,

@@ -1,5 +1,9 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { verifyToken } from "../routes/auth";
+import { Database } from "../../infrastructure/database";
+
+// Session expires after 30 minutes of inactivity
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
 export async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
     const publicPaths = [
@@ -43,6 +47,41 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
         });
     }
 
-    // Attach user info to request
-    (request as any).admin = decoded;
+    // Check session expiry based on lastActivity
+    try {
+        const admin = await Database.admin.findUnique({
+            where: { id: decoded.id },
+        });
+
+        if (!admin) {
+            return reply.status(401).send({
+                success: false,
+                message: "Unauthorized - User not found",
+            });
+        }
+
+        const timeSinceLastActivity = Date.now() - admin.lastActivity.getTime();
+
+        if (timeSinceLastActivity > SESSION_TIMEOUT_MS) {
+            return reply.status(401).send({
+                success: false,
+                message: "Session expired due to inactivity",
+                sessionExpired: true,
+            });
+        }
+
+        // Update last activity timestamp
+        await Database.admin.update({
+            where: { id: admin.id },
+            data: { lastActivity: new Date() },
+        });
+
+        // Attach user info to request
+        (request as any).admin = decoded;
+    } catch (error) {
+        return reply.status(500).send({
+            success: false,
+            message: "Internal server error",
+        });
+    }
 }
