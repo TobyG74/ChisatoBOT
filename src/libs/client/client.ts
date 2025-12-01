@@ -20,7 +20,7 @@ import EventEmitter from "events";
 import moment from "moment-timezone";
 import Pino from "pino";
 import path from "path";
-import PhoneNumber from "awesome-phonenumber";
+import PhoneNumber, { parsePhoneNumber } from "awesome-phonenumber";
 import qrcode from "qrcode-terminal";
 import util from "util";
 
@@ -624,7 +624,6 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         quoted?: MessageSerialize
     ) => {
         try {
-            // Create sticker using StickerGenerator
             const stickerBuffer = await StickerGenerator.createSticker(buffer, {
                 type: type || "default",
                 pack: options.pack,
@@ -632,7 +631,6 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 quality: 80
             });
 
-            // Send as sticker
             return this.sendMessage!(jid, {
                 sticker: stickerBuffer
             }, {
@@ -828,13 +826,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             const group = await Group.get(id);
             return (
                 group?.subject ||
-                PhoneNumber("+" + id.split("@")[0]).getNumber("international")
+                parsePhoneNumber("+" + id.split("@")[0]).number.international
             );
         } else {
             const user = await User.get(id);
             return (
                 user?.name ||
-                PhoneNumber("+" + id.split("@")[0]).getNumber("international")
+                parsePhoneNumber("+" + id.split("@")[0]).number.international
             );
         }
     };
@@ -857,9 +855,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         for (let i of contacts) {
             const number = i.split("@")[0];
             const pushname = await this.getName(i);
-            const awesomeNumber = PhoneNumber("+" + number).getNumber(
-                "international"
-            );
+            const awesomeNumber = parsePhoneNumber("+" + number).number.international;
             listContact.push({
                 displayName: pushname,
                 vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${pushname}\nFN:${pushname}\nitem1.TEL;waid=${number}:${awesomeNumber}\nitem1.X-ABLabel:Mobile\nEND:VCARD`,
