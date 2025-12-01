@@ -5,6 +5,8 @@ import { GroupSerialize } from "../../../types/structure/serialize";
 import { Group as GroupDatabase } from "../../../libs/database";
 import { Client } from "../../../libs";
 import { logger } from "../../../core/logger";
+import { createWelcomeImage, createLeaveImage } from "../../../utils/converter";
+import path from "path";
 import util from "util";
 
 export class GroupUpdateHandler {
@@ -18,7 +20,7 @@ export class GroupUpdateHandler {
             const baileys = await dynamicImport("@whiskeysockets/baileys");
             const { proto } = baileys;
             
-            const { parameters, from, participant, type, expiration } = message;
+            const { parameters, from, participant, type, expiration, pushName } = message;
 
             if (!from || !participant) {
                 logger.error("Group update: Missing required fields (from or participant)");
@@ -29,11 +31,18 @@ export class GroupUpdateHandler {
             
             let groupMetadata = await Group.get(from);
             if (!groupMetadata) {
-                groupMetadata = await Group.upsert(Chisato, from);
+                try {
+                    groupMetadata = await Group.upsert(Chisato, from);
+                } catch (upsertError) {
+                    logger.error(
+                        `Group update: Failed to upsert group metadata: ${
+                            upsertError instanceof Error ? upsertError.message : String(upsertError)
+                        }`
+                    );
+                }
             }
             
             if (!groupMetadata || !groupMetadata.subject) {
-                logger.error("Group update: Unable to fetch group metadata");
                 return;
             }
             
@@ -476,7 +485,6 @@ export class GroupUpdateHandler {
         isNotify: boolean
     ): Promise<void> {
         if (!isNotify) return;
-        console.log(participant, parameters);
 
         let caption = `「 *GROUP PARTICIPANTS* 」\n\n@${
             participant.split("@")[0]
@@ -517,21 +525,56 @@ export class GroupUpdateHandler {
         }
 
         if (isWelcome) {
-            let caption = `「 *GROUP WELCOME* 」\n\nHello`;
+            try {
+                const groupMetadata = await Chisato.groupMetadata(from);
+                const memberCount = groupMetadata.participants.length;
+                const groupName = groupMetadata.subject;
 
-            for (const user of parameters) {
-                const obj = JSON.parse(user);
-                caption += ` @${obj.id.split("@")[0]}`;
+                for (const user of parameters) {
+                    const obj = JSON.parse(user);
+                    const userNumber = obj.phoneNumber;
+
+                    let profilePicUrl: string;
+                    try {
+                        profilePicUrl = await Chisato.profilePictureUrl(userNumber, "image");
+                    } catch {
+                        profilePicUrl = path.join(process.cwd(), "media", "noprofile.png");
+                    }
+
+                    const username = userNumber.split("@")[0];
+
+                    const welcomeBuffer = await createWelcomeImage(
+                        profilePicUrl,
+                        username,
+                        groupName,
+                        memberCount
+                    );
+
+                    await Chisato.sendImage(
+                        from,
+                        welcomeBuffer,
+                        `👋 Welcome to *${groupName}*!\n\n@${username}\n\nYou are member #${memberCount}`,
+                        null,
+                        { mentions: [userNumber] }
+                    );
+                }
+            } catch (error) {
+                logger.error(`Failed to send welcome image: ${error instanceof Error ? error.message : String(error)}`);
+                
+                let caption = `「 *GROUP WELCOME* 」\n\nHello`;
+                for (const user of parameters) {
+                    const obj = JSON.parse(user);
+                    caption += ` @${obj.phoneNumber.split("@")[0]}`;
+                }
+                caption += ` Welcome to the ${groupName}`;
+
+                await Chisato.sendText(from, caption, null, {
+                    mentions: [
+                        participant,
+                        ...parameters.map(u => JSON.parse(u).id)
+                    ],
+                });
             }
-
-            caption += ` Welcome to the ${groupName}`;
-
-            await Chisato.sendText(from, caption, null, {
-                mentions: [
-                    participant,
-                    ...parameters.map(u => JSON.parse(u).id)
-                ],
-            });
         }
     }
 
@@ -546,19 +589,56 @@ export class GroupUpdateHandler {
         const { Group } = this.Database;
 
         if (isLeave) {
-            let caption = `「 *GROUP LEAVE* 」\n\nByee`;
-            for (const user of parameters) {
-                const obj = JSON.parse(user);
-                caption += ` @${obj.id.split("@")[0]}`;
-            }
-            caption += ` Goodbye and see you again`;
+            try {
+                const groupMetadata = await Chisato.groupMetadata(from);
+                const groupName = groupMetadata.subject;
+                const memberCount = groupMetadata.participants.length;
 
-            await Chisato.sendText(from, caption, null, {
-                mentions: [
-                    participant,
-                    ...parameters.map(u => JSON.parse(u).id)
-                ],
-            });
+                for (const user of parameters) {
+                    const obj = JSON.parse(user);
+                    const userNumber = obj.phoneNumber;
+
+                    let profilePicUrl: string;
+                    try {
+                        profilePicUrl = await Chisato.profilePictureUrl(userNumber, "image");
+                    } catch {
+                        profilePicUrl = path.join(process.cwd(), "media", "noprofile.png");
+                    }
+
+                    const username = userNumber.split("@")[0];
+
+                    const leaveBuffer = await createLeaveImage(
+                        profilePicUrl,
+                        username,
+                        groupName,
+                        memberCount
+                    );
+
+                    await Chisato.sendImage(
+                        from,
+                        leaveBuffer,
+                        `👋 Goodbye *@${username}*!\n\nThanks for being part of *${groupName}*\n\nRemaining members: ${memberCount}`,
+                        null,
+                        { mentions: [userNumber] }
+                    );
+                }
+            } catch (error) {
+                logger.error(`Failed to send leave image: ${error instanceof Error ? error.message : String(error)}`);
+                
+                let caption = `「 *GROUP LEAVE* 」\n\nByee`;
+                for (const user of parameters) {
+                    const obj = JSON.parse(user);
+                    caption += ` @${obj.id.split("@")[0]}`;
+                }
+                caption += ` Goodbye and see you again`;
+
+                await Chisato.sendText(from, caption, null, {
+                    mentions: [
+                        participant,
+                        ...parameters.map(u => JSON.parse(u).id)
+                    ],
+                });
+            }
         }
 
         if (participant.split("@")[0] === botNumber.split("@")[0]) {
