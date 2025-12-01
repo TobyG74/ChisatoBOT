@@ -608,8 +608,12 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     };
 
     /**
-     * Using the Sticker conversion module from Alensantio1
-     * https://github.com/Alensaito1/wa-sticker-formatter
+     * Send Media as Sticker
+     * @param jid
+     * @param options
+     * @param buffer
+     * @param type
+     * @param quoted
      */
 
     public sendMediaAsSticker = async (
