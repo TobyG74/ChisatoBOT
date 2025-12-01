@@ -1,5 +1,5 @@
 import { configService } from "../../../core/config/config.service";
-import { formatExample } from "../../../utils/template-helper";
+import { formatExample } from "../../../utils";
 
 export class CommandValidator {
     static async validateCommand(

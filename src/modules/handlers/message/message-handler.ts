@@ -15,7 +15,7 @@ import {
 } from "../../../libs/database";
 import { AntiLinkHandler } from "../settings";
 import { StringUtils } from "../../../utils/core/string-utils";
-import { formatExample } from "../../../utils/template-helper";
+import { formatExample } from "../../../utils";
 
 export class MessageHandler {
     private Database = {
