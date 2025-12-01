@@ -68,7 +68,6 @@ What is needed to run this project :
 -   [NodeJS version 16+](https://nodejs.org/en/)
 -   [FFMPEG](https://ffmpeg.org/download.html)
 -   [WEBP](https://storage.googleapis.com/downloads.webmproject.org/releases/webp/index.html)
--   You need a Chinese Proxy for the Image to Anime feature
 -   You need the [OCR Space API KEY](https://ocr.space) to run the OCR feature
 
 If you have problems, you can [open an issue](https://github.com/TobyG74/ChisatoBOT/issues) or join the community to ask questions about it
@@ -100,6 +99,28 @@ OCR_APIKEY=
 ![MongoDB](https://img.shields.io/badge/MongoDB-FFFFFF?style=for-the-badge&logo=mongodb&logoColor=2FA331)
 
 ## Installation
+
+### Quick Installation (Recommended)
+
+**For Windows:**
+```powershell
+.\install.ps1
+```
+
+**For Linux/macOS:**
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+The installer will automatically:
+- Check all prerequisites (Git, Node.js, FFmpeg)
+- Install npm dependencies
+- Setup environment variables
+- Configure Prisma and database
+- Build the TypeScript project
+
+### Manual Installation
 
 ### Clone this Project
 
