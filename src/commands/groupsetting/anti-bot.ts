@@ -5,29 +5,24 @@ export default {
     alias: ["autokickbot"],
     category: "group setting",
     description: "Automatically kick bot accounts from group",
-    usage: "<on/off>",
-    example: ".antibot on\n.antibot off\n.antibot",
+    usage: "[on/off]",
+    example: `*「 ANTI-BOT 」*
+
+🤖 Automatically kick bot accounts
+
+📝 *Description:*
+Anti-bot feature will automatically kick bot accounts that join the group.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+⚠️ *Note:* Bot must be admin to kick other bots.`,
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
     async run({ Chisato, from, args, message, Database, prefix }) {
         const groupSetting = await Database.Group.getSettings(from);
-
-        if (args.length === 0) {
-            const status = groupSetting?.antibot ? "ON" : "OFF";
-            const emoji = groupSetting?.antibot ? "✅" : "❌";
-            
-            let text = `*「 ANTI-BOT STATUS 」*\n\n`;
-            text += `${emoji} Anti-Bot: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Anti-bot feature will automatically kick bot accounts that join the group.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}antibot on\n`;
-            text += `• ${prefix}antibot off\n\n`;
-            text += `⚠️ *Note:* Bot must be admin to kick other bots.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

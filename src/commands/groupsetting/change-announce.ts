@@ -5,31 +5,24 @@ export default {
     alias: ["groupannounce", "changeannounce"],
     category: "group setting",
     description: "Toggle group announcement mode (only admins can send messages)",
-    usage: "<on/off>",
-    example: ".announce on\n.announce off\n.announce",
+    usage: "[on/off]",
+    example: `*「 ANNOUNCEMENT MODE 」*
+
+🔒 Toggle group announcement mode
+
+📝 *Description:*
+When enabled, only admins can send messages to the group.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+{prefix}{command.name}
+
+🔒 *Note:* Bot must be admin to change this setting.`,
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
     async run({ Chisato, from, args, message, groupMetadata, prefix }) {
-        if (args.length === 0) {
-            const status = groupMetadata?.announce ? "ON" : "OFF";
-            const emoji = groupMetadata?.announce ? "✅" : "❌";
-            
-            let text = `*「 ANNOUNCEMENT MODE STATUS 」*\n\n`;
-            text += `${emoji} Announcement Mode: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += groupMetadata?.announce
-                ? `Only admins can send messages to the group.`
-                : `All members can send messages to the group.`;
-            text += `\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}announce on\n`;
-            text += `• ${prefix}announce off\n\n`;
-            text += `🔒 *Note:* Bot must be admin to change this setting.`;
-
-            return Chisato.sendText(from, text, message);
-        }
-
         const action = args[0].toLowerCase();
 
         if (action === "on" || action === "enable" || action === "true" || action === "1") {

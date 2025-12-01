@@ -4,7 +4,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "antilink",
     alias: ["autourl"],
-    usage: "<option> <mode>",
+    usage: "[option] [mode]",
     category: "group setting",
     description: "Anti Link Protect",
     isGroup: true,

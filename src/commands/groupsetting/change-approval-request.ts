@@ -5,32 +5,26 @@ export default {
     alias: ["approvalmode", "joinapproval"],
     category: "group setting",
     description: "Require admin approval for join requests",
-    usage: "<on/off>",
-    example: ".approval on\n.approval off\n.approval",
+    usage: "[on/off]",
+    example: `*「 JOIN APPROVAL MODE 」*
+
+✅ Require admin approval for join requests
+
+📝 *Description:*
+• ON - Members must get admin approval to join
+• OFF - Members can join directly via invite link
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+{prefix}{command.name}
+
+🔒 *Note:* Bot must be admin to change this setting.`,
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
     async run({ Chisato, from, args, message, Database, prefix }) {
         const groupSetting = await Database.Group.get(from);
-
-        if (args.length === 0) {
-            const status = groupSetting?.approval ? "REQUIRED" : "NOT REQUIRED";
-            const emoji = groupSetting?.approval ? "✅" : "❌";
-            
-            let text = `*「 JOIN APPROVAL STATUS 」*\n\n`;
-            text += `${emoji} Admin Approval: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += groupSetting?.approval
-                ? `People must send join request and get admin approval to join this group.`
-                : `People can join directly via invite link without admin approval.`;
-            text += `\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}approval on\n`;
-            text += `• ${prefix}approval off\n\n`;
-            text += `🔒 *Note:* Bot must be admin to change this setting.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

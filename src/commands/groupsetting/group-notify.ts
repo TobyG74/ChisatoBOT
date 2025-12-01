@@ -5,8 +5,19 @@ export default {
     alias: ["gnotify", "groupnotify"],
     category: "group setting",
     description: "Enable group event notifications (join/leave/promote/demote)",
-    usage: "<on/off>",
-    example: ".notify on\n.notify off\n.notify",
+    usage: "[on/off]",
+    example: `*「 GROUP NOTIFICATIONS 」*
+
+🔔 Enable group event notifications
+
+📝 *Description:*
+Group notifications will send alerts for group events like member changes, promotions, and demotions.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+🔔 *Events:* Member join/leave, admin promote/demote, group changes.`,
     isGroup: true,
     isGroupAdmin: true,
     async run({ Chisato, from, args, message, Database, isBotAdmin, prefix }) {
@@ -19,22 +30,6 @@ export default {
         }
 
         const groupSetting = await Database.Group.getSettings(from);
-
-        if (args.length === 0) {
-            const status = groupSetting?.notify ? "ON" : "OFF";
-            const emoji = groupSetting?.notify ? "✅" : "❌";
-            
-            let text = `*「 GROUP NOTIFICATIONS STATUS 」*\n\n`;
-            text += `${emoji} Group Notifications: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Group notifications will send alerts for group events like member changes, promotions, and demotions.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}notify on\n`;
-            text += `• ${prefix}notify off\n\n`;
-            text += `🔔 *Events:* Member join/leave, admin promote/demote, group changes.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

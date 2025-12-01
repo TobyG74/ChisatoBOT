@@ -5,32 +5,26 @@ export default {
     alias: ["addmember", "memberadd"],
     category: "group setting",
     description: "Control who can add members to group",
-    usage: "<on/off>",
-    example: ".addmode on\n.addmode off\n.addmode",
+    usage: "[on/off]",
+    example: `*「 ADD MEMBER MODE 」*
+
+👥 Control who can add members
+
+📝 *Description:*
+• ON - All members can add people
+• OFF - Only admins can add people
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+{prefix}{command.name}
+
+🔒 *Note:* Bot must be admin to change this setting.`,
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
     async run({ Chisato, from, args, message, Database, prefix }) {
         const groupSetting = await Database.Group.get(from);
-
-        if (args.length === 0) {
-            const mode = groupSetting?.memberAddMode ? "ALL MEMBERS" : "ADMINS ONLY";
-            const emoji = groupSetting?.memberAddMode ? "👥" : "🔒";
-            
-            let text = `*「 ADD MEMBER MODE STATUS 」*\n\n`;
-            text += `${emoji} Current Mode: *${mode}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += groupSetting?.memberAddMode
-                ? `All members can add other people to this group.`
-                : `Only admins can add other people to this group.`;
-            text += `\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}addmode on\n`;
-            text += `• ${prefix}addmode off\n\n`;
-            text += `🔒 *Note:* Bot must be admin to change this setting.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

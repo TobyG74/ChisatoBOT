@@ -5,32 +5,25 @@ export default {
     alias: ["grouprestrict", "changerestrict", "lock"],
     category: "group setting",
     description: "Lock/unlock group settings (only admins can edit group info)",
-    usage: "<on/off>",
-    example: ".restrict on\n.restrict off\n.restrict",
+    usage: "[on/off]",
+    example: `*「 GROUP RESTRICT MODE 」*
+
+🔒 Lock/unlock group settings
+
+📝 *Description:*
+When locked, only admins can edit group info (name, icon, description).
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+{prefix}{command.name}
+
+🔒 *Note:* Bot must be admin to change this setting.`,
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
     async run({ Chisato, from, args, message, Database, prefix }) {
         const groupSetting = await Database.Group.get(from);
-
-        if (args.length === 0) {
-            const status = groupSetting?.restrict ? "LOCKED" : "UNLOCKED";
-            const emoji = groupSetting?.restrict ? "🔒" : "🔓";
-            
-            let text = `*「 GROUP RESTRICT STATUS 」*\n\n`;
-            text += `${emoji} Group Settings: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += groupSetting?.restrict
-                ? `Only admins can edit group info (name, icon, description).`
-                : `All members can edit group info.`;
-            text += `\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}restrict on\n`;
-            text += `• ${prefix}restrict off\n\n`;
-            text += `🔒 *Note:* Bot must be admin to change this setting.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

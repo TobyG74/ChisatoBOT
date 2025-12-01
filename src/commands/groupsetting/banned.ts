@@ -4,7 +4,7 @@ export default {
     name: "banned",
     alias: ["ban"],
     category: "group setting",
-    usage: "<tag>",
+    usage: "[tag]",
     description: "Banned member from group",
     isGroup: true,
     isGroupAdmin: true,

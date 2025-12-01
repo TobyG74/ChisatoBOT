@@ -4,7 +4,7 @@ export default {
     name: "unbanned",
     alias: ["unban"],
     category: "group setting",
-    usage: "<tag>",
+    usage: "[tag]",
     description: "Unbanned member from group",
     isGroup: true,
     isGroupAdmin: true,

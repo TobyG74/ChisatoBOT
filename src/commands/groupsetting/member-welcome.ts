@@ -5,8 +5,19 @@ export default {
     alias: ["memberwc", "welcome"],
     category: "group setting",
     description: "Send welcome message when members join group",
-    usage: "<on/off>",
-    example: ".memberwelcome on\n.memberwelcome off\n.memberwelcome",
+    usage: "[on/off]",
+    example: `*「 WELCOME MESSAGE 」*
+
+👋 Send welcome message to new members
+
+📝 *Description:*
+Welcome message feature will greet new members when they join the group.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+👋 *Note:* Bot must be admin to detect new members.`,
     isGroup: true,
     isGroupAdmin: true,
     async run({ Chisato, args, from, message, Database, isBotAdmin, prefix }) {
@@ -19,22 +30,6 @@ export default {
         }
 
         const groupSetting = await Database.Group.getSettings(from);
-
-        if (args.length === 0) {
-            const status = groupSetting?.welcome ? "ON" : "OFF";
-            const emoji = groupSetting?.welcome ? "✅" : "❌";
-            
-            let text = `*「 WELCOME MESSAGE STATUS 」*\n\n`;
-            text += `${emoji} Welcome Message: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Welcome message feature will greet new members when they join the group.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}memberwelcome on\n`;
-            text += `• ${prefix}memberwelcome off\n\n`;
-            text += `👋 *Note:* Bot must be admin to detect new members.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

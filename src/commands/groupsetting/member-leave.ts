@@ -5,8 +5,19 @@ export default {
     alias: ["mleft", "goodbye"],
     category: "group setting",
     description: "Send goodbye message when members leave group",
-    usage: "<on/off>",
-    example: ".memberleave on\n.memberleave off\n.memberleave",
+    usage: "[on/off]",
+    example: `*「 LEAVE MESSAGE 」*
+
+👋 Send goodbye message when members leave
+
+📝 *Description:*
+Leave message feature will send goodbye message when members leave the group.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+👋 *Note:* Bot must be admin to detect member removals.`,
     isGroup: true,
     isGroupAdmin: true,
     async run({ Chisato, args, from, message, Database, isBotAdmin, prefix }) {
@@ -19,22 +30,6 @@ export default {
         }
 
         const groupSetting = await Database.Group.getSettings(from);
-
-        if (args.length === 0) {
-            const status = groupSetting?.leave ? "ON" : "OFF";
-            const emoji = groupSetting?.leave ? "✅" : "❌";
-            
-            let text = `*「 LEAVE MESSAGE STATUS 」*\n\n`;
-            text += `${emoji} Leave Message: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Leave message feature will send goodbye message when members leave the group.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${prefix}memberleave on\n`;
-            text += `• ${prefix}memberleave off\n\n`;
-            text += `👋 *Note:* Bot must be admin to detect member removals.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 
