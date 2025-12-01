@@ -1,4 +1,4 @@
-import { converter } from "../../utils";
+import { TextConvert } from './../../utils/converter/text-convert';
 
 declare global {
     interface String {
@@ -15,7 +15,7 @@ declare global {
  */
 String.prototype.toBold = function (): string {
     return this.split("")
-        .map((char) => converter.TextConvert("bold-sans", char))
+        .map((char) => TextConvert("bold-sans", char))
         .join("")
         .trim();
 };

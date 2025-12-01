@@ -1,6 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 import { TraceMoeScraper } from "../../utils/scrapers/anime";
-import { toVideoMP4 } from "../../utils/scrapers/converter/convert";
+import { toVideoMP4 } from "../../utils/converter";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 
 export default {
