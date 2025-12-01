@@ -128,10 +128,15 @@ export class MessageHandler {
                 await this.handleGroupSettings(Chisato, message, context);
             }
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            
+            // Skip logging rate-overlimit errors to prevent spam
+            if (errorMessage.includes('rate-overlimit')) {
+                return;
+            }
+            
             logger.error(
-                `Message handler error: ${
-                    error instanceof Error ? error.message : String(error)
-                }`
+                `Message handler error: ${errorMessage}`
             );
         }
     }
