@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "block",
     alias: ["addblock"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "owner",
     description: "Block User",
     isOwner: true,

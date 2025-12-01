@@ -6,10 +6,21 @@ export default {
     alias: ["mode", "botmode"],
     category: "owner",
     description: "Change bot operation mode (public/self)",
-    usage: "<mode>",
-    example: ".mode\n.mode public\n.mode self",
+    usage: "[mode]",
+    example: `*「 BOT MODE STATUS 」*
+
+🌍 Change bot operation mode
+
+📝 *Available Modes:*
+• *PUBLIC* - Bot responds to all users
+• *SELF* - Bot only responds to owner
+
+💡 *Example:*
+{prefix}{command.name}
+{prefix}{command.name} public
+{prefix}{command.name} self`,
     isOwner: true,
-    async run({ Chisato, message, args, from }) {
+    async run({ Chisato, message, args, from, prefix, command }) {
         const config = configService.getConfig();
 
         if (args.length === 0) {
@@ -26,9 +37,10 @@ export default {
             text += `🎯 *Available Modes:*\n`;
             text += `• *PUBLIC* - Bot responds to all users\n`;
             text += `• *SELF* - Bot only responds to owner\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${config.prefix}mode public\n`;
-            text += `• ${config.prefix}mode self`;
+            text += `💡 *Example:*\n`;
+            text += `${prefix}${command.name}\n`;
+            text += `${prefix}${command.name} public\n`;
+            text += `${prefix}${command.name} self`;
 
             return Chisato.sendText(from, text, message);
         }

@@ -4,7 +4,7 @@ import fs from "fs";
 export default {
     name: "delteam",
     alias: ["deleteteam"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "owner",
     description: "Delete User from Team",
     isOwner: true,

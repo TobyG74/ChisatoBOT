@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "delpremium",
     alias: ["deletepremium"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "owner",
     description: "Add Premium User",
     isOwner: true,

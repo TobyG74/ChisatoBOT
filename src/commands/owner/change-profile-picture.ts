@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "setpicture",
     alias: ["setpp", "changepp"],
-    usage: "<reply>",
+    usage: "[reply]",
     category: "owner",
     description: "Change Bot Profile Picture",
     isOwner: true,

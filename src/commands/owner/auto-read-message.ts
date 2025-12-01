@@ -6,28 +6,22 @@ export default {
     alias: ["autoreadmsg", "armsg"],
     category: "owner",
     description: "Toggle auto-read message feature",
-    usage: "<on/off>",
-    example: ".autoreadmessage on\n.autoreadmessage off\n.autoreadmessage",
+    usage: "[on/off]",
+    example: `*「 AUTO-READ MESSAGE 」*
+
+✉️ Toggle auto-read message feature
+
+📝 *Description:*
+Auto-read message feature will automatically mark all incoming messages as read.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+🎯 *Note:* All messages will be automatically marked as read.`,
     isOwner: true,
     async run({ Chisato, message, args, from }) {
         const config = configService.getConfig();
-
-        if (args.length === 0) {
-            const status = config.settings.autoReadMessage ? "ON" : "OFF";
-            const emoji = config.settings.autoReadMessage ? "✅" : "❌";
-            
-            let text = `*「 AUTO-READ MESSAGE STATUS 」*\n\n`;
-            text += `${emoji} Auto-Read Message: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Auto-read message feature will automatically mark all incoming messages as read.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${config.prefix}autoreadmessage on\n`;
-            text += `• ${config.prefix}autoreadmessage off\n\n`;
-            text += `🎯 *Note:*\n`;
-            text += `When enabled, all messages will be automatically marked as read without manual action.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

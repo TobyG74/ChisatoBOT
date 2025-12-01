@@ -6,28 +6,22 @@ export default {
     alias: ["ac", "autofix"],
     category: "owner",
     description: "Toggle auto-correct feature for command suggestions",
-    usage: "<on/off>",
-    example: ".autocorrect on\n.autocorrect off\n.autocorrect",
+    usage: "[on/off]",
+    example: `*「 AUTO-CORRECT 」*
+
+✅ Toggle auto-correct feature
+
+📝 *Description:*
+Auto-correct feature will suggest similar commands when users type an incorrect command name.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+🎯 *Example:* If user types ".mnu" (typo), bot will suggest ".menu"`,
     isOwner: true,
     async run({ Chisato, message, args, from }) {
         const config = configService.getConfig();
-
-        if (args.length === 0) {
-            const status = config.settings.autoCorrect ? "ON" : "OFF";
-            const emoji = config.settings.autoCorrect ? "✅" : "❌";
-            
-            let text = `*「 AUTO-CORRECT STATUS 」*\n\n`;
-            text += `${emoji} Auto-Correct: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Auto-correct feature will suggest similar commands when users type an incorrect command name.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${config.prefix}autocorrect on\n`;
-            text += `• ${config.prefix}autocorrect off\n\n`;
-            text += `🎯 *Example:*\n`;
-            text += `If user types "${config.prefix}mnu" (typo), bot will suggest "${config.prefix}menu"`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 

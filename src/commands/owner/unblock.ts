@@ -3,7 +3,7 @@ import type { ConfigCommands } from "../../types/structure/commands";
 export default {
     name: "unblock",
     alias: ["addunblock"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "owner",
     description: "Unblock User",
     isOwner: true,

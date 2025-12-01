@@ -7,32 +7,25 @@ export default {
     category: "owner",
     description: "Configure anti-call feature (reject/block incoming calls)",
     usage: "[type]",
-    example: ".anticall\n.anticall reject\n.anticall block\n.anticall off",
+    example: `*「 ANTI-CALL 」*
+
+📞 Configure anti-call feature
+
+📝 *Description:*
+Anti-call feature helps manage incoming calls automatically.
+
+🎯 *Available Modes:*
+• *REJECT* - Automatically reject incoming calls
+• *BLOCK* - Reject and block the caller
+• *OFF* - Allow all calls (disabled)
+
+💡 *Usage:*
+{prefix}{command.name} reject
+{prefix}{command.name} block
+{prefix}{command.name} off`,
     isOwner: true,
     async run({ Chisato, message, args, from }) {
         const config = configService.getConfig();
-
-        if (args.length === 0) {
-            const status = config.call.status.toUpperCase();
-            const emoji = 
-                config.call.status === "block" ? "🚫" :
-                config.call.status === "reject" ? "❌" : "✅";
-            
-            let text = `*「 ANTI-CALL STATUS 」*\n\n`;
-            text += `${emoji} Current Mode: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Anti-call feature helps manage incoming calls automatically.\n\n`;
-            text += `🎯 *Available Modes:*\n`;
-            text += `• *REJECT* - Automatically reject incoming calls\n`;
-            text += `• *BLOCK* - Reject and block the caller\n`;
-            text += `• *OFF* - Allow all calls (disabled)\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${config.prefix}anticall reject - Enable auto-reject\n`;
-            text += `• ${config.prefix}anticall block - Enable auto-block\n`;
-            text += `• ${config.prefix}anticall off - Disable anti-call`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const type = args[0].toLowerCase();
 

@@ -4,7 +4,7 @@ import fs from "fs";
 export default {
     name: "addteam",
     alias: ["tambahteam"],
-    usage: "<tag>",
+    usage: "[tag]",
     category: "owner",
     description: "Add User to Team",
     isOwner: true,

@@ -4,7 +4,7 @@ import type { ConfigCommands } from "../../types/structure/commands.js";
 export default {
     name: "groupbc",
     alias: ["gcbc", "bcgc"],
-    usage: "<text>",
+    usage: "[text]",
     category: "owner",
     description: "Sending Broadcast To All Groups",
     isOwner: true,

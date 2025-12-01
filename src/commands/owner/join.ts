@@ -6,25 +6,22 @@ export default {
     alias: ["joingrup", "joingroup"],
     category: "owner",
     description: "Make bot join a group via invite link",
-    usage: "<invite_link>",
-    example: ".join https://chat.whatsapp.com/xxxxx",
+    usage: "[invite_link]",
+    example: `*「 JOIN GROUP 」*
+
+👥 Make bot join a group via invite link
+
+📝 *Usage:*
+{prefix}{command.name} <invite_link>
+
+💡 *Example:*
+{prefix}{command.name} https://chat.whatsapp.com/xxxxx
+
+🔗 *Format:* Provide a valid WhatsApp group invite link`,
     isOwner: true,
     async run({ Chisato, message, args, from }) {
         const msg = message;
         await Chisato.sendReaction(from, "⏳", msg.key);
-
-        if (args.length === 0) {
-            await Chisato.sendText(from,
-                `❌ *Join Group Command*\n\n` +
-                    `Please provide a WhatsApp group invite link!\n\n` +
-                    `*Usage:*\n` +
-                    `.join <invite_link>\n\n` +
-                    `*Example:*\n` +
-                    `.join https://chat.whatsapp.com/xxxxx`,
-            msg);
-            await Chisato.sendReaction(from, "❌", msg.key);
-            return;
-        }
 
         const inviteLink = args[0];
 

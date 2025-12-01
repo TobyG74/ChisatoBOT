@@ -6,28 +6,22 @@ export default {
     alias: ["autoreadsw", "arsw"],
     category: "owner",
     description: "Toggle auto-read status/story feature",
-    usage: "<on/off>",
-    example: ".autoreadstatus on\n.autoreadstatus off\n.autoreadstatus",
+    usage: "[on/off]",
+    example: `*「 AUTO-READ STATUS 」*
+
+📱 Toggle auto-read status/story feature
+
+📝 *Description:*
+Auto-read status feature will automatically view all WhatsApp status/stories.
+
+💡 *Usage:*
+{prefix}{command.name} on
+{prefix}{command.name} off
+
+🎯 *Note:* Bot will automatically view all status updates from contacts.`,
     isOwner: true,
     async run({ Chisato, message, args, from }) {
         const config = configService.getConfig();
-
-        if (args.length === 0) {
-            const status = config.settings.autoReadStatus ? "ON" : "OFF";
-            const emoji = config.settings.autoReadStatus ? "✅" : "❌";
-            
-            let text = `*「 AUTO-READ STATUS 」*\n\n`;
-            text += `${emoji} Auto-Read Status: *${status}*\n\n`;
-            text += `📝 *Description:*\n`;
-            text += `Auto-read status feature will automatically view all WhatsApp status/stories.\n\n`;
-            text += `💡 *Usage:*\n`;
-            text += `• ${config.prefix}autoreadstatus on\n`;
-            text += `• ${config.prefix}autoreadstatus off\n\n`;
-            text += `🎯 *Note:*\n`;
-            text += `When enabled, bot will automatically view all status updates from contacts.`;
-
-            return Chisato.sendText(from, text, message);
-        }
 
         const action = args[0].toLowerCase();
 
