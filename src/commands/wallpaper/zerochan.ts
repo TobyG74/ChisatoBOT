@@ -9,11 +9,11 @@ const searchCache = new Map<string, { results: any[], timestamp: number, totalRe
 export default {
     name: "zerochan",
     alias: ["zchan"],
-    usage: "<latest|search|page> [query] [page]",
+    usage: "[latest|search|page] [query] [page]",
     category: "wallpaper",
     description: "Get latest or search wallpapers from ZeroChan with pagination",
     cooldown: 2,
-    example: `• /zerochan latest\n• /zerochan latest 2\n• /zerochan search Chisato Nishikigi\n• /zerochan search Chisato Nishikigi 2`,
+    example: `• {prefix}{command.name} latest\n• {prefix}{command.name} latest 2\n• {prefix}{command.name} search Chisato Nishikigi\n• {prefix}{command.name} search Chisato Nishikigi 2`,
     async run({ Chisato, arg, from, message, prefix, command }) {
         try {
             const args = arg?.trim().split(/\s+/);

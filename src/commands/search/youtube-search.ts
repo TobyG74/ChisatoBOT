@@ -6,15 +6,20 @@ export default {
     name: "youtubesearch",
     alias: ["ytsearch", "yts", "searchyt"],
     category: "search",
-    usage: "<query>",
+    usage: "[query]",
     description: "Search youtube video, channel, live, or playlist",
     limit: 1,
     cooldown: 5,
-    example: `• /youtubesearch xxxxx`,
-    async run({ Chisato, query, from, message, command }) {
-        if (!query)
-            return Chisato.sendText(from, "Please provide query!", message);
-        
+    example: `*「 YOUTUBE SEARCH 」*
+
+🔍 Search for videos, channels, and playlists on YouTube!
+
+📝 *How to use:*
+{prefix}{command.name} [query]
+
+💡 *Example:*
+• {prefix}{command.name} xxxxx`,
+    async run({ Chisato, query, from, message, command, prefix }) {
         await Chisato.sendReaction(from, "⏳", message.key);
 
         try {

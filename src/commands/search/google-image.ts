@@ -8,31 +8,28 @@ const searchCache = new Map<string, { results: any[], timestamp: number }>();
 export default {
     name: "googleimage",
     alias: ["gimage", "gimg", "googleimg"],
-    usage: "<query> [page]",
+    usage: "[query] [page]",
     category: "search",
     description: "Search images on Google",
     cooldown: 5,
     limit: 2,
-    example: `• /googleimage cat\n• /gimage beautiful sunset\n• /gimg anime wallpaper 2`,
+    example: `*「 GOOGLE IMAGE SEARCH 」*
+
+🔍 Search for images on Google!
+
+📝 *How to use:*
+{prefix}{command.name} [query] [page]
+
+💡 *Example:*
+• {prefix}{command.name} cat
+• {prefix}{command.alias} beautiful sunset
+• {prefix}gimg anime wallpaper 2`,
     async run({ Chisato, from, query, prefix, message, command }) {
         const args = query?.trim().split(/\s+/) || [];
         const pageNum = args.length > 1 && !isNaN(parseInt(args[args.length - 1])) 
             ? parseInt(args.pop()!) 
             : 1;
         const searchQuery = args.join(" ");
-
-        if (!searchQuery) {
-            let text = `*「 GOOGLE IMAGE SEARCH 」*\n\n`;
-            text += `🔍 Search for images on Google!\n\n`;
-            text += `📝 *How to use:*\n`;
-            text += `${prefix}${command.name} [query] [page]\n\n`;
-            text += `💡 *Example:*\n`;
-            text += `• ${prefix}${command.name} cute cat\n`;
-            text += `• ${prefix}gimage anime wallpaper\n`;
-            text += `• ${prefix}gimg landscape 2`;
-            
-            return Chisato.sendText(from, text, message);
-        }
 
         try {
             await Chisato.sendReaction(from, "⏳", message.key);
