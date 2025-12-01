@@ -6,6 +6,8 @@ import emojiReg from "emoji-regex";
 import { exec } from "child_process";
 import { promisify } from "util";
 import sharp from "sharp";
+import webpmux from "node-webpmux";
+import Axios from "axios";
 
 const { CanvasTextWrapper } = Wrap;
 const execAsync = promisify(exec);
@@ -168,7 +170,7 @@ export class StickerGenerator {
             quality?: number;
         } = {}
     ): Promise<Buffer> {
-        const { type = "default", quality = 80 } = options;
+        const { type = "default", pack = "ChisatoBOT", author = "TobyG74", quality = 80 } = options;
         const tempDir = path.join(process.cwd(), "temp");
         
         if (!fs.existsSync(tempDir)) {
@@ -178,11 +180,14 @@ export class StickerGenerator {
         try {
             const isVideo = buffer.toString("hex", 0, 4) === "66747970"; 
             
+            let stickerBuffer: Buffer;
             if (isVideo) {
-                return await this.videoToSticker(buffer, type, quality);
+                stickerBuffer = await this.videoToSticker(buffer, type, quality);
             } else {
-                return await this.imageToSticker(buffer, type, quality);
+                stickerBuffer = await this.imageToSticker(buffer, type, quality);
             }
+            
+            return await this.addMetadata(stickerBuffer, pack, author);
         } catch (error) {
             throw new Error(`Failed to create sticker: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -288,14 +293,32 @@ export class StickerGenerator {
      * @returns Buffer with EXIF metadata
      */
     static async addMetadata(buffer: Buffer, pack: string, author: string): Promise<Buffer> {
-        const exif = {
-            "sticker-pack-id": "com.chisatobot.sticker",
-            "sticker-pack-name": pack,
-            "sticker-pack-publisher": author,
-            "emojis": ["😀", "😃", "😄"]
-        };
+        try {
+            const data: Record<string, string> = {};
 
-        return buffer;
+            data['sticker-pack-id'] = 'com.chisatobot.sticker';
+            data['sticker-pack-name'] = pack || 'ChisatoBOT';
+            data['sticker-pack-publisher'] = author || 'TobyG74';
+
+            const exif = Buffer.concat([
+                Buffer.from([
+                    0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00,
+                    0x00, 0x00
+                ]),
+                Buffer.from(JSON.stringify(data), 'utf-8')
+            ]);
+
+            exif.writeUIntLE(Buffer.from(JSON.stringify(data), 'utf-8').length, 14, 4);
+
+            const img = new webpmux.Image();
+            await img.load(buffer);
+            img.exif = exif;
+
+            return await img.save(null);
+        } catch (error) {
+            console.error('Failed to add metadata:', error);
+            return buffer;
+        }
     }
 
     /**
@@ -364,4 +387,213 @@ export class StickerGenerator {
 
         return defaultColors[Math.floor(Math.random() * defaultColors.length)];
     }
+
+    /**
+     * Generate WhatsApp-style bubble chat sticker from quote
+     * @param profilePicUrl - URL or path to profile picture
+     * @param senderName - Name of the sender
+     * @param message - Message text
+     * @returns Buffer of PNG image
+     */
+    static async generateBubbleChatSticker(
+        profilePicUrl: string,
+        senderName: string,
+        message: string
+    ): Promise<Buffer> {
+        const canvasSize = 512;
+        const canvas = createCanvas(canvasSize, canvasSize);
+        const ctx = canvas.getContext("2d");
+
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+        const avatarSize = 50;
+        const avatarX = 20;
+        const avatarY = 50;
+
+        const padding = 20;
+        const lineHeight = 24;
+        const maxBubbleWidth = canvasSize - avatarX - avatarSize - 40;
+        
+        ctx.font = "bold 18px Arial, sans-serif";
+        const nameWidth = ctx.measureText(senderName).width;
+        
+        ctx.font = "16px Arial, sans-serif";
+        const wrappedText = this.wrapText(ctx, message, maxBubbleWidth - (padding * 2));
+        
+        let maxTextWidth = nameWidth;
+        for (const line of wrappedText) {
+            const lineWidth = ctx.measureText(line).width;
+            if (lineWidth > maxTextWidth) {
+                maxTextWidth = lineWidth;
+            }
+        }
+        
+        const bubbleWidth = Math.min(maxTextWidth + (padding * 2), maxBubbleWidth);
+        const bubbleHeight = 40 + (wrappedText.length * lineHeight) + padding;
+
+        const bubbleX = avatarX + avatarSize + 15;
+        const bubbleY = avatarY - 15;
+
+        // Draw WhatsApp bubble 
+        ctx.fillStyle = "#DCF8C6";
+        ctx.strokeStyle = "#B5E3A0";
+        ctx.lineWidth = 2;
+        
+        // Rounded rectangle for bubble
+        const radius = 10;
+        ctx.beginPath();
+        ctx.moveTo(bubbleX + radius, bubbleY);
+        ctx.lineTo(bubbleX + bubbleWidth - radius, bubbleY);
+        ctx.quadraticCurveTo(bubbleX + bubbleWidth, bubbleY, bubbleX + bubbleWidth, bubbleY + radius);
+        ctx.lineTo(bubbleX + bubbleWidth, bubbleY + bubbleHeight - radius);
+        ctx.quadraticCurveTo(bubbleX + bubbleWidth, bubbleY + bubbleHeight, bubbleX + bubbleWidth - radius, bubbleY + bubbleHeight);
+        ctx.lineTo(bubbleX + radius, bubbleY + bubbleHeight);
+        ctx.quadraticCurveTo(bubbleX, bubbleY + bubbleHeight, bubbleX, bubbleY + bubbleHeight - radius);
+        ctx.lineTo(bubbleX, bubbleY + radius);
+        ctx.quadraticCurveTo(bubbleX, bubbleY, bubbleX + radius, bubbleY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw bubble tail (triangle pointing to avatar)
+        ctx.beginPath();
+        ctx.moveTo(bubbleX, bubbleY + 20);
+        ctx.lineTo(bubbleX - 10, bubbleY + 15);
+        ctx.lineTo(bubbleX, bubbleY + 30);
+        ctx.closePath();
+        ctx.fillStyle = "#DCF8C6";
+        ctx.fill();
+        ctx.strokeStyle = "#B5E3A0";
+        ctx.stroke();
+
+        // Draw sender name (bold)
+        ctx.fillStyle = "#075E54";
+        ctx.font = "bold 18px Arial, sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(senderName, bubbleX + padding, bubbleY + 15);
+
+        // Draw message text
+        ctx.fillStyle = "#000000";
+        ctx.font = "16px Arial, sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        let textY = bubbleY + 40;
+        for (const line of wrappedText) {
+            ctx.fillText(line, bubbleX + padding, textY);
+            textY += lineHeight;
+        }
+
+        // Draw profile picture (circular)
+        try {
+            const response = await Axios.get(profilePicUrl, { responseType: "arraybuffer" });
+            const avatarImage = await loadImage(Buffer.from(response.data));
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avatarImage, avatarX, avatarY, avatarSize, avatarSize);
+            ctx.restore();
+
+            // Draw avatar border
+            ctx.strokeStyle = "#075E54";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+            ctx.stroke();
+        } catch (error) {
+            // Draw default avatar circle if image fails to load
+            ctx.fillStyle = "#075E54";
+            ctx.beginPath();
+            ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw user icon
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "bold 30px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("👤", avatarX + avatarSize / 2, avatarY + avatarSize / 2);
+        }
+
+        return await canvas.encode("png");
+    }
+
+    /**
+     * Wrap text to fit within specified width
+     * @param ctx - Canvas context
+     * @param text - Text to wrap
+     * @param maxWidth - Maximum width
+     * @returns Array of wrapped lines
+     */
+    private static wrapText(ctx: any, text: string, maxWidth: number): string[] {
+        const lines: string[] = [];
+        
+        // Split by newlines first to preserve intentional line breaks
+        const paragraphs = text.split('\n');
+        
+        for (const paragraph of paragraphs) {
+            if (!paragraph.trim()) {
+                lines.push('');
+                continue;
+            }
+            
+            const words = paragraph.split(' ');
+            let currentLine = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const testLine = currentLine ? currentLine + ' ' + word : word;
+                const metrics = ctx.measureText(testLine);
+
+                if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+        }
+
+        // Limit to reasonable number of lines for sticker
+        if (lines.length > 20) {
+            return [...lines.slice(0, 19), '...'];
+        }
+        
+        return lines;
+    }
+
+    /**
+     * Mix two emojis to create a combined emoji sticker
+     * @param emoji1 - First emoji
+     * @param emoji2 - Second emoji
+     * @returns Promise with URL of mixed emoji or error
+     */
+    static async emojiMix(emoji1: string, emoji2: string): Promise<{ url?: string; error?: boolean; message?: string }> {
+        try {
+            const response = await Axios.get(
+                `https://tenor.googleapis.com/v2/featured?key=AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ&contentfilter=high&media_filter=png_transparent&component=proactive&collection=emoji_kitchen_v5&q=${encodeURIComponent(
+                    emoji1
+                )}_${encodeURIComponent(emoji2)}`
+            );
+
+            if (response.data.results.length === 0) {
+                return {
+                    error: true,
+                    message: `${emoji1} and ${emoji2} cannot be combined! Try different emojis...`,
+                };
+            }
+
+            return { url: response.data.results[0].url };
+        } catch (error) {
+            throw new Error(`Failed to mix emojis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
 }
+
