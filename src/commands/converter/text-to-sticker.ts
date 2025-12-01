@@ -5,7 +5,7 @@ import { StickerGenerator } from "../../utils/converter/sticker";
 
 export default {
     name: "texttosticker",
-    alias: ["tts", "textsticker", "ttp"],
+    alias: ["textsticker", "ttp"],
     usage: "[text]",
     category: "converter",
     description: "Convert text to sticker image",

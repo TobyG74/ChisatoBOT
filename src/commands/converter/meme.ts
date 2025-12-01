@@ -8,6 +8,15 @@ export default {
     category: "converter",
     description: "Add text to image to create meme",
     cooldown: 3,
+    example: `*「 MEME GENERATOR 」*
+😂 Add text to image to create meme
+📝 *Usage:*
+{prefix}{command.name} [top text]|[bottom text]
+{prefix}{command.name} [single text]
+💡 *Example:*
+{prefix}{command.name} TODAY IS FUNNY|MAKE ME LAUGH
+{prefix}{command.name} WTF IS THAT
+`,
     async run({ Chisato, args, from, message, prefix }) {
         await Chisato.sendReaction(from, "⏳", message.key);
 
@@ -27,8 +36,8 @@ export default {
                 text += `1️⃣ Reply to an image with ${prefix}meme [top text]|[bottom text]\n`;
                 text += `2️⃣ Reply to an image with ${prefix}meme [single text]\n\n`;
                 text += `💡 *Example:*\n`;
-                text += `• ${prefix}meme TOP TEXT|BOTTOM TEXT (reply to image)\n`;
-                text += `• ${prefix}meme SINGLE TEXT (reply to image)\n\n`;
+                text += `• ${prefix}meme TODAY IS FUNNY|MAKE ME LAUGH\n`;
+                text += `• ${prefix}meme WTF IS THAT\n\n`;
                 text += `✨ Create funny memes easily!`;
                 await Chisato.sendText(from, text, message);
                 return;

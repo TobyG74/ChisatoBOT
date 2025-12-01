@@ -5,7 +5,7 @@ import fs from "fs";
 export default {
     name: "sticker",
     alias: ["stk", "stc", "stiker", "s"],
-    usage: "[option] (default|full|circle)",
+    usage: "[option]",
     category: "converter",
     description: "Convert Image / Video to Sticker",
     cooldown: 2,
