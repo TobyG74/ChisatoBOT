@@ -71,6 +71,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
         try {
             const { groupId } = request.params as { groupId: string };
 
+            // Fetch directly from database to ensure latest data
             const group = await Database.group.findUnique({
                 where: { groupId },
             });

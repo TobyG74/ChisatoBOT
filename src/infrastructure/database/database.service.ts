@@ -189,11 +189,25 @@ class DatabaseService {
     public async updateGroup(groupId: string, data: any): Promise<PrismaGroup> {
         const cacheKey = `group:${groupId}`;
 
-        const payload = data?.groupMetadata ?? data;
+        if (data?.groupMetadata) {
+            const group = await this.upsertGroup(groupId, data.groupMetadata);
+            cacheService.set(cacheKey, group, this.CACHE_TTL.GROUP);
+            return group;
+        }
 
-        const group = await this.upsertGroup(groupId, payload);
+        const cleanData: any = {};
+        for (const key in data) {
+            if (data[key] !== undefined) {
+                cleanData[key] = data[key];
+            }
+        }
 
-        cacheService.set(cacheKey, group, this.CACHE_TTL.GROUP);
+        const group = await this.prisma.group.update({
+            where: { groupId },
+            data: cleanData,
+        });
+
+        cacheService.delete(cacheKey);
         return group;
     }
 
@@ -212,7 +226,7 @@ class DatabaseService {
             },
         });
 
-        cacheService.set(cacheKey, group, this.CACHE_TTL.GROUP);
+        cacheService.delete(cacheKey);
         return group;
     }
 

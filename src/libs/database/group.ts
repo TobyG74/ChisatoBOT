@@ -1,5 +1,6 @@
 import { Client, Database } from "..";
 import { Group as GroupType, Settings } from "@prisma/client";
+import { databaseService } from "../../infrastructure/database/database.service";
 
 export class Group {
     /**
@@ -136,10 +137,8 @@ export class Group {
     public update = (groupId: string, data: any): Promise<GroupType> =>
         new Promise(async (resolve, reject) => {
             try {
-                const metadata = await Database.group.update({
-                    where: { groupId },
-                    data: { ...data },
-                });
+                // Use databaseService to ensure cache is invalidated
+                const metadata = await databaseService.updateGroup(groupId, data);
                 resolve(metadata);
             } catch (err) {
                 reject(err);
@@ -155,17 +154,8 @@ export class Group {
     public updateSettings = (groupId: string, data: any): Promise<Settings> =>
         new Promise(async (resolve, reject) => {
             try {
-                const metadata = await Database.group.update({
-                    where: { groupId },
-                    data: {
-                        settings: {
-                            update: data,
-                        },
-                    },
-                    select: {
-                        settings: true,
-                    },
-                });
+                // Use databaseService to ensure cache is invalidated
+                const metadata = await databaseService.updateGroupSettings(groupId, data);
                 resolve(metadata.settings);
             } catch (err) {
                 reject(err);
