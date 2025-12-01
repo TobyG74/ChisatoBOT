@@ -1,4 +1,5 @@
 import { configService } from "../../../core/config/config.service";
+import { formatExample } from "../../../utils/template-helper";
 
 export class CommandValidator {
     static async validateCommand(
@@ -31,9 +32,17 @@ export class CommandValidator {
 
         // Check example requirement
         if (command.example && context.args.length === 0) {
+            const formattedExample = formatExample(command.example, {
+                prefix: context.prefix,
+                command: { name: command.name, alias: command.alias },
+                botName: context.botName,
+                pushName: context.pushName,
+                context: context
+            });
+            
             await Chisato.sendText(
                 context.from,
-                `Example : ${command.example}`,
+                formattedExample,
                 message
             );
             return { valid: false, reason: "example_required" };
