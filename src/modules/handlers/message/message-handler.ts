@@ -16,6 +16,7 @@ import {
 import { AntiLinkHandler } from "../settings";
 import { StringUtils } from "../../../utils/core/string-utils";
 import path from "path";
+import { formatExample } from "src/utils";
 
 export class MessageHandler {
     private Database = {
@@ -321,7 +322,15 @@ export class MessageHandler {
         }
 
         if (command.example) {
-            str += `• Example : \n${command.example}`;
+            const formattedExample = formatExample(command.example, {
+                prefix: context.prefix,
+                command: { name: command.name, alias: command.alias },
+                botName: context.botName,
+                pushName: context.pushName,
+                context: context
+            });
+            
+            str += `• Example : \n${formattedExample}`;
         }
 
         await Chisato.sendText(context.from, str, message);
