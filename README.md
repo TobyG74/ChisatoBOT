@@ -23,18 +23,24 @@
 
 ## Author
 
-<div align="center" style="display: flex; justify-content: center; gap: 40px;">
-    <a href="https://github.com/TobyG74">
-        <img src="https://avatars.githubusercontent.com/u/32604979?v=4?s=100" width="100px"/>
-        <br>
-        <bold>TobyG74</bold>
-    </a>
-    <a href="https://github.com/nugraizy">
-        <img src="https://avatars.githubusercontent.com/u/69896924?v=4?s=100" width="100px">
-        <br>
-        <bold>Nugraizy</bold>
-    </a>
-</div>
+<table align="center">
+    <tr>
+        <td align="center" valign="top" width="50%">
+            <a href="https://github.com/TobyG74">
+                <img src="https://avatars.githubusercontent.com/u/32604979?v=4?s=100" width="100px"/>
+                <br>
+                <strong>TobyG74</strong>
+            </a>
+        </td>
+        <td align="center" valign="top" width="50%">
+            <a href="https://github.com/nugraizy">
+                <img src="https://avatars.githubusercontent.com/u/69896924?v=4?s=100" width="100px"/>
+                <br>
+                <strong>Nugraizy</strong>
+            </a>
+        </td>
+    </tr>
+</table>
 
 ## Description
 
