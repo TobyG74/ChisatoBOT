@@ -4,8 +4,8 @@ import crypto from "crypto";
 export default {
     name: "call",
     alias: ["telpon"],
-    usage: "<number|count>",
-    category: "owner",
+    usage: "[number|count]",
+    category: "debugging",
     description: "Call",
     isOwner: true,
     async run({ Chisato, arg, message }) {

@@ -20,7 +20,6 @@ import EventEmitter from "events";
 import moment from "moment-timezone";
 import Pino from "pino";
 import path from "path";
-import Sticker from "wa-sticker-formatter";
 import PhoneNumber from "awesome-phonenumber";
 import qrcode from "qrcode-terminal";
 import util from "util";
@@ -32,7 +31,6 @@ import { commands } from "./commands";
 import type { SocketConfig } from "../../types/auth/socket";
 import type TypedEventEmitter from "typed-emitter";
 import type { Chisato, ChisatoMediaUpload } from "../../types/auth/chisato";
-import type { StickerTypes } from "wa-sticker-formatter";
 import type { Readable } from "stream";
 import type { MessageSerialize } from "../../types/structure/serialize";
 
@@ -40,6 +38,7 @@ import type { MessageSerialize } from "../../types/structure/serialize";
 import { Database, Validators, FileUtils } from "..";
 import { useMultiAuthState, useSingleAuthState } from "../../auth";
 import { fromBuffer } from "file-type";
+import { StickerGenerator, StickerType } from "../../utils/converter/sticker";
 
 /** Extensions */
 import "../../shared/extensions/string.extensions";
@@ -617,51 +616,27 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         jid: string,
         options: { pack: string; author: string },
         buffer: Buffer,
-        type: StickerTypes,
+        type: StickerType,
         quoted?: MessageSerialize
     ) => {
-        const sticker = new Sticker(buffer, {
-            pack: options.pack,
-            author: options.author,
-            type:
-                type === "full"
-                    ? "full"
-                    : type === "default"
-                    ? "default"
-                    : type === "circle"
-                    ? "circle"
-                    : type === "rounded"
-                    ? "rounded"
-                    : "crop",
-            categories: [
-                "😀",
-                "😃",
-                "😄",
-                "😁",
-                "😆",
-                "😅",
-                "😂",
-                "🤣",
-                "🙂",
-                "😛",
-                "😝",
-                "😜",
-                "🤪",
-                "🤗",
-                "😺",
-                "😸",
-                "😹",
-                "😌",
-                "😉",
-                "🤗",
-                "😊",
-            ],
-            id: FileUtils.randomNumber(5),
-            quality: 15,
-        });
-        return this.sendMessage!(jid, await sticker.toMessage(), {
-            quoted,
-        }) as Promise<WAMessage>;
+        try {
+            // Create sticker using StickerGenerator
+            const stickerBuffer = await StickerGenerator.createSticker(buffer, {
+                type: type || "default",
+                pack: options.pack,
+                author: options.author,
+                quality: 80
+            });
+
+            // Send as sticker
+            return this.sendMessage!(jid, {
+                sticker: stickerBuffer
+            }, {
+                quoted
+            }) as Promise<WAMessage>;
+        } catch (error) {
+            throw new Error(`Failed to send sticker: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     };
 
     /**

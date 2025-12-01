@@ -16,16 +16,8 @@ export default {
             return false;
         };
         const command = Array.from(commands.values()).map((res, i) => res);
-        let caption =
-            "┏━━「 𓆩 𝚮ɪᴅᴅᴇɴ 𝐅ɪɴᴅᴇʀ ⁣𓆪 」\n┃\n" +
-            `┣ Hiii ${pushName ? pushName : "Kak"}, \n` +
-            `┣ The command currently being maintained is Strikethrough\n` +
-            `┣ Example : ${prefix}~sticker~\n` +
-            `┣ Run the command without < >\n┃\n` +
-            `┣ *Instruction* :\n` +
-            `┣ ★ : Owner\n` +
-            `┣ ▷ : User\n` +
-            `┣ ➤ : Admin Group\n┃\n`;
+        
+        // Build category structure
         for (const cmd of command) {
             const value = commands.get(cmd.name);
             if (Object.keys(category).includes(value.category)) category[value.category].push(value);
@@ -34,20 +26,49 @@ export default {
                 category[value.category].push(value);
             }
         }
+
+        // Modern WhatsApp Style Menu
+        let caption = `╭━━━━『 *${botName}* 』━━━━╮\n\n`;
+        caption += `👋 *Hello, ${pushName || "User"}!*\n\n`;
+        caption += `╭───『 *INFO* 』\n`;
+        caption += `│ • Total Commands: *${command.length}*\n`;
+        caption += `│ • Prefix: *${prefix}*\n`;
+        caption += `│ • Categories: *${Object.keys(category).length}*\n`;
+        caption += `╰────────────────\n\n`;
+        
+        caption += `📝 *Command Legend:*\n`;
+        caption += `• ⭐ = Owner Only\n`;
+        caption += `• 💎 = Team Only\n`;
+        caption += `• 👑 = Group Admin\n`;
+        caption += `• ✨ = Public\n\n`;
+        
+        caption += `⚠️ *Note:*\n`;
+        caption += `Commands with ~strikethrough~ are under maintenance\n`;
+        caption += `Example: ${prefix}~command~\n\n`;
+
         const keys = Object.keys(category).sort((a, b) => a.localeCompare(b));
+        
         for (const key of keys) {
-            caption += `┣━━━「 *${key.toLocaleUpperCase()}* 」━━━\n┃\n`;
-            caption += `${category[key]
-                .sort((a: ConfigCommands, b: string) => a.category.localeCompare(b))
-                .map(
-                    (v: ConfigCommands, i: number) =>
-                        `┣${v.isOwner ? "★" : v.isTeam ? "☆" : v.isGroupAdmin ? "➤" : "▷"} ${prefix}${
-                            checkMaintenance(v.name) ? `~${v.name}~` : v.name
-                        } ${v.usage ? v.usage : " "}`
-                )
-                .join("\n")}\n┃\n`;
+            const categoryCommands = category[key].sort((a: ConfigCommands, b: ConfigCommands) => 
+                a.name.localeCompare(b.name)
+            );
+            
+            caption += `┏━━━『 *${key.toUpperCase()}* 』\n`;
+            
+            categoryCommands.forEach((v: ConfigCommands, i: number) => {
+                const icon = v.isOwner ? "⭐" : v.isTeam ? "💎" : v.isGroupAdmin ? "👑" : "✨";
+                const cmdName = checkMaintenance(v.name) ? `~${v.name}~` : v.name;
+                const usage = v.usage ? ` ${v.usage}` : "";
+                
+                caption += `┃ ${icon} ${prefix}${cmdName}${usage}\n`;
+            });
+            
+            caption += `┗━━━━━━━━━━━━━━━\n\n`;
         }
-        caption += `┗━━「 *${botName}* 」`;
+        
+        caption += `╰━━━━━━━━━━━━━━━╯\n`;
+        caption += `_Powered by ${botName}_`;
+        
         await Chisato.sendText(from, caption, message);
     },
 } satisfies ConfigCommands;
