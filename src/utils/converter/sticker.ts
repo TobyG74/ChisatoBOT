@@ -1,18 +1,91 @@
+/**
+ * Created By TobyG74 & Nugraizy
+ * Please don't remove this credit when you use this code
+ */
+
 import fs from "fs";
 import path from "path";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { createCanvas, loadImage, SKRSContext2D } from "@napi-rs/canvas";
 import Wrap from "canvas-text-wrapper";
-import emojiReg from "emoji-regex";
 import { exec } from "child_process";
 import { promisify } from "util";
 import sharp from "sharp";
 import webpmux from "node-webpmux";
 import Axios from "axios";
+import { parse as parseEmoji } from "twemoji-parser";
 
 const { CanvasTextWrapper } = Wrap;
 const execAsync = promisify(exec);
 
 export type StickerType = "default" | "full" | "circle" | "rounded" | "crop";
+
+/**
+ * Helper function to draw text with emoji support by rendering emoji as images
+ * @param ctx - Canvas context
+ * @param text - Text to draw (may contain emoji)
+ * @param x - X position
+ * @param y - Y position
+ * @param maxWidth - Maximum width for text wrapping
+ */
+async function drawTextWithEmoji(
+    ctx: SKRSContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth?: number
+): Promise<void> {
+    const parsedEmoji = parseEmoji(text);
+    
+    if (parsedEmoji.length === 0) {
+        ctx.fillText(text, x, y, maxWidth);
+        return;
+    }
+
+    let currentX = x;
+    let lastIndex = 0;
+    const fontSize = parseInt(ctx.font.match(/\d+/)?.[0] || "16");
+    const emojiSize = fontSize;
+
+    for (const emoji of parsedEmoji) {
+        if (emoji.indices[0] > lastIndex) {
+            const textBefore = text.substring(lastIndex, emoji.indices[0]);
+            ctx.fillText(textBefore, currentX, y);
+            currentX += ctx.measureText(textBefore).width;
+        }
+
+        try {
+            const emojiUrl = emoji.url;
+            const response = await Axios.get(emojiUrl, { responseType: "arraybuffer" });
+            const emojiImage = await loadImage(Buffer.from(response.data));
+            
+            // Adjust emoji position based on textBaseline
+            let emojiY = y;
+            if (ctx.textBaseline === "top") {
+                emojiY = y;
+            } else if (ctx.textBaseline === "middle") {
+                emojiY = y - emojiSize / 2;
+            } else if (ctx.textBaseline === "bottom") {
+                emojiY = y - emojiSize;
+            } else { // alphabetic or other
+                emojiY = y - emojiSize * 0.85;
+            }
+            
+            ctx.drawImage(emojiImage, currentX, emojiY, emojiSize, emojiSize);
+            currentX += emojiSize;
+        } catch (error) {
+            const emojiText = emoji.text;
+            ctx.fillText(emojiText, currentX, y);
+            currentX += ctx.measureText(emojiText).width;
+        }
+
+        lastIndex = emoji.indices[1];
+    }
+
+    if (lastIndex < text.length) {
+        const textAfter = text.substring(lastIndex);
+        ctx.fillText(textAfter, currentX, y);
+    }
+}
 
 /**
  * StickerGenerator - Utility class for generating stickers from text and images
@@ -24,8 +97,7 @@ export class StickerGenerator {
      * @returns Buffer of animated webp sticker
      */
     static async generateAnimatedText(text: string): Promise<Buffer> {
-        const regex = new RegExp(emojiReg(), "g");
-        text = text.trim().replace(regex, "");
+        text = text.trim();
 
         const colors = this.loadColorsPalette();
         const bufferContainer: string[] = [];
@@ -44,7 +116,7 @@ export class StickerGenerator {
             ctx.shadowBlur = 2;
 
             CanvasTextWrapper(canvas as any, text, {
-                font: "82px Arial",
+                font: "82px NotoColorEmoji, Arial, sans-serif",
                 textAlign: "center",
                 verticalAlign: "middle",
                 sizeToFill: true
@@ -73,7 +145,7 @@ export class StickerGenerator {
         ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, width, height);
 
-        // Text
+        // Text with emoji support
         const baseFontSize = 100;
         const fontSize = Math.min(baseFontSize, Math.floor(width / (text.length * 0.6)));
         
@@ -82,7 +154,7 @@ export class StickerGenerator {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        ctx.fillText(text, width / 2, height / 2);
+        await drawTextWithEmoji(ctx, text, width / 2, height / 2);
 
         return await canvas.encode("png");
     }
@@ -406,18 +478,41 @@ export class StickerGenerator {
 
         ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-        const avatarSize = 50;
-        const avatarX = 20;
-        const avatarY = 50;
-
-        const padding = 20;
-        const lineHeight = 24;
-        const maxBubbleWidth = canvasSize - avatarX - avatarSize - 40;
+        /** Calculate message length to determine scale factor */
+        const messageLength = message.length;
+        let scaleFactor = 1.0;
         
-        ctx.font = "bold 18px Arial, sans-serif";
+        if (messageLength <= 20) {
+            scaleFactor = 1.8; 
+        } else if (messageLength <= 50) {
+            scaleFactor = 1.5; 
+        } else if (messageLength <= 100) {
+            scaleFactor = 1.2; 
+        } else if (messageLength <= 200) {
+            scaleFactor = 1.0; 
+        } else if (messageLength <= 300) {
+            scaleFactor = 0.85; 
+        } else {
+            scaleFactor = 0.7; 
+        }
+
+        const avatarSize = Math.floor(50 * scaleFactor);
+        const avatarX = Math.floor(20 * scaleFactor);
+        const avatarY = Math.floor(50 * scaleFactor);
+
+        const padding = Math.floor(20 * scaleFactor);
+        const lineHeight = Math.floor(24 * scaleFactor);
+        const maxBubbleWidth = canvasSize - avatarX - avatarSize - Math.floor(40 * scaleFactor);
+        
+        const nameFontSize = Math.floor(16 * scaleFactor);
+        const messageFontSize = Math.floor(14 * scaleFactor);
+
+        /** Calculate message length to determine scale factor */
+        
+        ctx.font = `bold ${nameFontSize}px Arial, sans-serif`;
         const nameWidth = ctx.measureText(senderName).width;
         
-        ctx.font = "16px Arial, sans-serif";
+        ctx.font = `${messageFontSize}px Arial, sans-serif`;
         const wrappedText = this.wrapText(ctx, message, maxBubbleWidth - (padding * 2));
         
         let maxTextWidth = nameWidth;
@@ -429,18 +524,18 @@ export class StickerGenerator {
         }
         
         const bubbleWidth = Math.min(maxTextWidth + (padding * 2), maxBubbleWidth);
-        const bubbleHeight = 40 + (wrappedText.length * lineHeight) + padding;
+        const bubbleHeight = Math.floor(40 * scaleFactor) + (wrappedText.length * lineHeight) + padding;
 
-        const bubbleX = avatarX + avatarSize + 15;
-        const bubbleY = avatarY - 15;
+        const bubbleX = avatarX + avatarSize + Math.floor(15 * scaleFactor);
+        const bubbleY = avatarY - Math.floor(15 * scaleFactor);
 
         // Draw WhatsApp bubble 
         ctx.fillStyle = "#DCF8C6";
         ctx.strokeStyle = "#B5E3A0";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = Math.max(1, Math.floor(2 * scaleFactor));
         
         // Rounded rectangle for bubble
-        const radius = 10;
+        const radius = Math.floor(10 * scaleFactor);
         ctx.beginPath();
         ctx.moveTo(bubbleX + radius, bubbleY);
         ctx.lineTo(bubbleX + bubbleWidth - radius, bubbleY);
@@ -456,10 +551,11 @@ export class StickerGenerator {
         ctx.stroke();
 
         // Draw bubble tail (triangle pointing to avatar)
+        const tailSize = Math.floor(10 * scaleFactor);
         ctx.beginPath();
-        ctx.moveTo(bubbleX, bubbleY + 20);
-        ctx.lineTo(bubbleX - 10, bubbleY + 15);
-        ctx.lineTo(bubbleX, bubbleY + 30);
+        ctx.moveTo(bubbleX, bubbleY + Math.floor(20 * scaleFactor));
+        ctx.lineTo(bubbleX - tailSize, bubbleY + Math.floor(15 * scaleFactor));
+        ctx.lineTo(bubbleX, bubbleY + Math.floor(30 * scaleFactor));
         ctx.closePath();
         ctx.fillStyle = "#DCF8C6";
         ctx.fill();
@@ -468,19 +564,19 @@ export class StickerGenerator {
 
         // Draw sender name (bold)
         ctx.fillStyle = "#075E54";
-        ctx.font = "bold 18px Arial, sans-serif";
+        ctx.font = `bold ${nameFontSize}px Arial, sans-serif`;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        ctx.fillText(senderName, bubbleX + padding, bubbleY + 15);
+        await drawTextWithEmoji(ctx, senderName, bubbleX + padding, bubbleY + Math.floor(15 * scaleFactor));
 
         // Draw message text
         ctx.fillStyle = "#000000";
-        ctx.font = "16px Arial, sans-serif";
+        ctx.font = `${messageFontSize}px Arial, sans-serif`;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        let textY = bubbleY + 40;
+        let textY = bubbleY + Math.floor(40 * scaleFactor);
         for (const line of wrappedText) {
-            ctx.fillText(line, bubbleX + padding, textY);
+            await drawTextWithEmoji(ctx, line, bubbleX + padding, textY);
             textY += lineHeight;
         }
 
@@ -499,7 +595,7 @@ export class StickerGenerator {
 
             // Draw avatar border
             ctx.strokeStyle = "#075E54";
-            ctx.lineWidth = 3;
+            ctx.lineWidth = Math.max(2, Math.floor(3 * scaleFactor));
             ctx.beginPath();
             ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
             ctx.stroke();
@@ -512,7 +608,7 @@ export class StickerGenerator {
 
             // Draw user icon
             ctx.fillStyle = "#FFFFFF";
-            ctx.font = "bold 30px Arial";
+            ctx.font = `bold ${Math.floor(30 * scaleFactor)}px Arial`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("👤", avatarX + avatarSize / 2, avatarY + avatarSize / 2);
