@@ -37,7 +37,9 @@ model Group {
 type Settings {
   notify              Boolean     @default(false)
   welcome             Boolean     @default(true)
+  welcomeMessage      String?
   leave               Boolean     @default(true)
+  leaveMessage        String?
   mute                Boolean     @default(false)
   antilink            Antilink    
   antibot             Boolean     @default(false)
@@ -101,10 +103,11 @@ model Session {
 }
 
 model Admin {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  phoneNumber String   @unique
-  username    String   @unique
-  password    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  phoneNumber  String   @unique
+  username     String   @unique
+  password     String
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
