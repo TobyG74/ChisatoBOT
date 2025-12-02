@@ -529,6 +529,11 @@ export class GroupUpdateHandler {
                 const groupMetadata = await Chisato.groupMetadata(from);
                 const memberCount = groupMetadata.participants.length;
                 const groupName = groupMetadata.subject;
+                const groupOwner = groupMetadata.owner || "";
+                
+                // Get custom welcome message
+                const groupSettings = await this.Database.Group.getSettings(from);
+                const customMessage = groupSettings?.welcomeMessage;
 
                 for (const user of parameters) {
                     const obj = JSON.parse(user);
@@ -543,6 +548,38 @@ export class GroupUpdateHandler {
 
                     const username = userNumber.split("@")[0];
 
+                    // Process custom message if exists
+                    let caption: string;
+                    let mentions: string[] = [userNumber];
+                    
+                    if (customMessage) {
+                        // Replace variables in custom message
+                        caption = customMessage
+                            .replace(/@user/g, `@${username}`)
+                            .replace(/@group/g, groupName)
+                            .replace(/@ownergroup/g, groupOwner ? `@${groupOwner.split("@")[0]}` : "Admin");
+                        
+                        // Add owner to mentions if present
+                        if (customMessage.includes("@ownergroup") && groupOwner) {
+                            mentions.push(groupOwner);
+                        }
+                        
+                        // Extract phone numbers mentioned in format @628xxx
+                        const phoneRegex = /@(\d+)/g;
+                        let match;
+                        while ((match = phoneRegex.exec(customMessage)) !== null) {
+                            const phoneNumber = match[1] + "@s.whatsapp.net";
+                            if (!mentions.includes(phoneNumber)) {
+                                mentions.push(phoneNumber);
+                            }
+                            // Replace @628xxx with proper WhatsApp mention format
+                            caption = caption.replace(`@${match[1]}`, `@${match[1]}`);
+                        }
+                    } else {
+                        // Default message
+                        caption = `👋 Welcome to *${groupName}*!\n\n@${username}\n\nYou are member #${memberCount}`;
+                    }
+
                     const welcomeBuffer = await createWelcomeImage(
                         profilePicUrl,
                         username,
@@ -553,9 +590,9 @@ export class GroupUpdateHandler {
                     await Chisato.sendImage(
                         from,
                         welcomeBuffer,
-                        `👋 Welcome to *${groupName}*!\n\n@${username}\n\nYou are member #${memberCount}`,
+                        caption,
                         null,
-                        { mentions: [userNumber] }
+                        { mentions }
                     );
                 }
             } catch (error) {
@@ -593,6 +630,11 @@ export class GroupUpdateHandler {
                 const groupMetadata = await Chisato.groupMetadata(from);
                 const groupName = groupMetadata.subject;
                 const memberCount = groupMetadata.participants.length;
+                const groupOwner = groupMetadata.owner || "";
+                
+                // Get custom leave message
+                const groupSettings = await Group.getSettings(from);
+                const customMessage = groupSettings?.leaveMessage;
 
                 for (const user of parameters) {
                     const obj = JSON.parse(user);
@@ -607,6 +649,36 @@ export class GroupUpdateHandler {
 
                     const username = userNumber.split("@")[0];
 
+                    // Process custom message if exists
+                    let caption: string;
+                    let mentions: string[] = [userNumber];
+                    
+                    if (customMessage) {
+                        // Replace variables in custom message
+                        caption = customMessage
+                            .replace(/@user/g, `@${username}`)
+                            .replace(/@group/g, groupName)
+                            .replace(/@ownergroup/g, groupOwner ? `@${groupOwner.split("@")[0]}` : "Admin");
+                        
+                        // Add owner to mentions if present
+                        if (customMessage.includes("@ownergroup") && groupOwner) {
+                            mentions.push(groupOwner);
+                        }
+                        
+                        // Extract phone numbers mentioned in format @628xxx
+                        const phoneRegex = /@(\d+)/g;
+                        let match;
+                        while ((match = phoneRegex.exec(customMessage)) !== null) {
+                            const phoneNumber = match[1] + "@s.whatsapp.net";
+                            if (!mentions.includes(phoneNumber)) {
+                                mentions.push(phoneNumber);
+                            }
+                        }
+                    } else {
+                        // Default message
+                        caption = `👋 Goodbye *@${username}*!\n\nThanks for being part of *${groupName}*\n\nRemaining members: ${memberCount}`;
+                    }
+
                     const leaveBuffer = await createLeaveImage(
                         profilePicUrl,
                         username,
@@ -617,9 +689,9 @@ export class GroupUpdateHandler {
                     await Chisato.sendImage(
                         from,
                         leaveBuffer,
-                        `👋 Goodbye *@${username}*!\n\nThanks for being part of *${groupName}*\n\nRemaining members: ${memberCount}`,
+                        caption,
                         null,
-                        { mentions: [userNumber] }
+                        { mentions }
                     );
                 }
             } catch (error) {
