@@ -10,9 +10,9 @@ export default {
     isGroupAdmin: true,
     isBotAdmin: true,
     async run({ Chisato, args, from, command, message, prefix }) {
-        if (message.quoted["contactMessage"]) {
-            const vcard = message.quoted["contactMessage"].vcard;
-            const parseWaid = vcard.match(/(?<=waid=).+$/m)[0].split(":")[0];
+        if (message.quoted && message.quoted.type === "contactMessage") {
+            const vcard = message.quoted?.message.contactMessage.vcard;
+            const parseWaid = vcard.match(/(?<=waid=).+$/m)[0].split(":")[0] + "@s.whatsapp.net";
             await Chisato.groupParticipantsUpdate(from, [parseWaid], "add");
         } else if (args[0]) {
             if (isNaN(parseInt(args[0])))
