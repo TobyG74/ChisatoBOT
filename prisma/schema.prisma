@@ -62,12 +62,27 @@ model User {
   expired  Int     @default(0)
   isBanned Boolean @default(false)
   afk      Afk
+  level    Level?
+  stats    UserStats?
 }
 
 type Afk {
   status Boolean @default(false)
   reason String?
   since  Int?    @default(0)
+}
+
+type Level {
+  level       Int @default(1)
+  xp          Int @default(0)
+  totalXp     Int @default(0)
+}
+
+type UserStats {
+  totalCommands      Int              @default(0)
+  commandsUsed       CommandUsage[]
+  lastCommandTime    Int?             @default(0)
+  joinedAt           Int?             @default(0)
 }
 
 enum Role {
@@ -94,6 +109,11 @@ enum AntilinkList {
   twitter
   tiktok
   all
+}
+
+type CommandUsage {
+  command String
+  count   Int    @default(0)
 }
 
 model Session {
