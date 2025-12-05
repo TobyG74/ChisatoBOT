@@ -4,8 +4,8 @@ import type { ConfigCommands } from "../../types/structure/commands";
 import { Group, User } from "../../libs/database";
 
 export default {
-    name: "stats",
-    alias: ["statistics", "statistic", "stat"],
+    name: "botstatistics",
+    alias: ["botstats"],
     category: "misc",
     description: "View the count from the database",
     async run({ Chisato, from, message }) {
