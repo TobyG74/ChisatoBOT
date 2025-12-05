@@ -40,6 +40,9 @@ export class MessageHandler {
             // Ignore status broadcasts and protocol messages
             if (message.key.remoteJid === "status@broadcast") return;
             if (!message.type || message.type === "protocolMessage") return;
+            
+            // Ignore bot's own messages (except in selfbot mode)
+            if (message.fromMe && !config.settings.selfbot) return;
 
             // Auto-read messages
             if (config.settings.autoReadMessage && Chisato.readMessages) {
@@ -237,6 +240,40 @@ export class MessageHandler {
             // Track adminpanel command calls for session handling
             if (command.name === "adminpanel") {
                 SessionHandler.trackAdminPanelCall(context.sender);
+            }
+
+            // Add XP for command usage (leveling system)
+            try {
+                if (message.fromMe) return; 
+                const { calculateXPReward } = await import("../../../utils/leveling");
+                const xpReward = calculateXPReward(
+                    command.category,
+                    context.isPremium
+                );
+                
+                const result = await this.Database.User.addXP(
+                    context.sender,
+                    xpReward,
+                    command.name
+                );
+
+                // Notify user if they leveled up
+                if (result.leveledUp && result.newLevel) {
+                    const { getRankInfo } = await import("../../../utils/leveling");
+                    const rankInfo = getRankInfo(result.newLevel);
+                    
+                    await Chisato.sendText(
+                        context.from,
+                        `🎉 *LEVEL UP!*\n\n` +
+                        `${rankInfo.emoji} Congratulations! You've reached Level ${result.newLevel}\n` +
+                        `Rank: ${rankInfo.rank}\n\n` +
+                        `Keep using commands to level up more!`,
+                        message
+                    );
+                }
+            } catch (error) {
+                // Don't block command execution if XP tracking fails
+                logger.error(`XP tracking error: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
 
