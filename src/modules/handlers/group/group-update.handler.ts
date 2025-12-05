@@ -22,10 +22,7 @@ export class GroupUpdateHandler {
             
             const { parameters, from, participant, type, expiration, pushName } = message;
 
-            if (!from || !participant) {
-                logger.error("Group update: Missing required fields (from or participant)");
-                return;
-            }
+            if (!from || !participant) return
 
             const { Group } = this.Database;
             

@@ -35,7 +35,7 @@ export class MessageContextBuilder {
 
             // Bot data
             const botNumber = await Chisato.decodeJid(Chisato.user.id);
-            const botLid = Chisato.user.id
+            const botLid = Chisato.user.lid
             const botName = Chisato.user.name;
             const prefix =
                 body && /^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?@#$%^&.©^]/gi.test(body)
@@ -61,8 +61,7 @@ export class MessageContextBuilder {
                 // Ignore blocklist errors
             }
 
-            const userMetadata =
-                (await User.get(sender)) ??
+            const userMetadata = (await User.get(sender)) ??
                 (await User.upsert(Chisato, sender, pushName));
 
             // Group data

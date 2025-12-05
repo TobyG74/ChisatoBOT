@@ -45,7 +45,7 @@ export const message = async (
         m.sender = m.isGroup
             ? await Chisato.decodeJid(m.key.participantAlt)
             : m.fromMe
-            ? await Chisato.decodeJid(Chisato.user.phoneNumber)
+            ? await Chisato.decodeJid(Chisato.user.id)
             : m.from;
         m.body =
             m.type === "conversation"
