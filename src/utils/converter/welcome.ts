@@ -1,10 +1,91 @@
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { createCanvas, loadImage, SKRSContext2D } from "@napi-rs/canvas";
 import path from "path";
 import axios from "axios";
+import { parse as parseEmoji } from "twemoji-parser";
+import { parsePhoneNumber } from "awesome-phonenumber";
+
+/**
+ * Helper function to draw text with emoji support
+ */
+async function drawTextWithEmoji(
+    ctx: SKRSContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth?: number
+): Promise<void> {
+    const parsedEmoji = parseEmoji(text);
+    
+    if (parsedEmoji.length === 0) {
+        ctx.fillText(text, x, y, maxWidth);
+        return;
+    }
+
+    let currentX = x;
+    let lastIndex = 0;
+    const fontSize = parseInt(ctx.font.match(/\d+/)?.[0] || "16");
+    const emojiSize = fontSize;
+
+    if (ctx.textAlign === "center") {
+        const textWidth = ctx.measureText(text).width;
+        currentX = x - textWidth / 2;
+    } else if (ctx.textAlign === "right") {
+        const textWidth = ctx.measureText(text).width;
+        currentX = x - textWidth;
+    }
+
+    for (const emoji of parsedEmoji) {
+        if (emoji.indices[0] > lastIndex) {
+            const textBefore = text.substring(lastIndex, emoji.indices[0]);
+            const savedAlign = ctx.textAlign;
+            ctx.textAlign = "left";
+            ctx.fillText(textBefore, currentX, y);
+            ctx.textAlign = savedAlign;
+            currentX += ctx.measureText(textBefore).width;
+        }
+
+        try {
+            const emojiUrl = emoji.url;
+            const response = await axios.get(emojiUrl, { responseType: "arraybuffer" });
+            const emojiImage = await loadImage(Buffer.from(response.data));
+            
+            let emojiY = y;
+            if (ctx.textBaseline === "top") {
+                emojiY = y;
+            } else if (ctx.textBaseline === "middle") {
+                emojiY = y - emojiSize / 2;
+            } else if (ctx.textBaseline === "bottom") {
+                emojiY = y - emojiSize;
+            } else {
+                emojiY = y - emojiSize * 0.85;
+            }
+            
+            ctx.drawImage(emojiImage, currentX, emojiY, emojiSize, emojiSize);
+            currentX += emojiSize;
+        } catch (error) {
+            const emojiText = emoji.text;
+            const savedAlign = ctx.textAlign;
+            ctx.textAlign = "left";
+            ctx.fillText(emojiText, currentX, y);
+            ctx.textAlign = savedAlign;
+            currentX += ctx.measureText(emojiText).width;
+        }
+
+        lastIndex = emoji.indices[1];
+    }
+
+    if (lastIndex < text.length) {
+        const textAfter = text.substring(lastIndex);
+        const savedAlign = ctx.textAlign;
+        ctx.textAlign = "left";
+        ctx.fillText(textAfter, currentX, y);
+        ctx.textAlign = savedAlign;
+    }
+}
 
 export async function createWelcomeImage(
     profileUrl: string,
-    username: string,
+    phoneNumber: string,
     groupName: string,
     memberCount: number
 ): Promise<Buffer> {
@@ -154,7 +235,7 @@ export async function createWelcomeImage(
         displayGroup = displayGroup.substring(0, 25) + "...";
     }
     
-    ctx.fillText(displayGroup, width / 2, 325);
+    await drawTextWithEmoji(ctx, displayGroup, width / 2, 325);
 
     ctx.fillStyle = "#fbbf24";
     const dotY = 360;
@@ -171,12 +252,9 @@ export async function createWelcomeImage(
     ctx.font = "38px Arial, sans-serif";
     ctx.fillStyle = "#e5e7eb";
     
-    let displayName = username;
-    if (displayName.length > 22) {
-        displayName = displayName.substring(0, 19) + "...";
-    }
+    let displayName = (parsePhoneNumber("+" + phoneNumber)).number.international
     
-    ctx.fillText(displayName, width / 2, 400);
+    await drawTextWithEmoji(ctx, displayName, width / 2, 400);
     
     const badgeWidth = 180;
     const badgeHeight = 42;
@@ -208,7 +286,7 @@ export async function createWelcomeImage(
 
 export async function createLeaveImage(
     profileUrl: string,
-    username: string,
+    phoneNumber: string,
     groupName: string,
     memberCount: number
 ): Promise<Buffer> {
@@ -355,7 +433,7 @@ export async function createLeaveImage(
         displayGroup = displayGroup.substring(0, 25) + "...";
     }
     
-    ctx.fillText(displayGroup, width / 2, 325);
+    await drawTextWithEmoji(ctx, displayGroup, width / 2, 325);
 
     ctx.fillStyle = "#ef4444";
     const dotY = 360;
@@ -372,12 +450,9 @@ export async function createLeaveImage(
     ctx.font = "38px Arial, sans-serif";
     ctx.fillStyle = "#e5e7eb";
     
-    let displayName = username;
-    if (displayName.length > 22) {
-        displayName = displayName.substring(0, 19) + "...";
-    }
+    let displayName = (parsePhoneNumber("+" + phoneNumber)).number.international
     
-    ctx.fillText(displayName, width / 2, 400);
+    await drawTextWithEmoji(ctx, displayName, width / 2, 400);
     
     const badgeWidth = 180;
     const badgeHeight = 42;

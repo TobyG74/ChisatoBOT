@@ -20,77 +20,77 @@ const execAsync = promisify(exec);
 export type StickerType = "default" | "full" | "circle" | "rounded" | "crop";
 
 /**
- * Helper function to draw text with emoji support by rendering emoji as images
- * @param ctx - Canvas context
- * @param text - Text to draw (may contain emoji)
- * @param x - X position
- * @param y - Y position
- * @param maxWidth - Maximum width for text wrapping
- */
-async function drawTextWithEmoji(
-    ctx: SKRSContext2D,
-    text: string,
-    x: number,
-    y: number,
-    maxWidth?: number
-): Promise<void> {
-    const parsedEmoji = parseEmoji(text);
-    
-    if (parsedEmoji.length === 0) {
-        ctx.fillText(text, x, y, maxWidth);
-        return;
-    }
-
-    let currentX = x;
-    let lastIndex = 0;
-    const fontSize = parseInt(ctx.font.match(/\d+/)?.[0] || "16");
-    const emojiSize = fontSize;
-
-    for (const emoji of parsedEmoji) {
-        if (emoji.indices[0] > lastIndex) {
-            const textBefore = text.substring(lastIndex, emoji.indices[0]);
-            ctx.fillText(textBefore, currentX, y);
-            currentX += ctx.measureText(textBefore).width;
-        }
-
-        try {
-            const emojiUrl = emoji.url;
-            const response = await Axios.get(emojiUrl, { responseType: "arraybuffer" });
-            const emojiImage = await loadImage(Buffer.from(response.data));
-            
-            // Adjust emoji position based on textBaseline
-            let emojiY = y;
-            if (ctx.textBaseline === "top") {
-                emojiY = y;
-            } else if (ctx.textBaseline === "middle") {
-                emojiY = y - emojiSize / 2;
-            } else if (ctx.textBaseline === "bottom") {
-                emojiY = y - emojiSize;
-            } else { // alphabetic or other
-                emojiY = y - emojiSize * 0.85;
-            }
-            
-            ctx.drawImage(emojiImage, currentX, emojiY, emojiSize, emojiSize);
-            currentX += emojiSize;
-        } catch (error) {
-            const emojiText = emoji.text;
-            ctx.fillText(emojiText, currentX, y);
-            currentX += ctx.measureText(emojiText).width;
-        }
-
-        lastIndex = emoji.indices[1];
-    }
-
-    if (lastIndex < text.length) {
-        const textAfter = text.substring(lastIndex);
-        ctx.fillText(textAfter, currentX, y);
-    }
-}
-
-/**
  * StickerGenerator - Utility class for generating stickers from text and images
  */
 export class StickerGenerator {
+
+    /**
+     * Helper function to draw text with emoji support by rendering emoji as images
+     * @param ctx - Canvas context
+     * @param text - Text to draw (may contain emoji)
+     * @param x - X position
+     * @param y - Y position
+     * @param maxWidth - Maximum width for text wrapping
+     */
+    static async drawTextWithEmoji(
+        ctx: SKRSContext2D,
+        text: string,
+        x: number,
+        y: number,
+        maxWidth?: number
+    ): Promise<void> {
+        const parsedEmoji = parseEmoji(text);
+        
+        if (parsedEmoji.length === 0) {
+            ctx.fillText(text, x, y, maxWidth);
+            return;
+        }
+
+        let currentX = x;
+        let lastIndex = 0;
+        const fontSize = parseInt(ctx.font.match(/\d+/)?.[0] || "16");
+        const emojiSize = fontSize;
+
+        for (const emoji of parsedEmoji) {
+            if (emoji.indices[0] > lastIndex) {
+                const textBefore = text.substring(lastIndex, emoji.indices[0]);
+                ctx.fillText(textBefore, currentX, y);
+                currentX += ctx.measureText(textBefore).width;
+            }
+
+            try {
+                const emojiUrl = emoji.url;
+                const response = await Axios.get(emojiUrl, { responseType: "arraybuffer" });
+                const emojiImage = await loadImage(Buffer.from(response.data));
+                
+                // Adjust emoji position based on textBaseline
+                let emojiY = y;
+                if (ctx.textBaseline === "top") {
+                    emojiY = y;
+                } else if (ctx.textBaseline === "middle") {
+                    emojiY = y - emojiSize / 2;
+                } else if (ctx.textBaseline === "bottom") {
+                    emojiY = y - emojiSize;
+                } else { // alphabetic or other
+                    emojiY = y - emojiSize * 0.85;
+                }
+                
+                ctx.drawImage(emojiImage, currentX, emojiY, emojiSize, emojiSize);
+                currentX += emojiSize;
+            } catch (error) {
+                const emojiText = emoji.text;
+                ctx.fillText(emojiText, currentX, y);
+                currentX += ctx.measureText(emojiText).width;
+            }
+
+            lastIndex = emoji.indices[1];
+        }
+
+        if (lastIndex < text.length) {
+            const textAfter = text.substring(lastIndex);
+            ctx.fillText(textAfter, currentX, y);
+        }
+    }
     /**
      * Generate animated text sticker with rainbow colors
      * @param text - Text to convert to animated sticker
@@ -101,9 +101,11 @@ export class StickerGenerator {
 
         const colors = this.loadColorsPalette();
         const bufferContainer: string[] = [];
+        const width = 500;
+        const height = 500;
 
         for (let i = 0; i < colors.length; i++) {
-            const canvas = createCanvas(500, 500);
+            const canvas = createCanvas(width, height);
             const ctx = canvas.getContext("2d");
 
             const color = colors[i].startsWith("#") ? colors[i] : `#${colors[i]}`;
@@ -115,12 +117,14 @@ export class StickerGenerator {
             ctx.shadowColor = color;
             ctx.shadowBlur = 2;
 
-            CanvasTextWrapper(canvas as any, text, {
-                font: "82px NotoColorEmoji, Arial, sans-serif",
-                textAlign: "center",
-                verticalAlign: "middle",
-                sizeToFill: true
-            });
+            const baseFontSize = 82;
+            const fontSize = Math.min(baseFontSize, Math.floor(width / (text.length * 0.5)));
+            
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            await this.drawTextWithEmoji(ctx, text, width / 2, height / 2);
 
             const buffer = await canvas.encode("webp");
             const saved = this.saveImages(buffer, i);
@@ -141,20 +145,24 @@ export class StickerGenerator {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext("2d");
 
-        // Background
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, width, height);
+        ctx.clearRect(0, 0, width, height);
 
-        // Text with emoji support
         const baseFontSize = 100;
-        const fontSize = Math.min(baseFontSize, Math.floor(width / (text.length * 0.6)));
+        const fontSize = Math.min(baseFontSize, Math.floor(width / (text.length * 0.5)));
         
         ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = Math.floor(fontSize / 20);
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        await drawTextWithEmoji(ctx, text, width / 2, height / 2);
+        const textX = width / 2;
+        const textY = height / 2;
+        
+        ctx.strokeText(text.replace(/[\p{Emoji}]/gu, ''), textX, textY);
+        
+        await this.drawTextWithEmoji(ctx, text, textX, textY);
 
         return await canvas.encode("png");
     }
@@ -250,7 +258,12 @@ export class StickerGenerator {
         }
 
         try {
-            const isVideo = buffer.toString("hex", 0, 4) === "66747970"; 
+            const hex = buffer.toString("hex", 0, 12);
+            const isVideo = 
+                hex.startsWith("66747970") ||  // MP4, MOV (ftyp)
+                hex.startsWith("000000") && hex.includes("667479706d7034") || // MP4 variant
+                hex.startsWith("1a45dfa3") ||  // WEBM, MKV
+                hex.startsWith("52494646") && buffer.toString("hex", 8, 12) === "57415649"; // AVI
             
             let stickerBuffer: Buffer;
             if (isVideo) {
@@ -328,8 +341,20 @@ export class StickerGenerator {
         try {
             fs.writeFileSync(tempInput, buffer);
 
+            // Check video duration
+            const durationCommand = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${tempInput}"`;
+            const { stdout: durationOutput } = await execAsync(durationCommand);
+            const duration = parseFloat(durationOutput.trim());
+
+            if (duration > 10) {
+                // Cleanup temp file
+                if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
+                throw new Error(`Video duration (${duration.toFixed(2)}s) exceeds maximum 10 seconds`);
+            }
+
             let scale = "512:512";
             let crop = "";
+            let durationLimit = `-t 10`; // Maximum 10 seconds
 
             if (type === "circle" || type === "rounded") {
                 crop = "-vf \"crop=min(iw\\,ih):min(iw\\,ih),scale=512:512,format=rgba,geq=lum='p(X,Y)':a='if(gt(abs(W/2-X),W/2)||gt(abs(H/2-Y),H/2),0,255)'\"";
@@ -340,7 +365,7 @@ export class StickerGenerator {
                 crop = `-vf "crop=min(iw\\,ih):min(iw\\,ih),scale=512:512"`;
             }
 
-            const command = `ffmpeg -i "${tempInput}" ${crop} -vcodec libwebp -lossless 0 -q:v ${quality} -loop 0 -preset default -an -vsync 0 "${tempOutput}"`;
+            const command = `ffmpeg -i "${tempInput}" ${durationLimit} ${crop} -vcodec libwebp -lossless 0 -q:v ${quality} -loop 0 -preset default -an -vsync 0 -fs 1M "${tempOutput}"`;
             
             await execAsync(command);
 
@@ -567,7 +592,7 @@ export class StickerGenerator {
         ctx.font = `bold ${nameFontSize}px Arial, sans-serif`;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        await drawTextWithEmoji(ctx, senderName, bubbleX + padding, bubbleY + Math.floor(15 * scaleFactor));
+        await this.drawTextWithEmoji(ctx, senderName, bubbleX + padding, bubbleY + Math.floor(15 * scaleFactor));
 
         // Draw message text
         ctx.fillStyle = "#000000";
@@ -576,7 +601,7 @@ export class StickerGenerator {
         ctx.textBaseline = "top";
         let textY = bubbleY + Math.floor(40 * scaleFactor);
         for (const line of wrappedText) {
-            await drawTextWithEmoji(ctx, line, bubbleX + padding, textY);
+            await this.drawTextWithEmoji(ctx, line, bubbleX + padding, textY);
             textY += lineHeight;
         }
 
