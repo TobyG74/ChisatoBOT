@@ -53,11 +53,42 @@ class DatabaseService {
     public async getUser(userId: string): Promise<PrismaUser | null> {
         const cacheKey = `user:${userId}`;
 
-        return cacheService.getOrSet(
+        const user = await cacheService.getOrSet(
             cacheKey,
             () => this.prisma.user.findUnique({ where: { userId } }),
             this.CACHE_TTL.USER
         );
+
+        // Ensure level and stats are initialized
+        if (user && (!user.level || !user.stats)) {
+            return await this.initializeUserLevelAndStats(userId);
+        }
+
+        return user;
+    }
+
+    private async initializeUserLevelAndStats(userId: string): Promise<PrismaUser> {
+        const cacheKey = `user:${userId}`;
+        
+        const user = await this.prisma.user.update({
+            where: { userId },
+            data: {
+                level: {
+                    level: 1,
+                    xp: 0,
+                    totalXp: 0,
+                },
+                stats: {
+                    totalCommands: 0,
+                    commandsUsed: [],
+                    lastCommandTime: 0,
+                    joinedAt: Math.floor(Date.now() / 1000),
+                },
+            },
+        });
+
+        cacheService.set(cacheKey, user, this.CACHE_TTL.USER);
+        return user;
     }
 
     public async upsertUser(
@@ -78,6 +109,17 @@ class DatabaseService {
                     status: false,
                     reason: null,
                     since: 0,
+                },
+                level: {
+                    level: 1,
+                    xp: 0,
+                    totalXp: 0,
+                },
+                stats: {
+                    totalCommands: 0,
+                    commandsUsed: [],
+                    lastCommandTime: 0,
+                    joinedAt: Math.floor(Date.now() / 1000),
                 },
             },
             update: {
@@ -105,6 +147,17 @@ class DatabaseService {
                     reason: null,
                     since: 0,
                 },
+                level: data.level || {
+                    level: 1,
+                    xp: 0,
+                    totalXp: 0,
+                },
+                stats: data.stats || {
+                    totalCommands: 0,
+                    commandsUsed: [],
+                    lastCommandTime: 0,
+                    joinedAt: Math.floor(Date.now() / 1000),
+                },
             },
             update: data,
         });
@@ -115,6 +168,71 @@ class DatabaseService {
 
     public async getUserCount(): Promise<number> {
         return this.prisma.user.count();
+    }
+
+    /**
+     * Leveling Operations
+     */
+    public async addUserXP(
+        userId: string,
+        xpToAdd: number,
+        commandName: string
+    ): Promise<{ user: PrismaUser; leveledUp: boolean; newLevel?: number }> {
+        const cacheKey = `user:${userId}`;
+        
+        const user = await this.getUser(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        // Initialize level and stats if null
+        const currentLevel = user.level?.level || 1;
+        const currentXp = user.level?.xp || 0;
+        const totalXp = user.level?.totalXp || 0;
+        
+        // Calculate new XP and level
+        const { addXP } = await import("../../utils/leveling");
+        const result = addXP(currentLevel, currentXp, totalXp, xpToAdd);
+        
+        // Update command usage stats
+        const commandsUsed = user.stats?.commandsUsed || [];
+        const commandIndex = commandsUsed.findIndex((c: any) => c.command === commandName);
+        
+        if (commandIndex >= 0) {
+            commandsUsed[commandIndex].count++;
+        } else {
+            commandsUsed.push({ command: commandName, count: 1 });
+        }
+        
+        // Update user
+        const updatedUser = await this.prisma.user.update({
+            where: { userId },
+            data: {
+                level: {
+                    level: result.newLevel,
+                    xp: result.newXp,
+                    totalXp: result.newTotalXp,
+                },
+                stats: {
+                    totalCommands: (user.stats?.totalCommands || 0) + 1,
+                    commandsUsed,
+                    lastCommandTime: Math.floor(Date.now() / 1000),
+                    joinedAt: user.stats?.joinedAt || Math.floor(Date.now() / 1000),
+                },
+            },
+        });
+        
+        cacheService.delete(cacheKey);
+        
+        return {
+            user: updatedUser,
+            leveledUp: result.leveledUp,
+            newLevel: result.leveledUp ? result.newLevel : undefined,
+        };
+    }
+
+    public async getAllUsers(): Promise<PrismaUser[]> {
+        return this.prisma.user.findMany();
     }
 
     /**

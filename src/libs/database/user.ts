@@ -35,6 +35,17 @@ export class User {
                             reason: "",
                             since: 0,
                         },
+                        level: {
+                            level: 1,
+                            xp: 0,
+                            totalXp: 0,
+                        },
+                        stats: {
+                            totalCommands: 0,
+                            commandsUsed: [],
+                            lastCommandTime: 0,
+                            joinedAt: Math.floor(Date.now() / 1000),
+                        },
                     },
                     update: {
                         userId,

@@ -61,19 +61,6 @@ export class User {
     };
 
     /**
-     * Get All User Data from Database
-     * @deprecated Use databaseService directly
-     */
-    public getAll = async (): Promise<any[]> => {
-        try {
-            const prisma = databaseService.getPrismaClient();
-            return await prisma.user.findMany();
-        } catch (error) {
-            return [];
-        }
-    };
-
-    /**
      * Update User Data from Database
      * @deprecated Use databaseService.updateUser instead
      */
@@ -117,6 +104,37 @@ export class User {
             return await databaseService.getUserCount();
         } catch (error) {
             return 0;
+        }
+    };
+
+    /**
+     * Add XP to user and track command usage
+     */
+    public addXP = async (
+        userId: string,
+        xpToAdd: number,
+        commandName: string
+    ): Promise<any> => {
+        try {
+            return await databaseService.addUserXP(userId, xpToAdd, commandName);
+        } catch (error) {
+            logger.error(
+                `Add XP error: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+            throw error;
+        }
+    };
+
+    /**
+     * Get all users for leaderboard
+     */
+    public getAll = async (): Promise<any[]> => {
+        try {
+            return await databaseService.getAllUsers();
+        } catch (error) {
+            return [];
         }
     };
 }
