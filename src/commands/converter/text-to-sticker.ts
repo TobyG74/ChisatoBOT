@@ -1,5 +1,4 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { StickerType } from "../../utils/converter/sticker";
 import fs from "fs";
 import { StickerGenerator } from "../../utils/converter/sticker";
 

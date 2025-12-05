@@ -12,3 +12,4 @@ export * from "./function";
 export * from "./fetch";
 export * from "./template-helper";
 export * from "./converter/sticker";
+export * from "./leveling";
