@@ -3,7 +3,7 @@
  * Centralized connection-related constants
  */
 
-import type { DisconnectReason } from "@whiskeysockets/baileys";
+import type { DisconnectReason } from "baileys";
 
 export const CONNECTION_CONFIG = {
     MAX_RETRY_ATTEMPTS: 2,

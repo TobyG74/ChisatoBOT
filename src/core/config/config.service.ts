@@ -1,12 +1,26 @@
 import fs from "fs";
 import path from "path";
 
+export type CommandOverride = {
+    isOwner?: boolean;
+    isTeam?: boolean;
+    isPrivate?: boolean;
+    isPremium?: boolean;
+    isGroup?: boolean;
+    isGroupAdmin?: boolean;
+    isGroupOwner?: boolean;
+    isBotAdmin?: boolean;
+    cooldown?: number;
+    limit?: number;
+};
+
 export interface BotConfig {
     ownerNumber: string[];
     teamNumber: string[];
     timeZone: string;
     prefix: string;
     maintenance: string[];
+    commandOverrides: Record<string, CommandOverride>;
     stickers: {
         author: string;
         packname: string;
@@ -65,6 +79,9 @@ class ConfigService {
         if (!this.config.timeZone) {
             throw new Error("Config validation failed: timeZone is required");
         }
+        if (!this.config.commandOverrides) {
+            this.config.commandOverrides = {};
+        }
     }
 
     public getConfig(): BotConfig {
@@ -98,6 +115,27 @@ class ConfigService {
 
     public isMaintenance(commandName: string): boolean {
         return this.config.maintenance.includes(commandName);
+    }
+
+    public getCommandOverride(name: string): CommandOverride | undefined {
+        return this.config.commandOverrides?.[name];
+    }
+
+    public setCommandOverride(name: string, override: CommandOverride): void {
+        if (!this.config.commandOverrides) this.config.commandOverrides = {};
+        this.config.commandOverrides[name] = { ...this.config.commandOverrides[name], ...override };
+        this.saveConfig();
+    }
+
+    public clearCommandOverride(name: string): void {
+        if (this.config.commandOverrides) {
+            delete this.config.commandOverrides[name];
+            this.saveConfig();
+        }
+    }
+
+    public getAllCommandOverrides(): Record<string, CommandOverride> {
+        return this.config.commandOverrides || {};
     }
 
     public updateSettings(updates: Partial<BotConfig["settings"]>): void {

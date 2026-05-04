@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import { logger } from "../../core/logger/logger.service";
 import type { ConfigCommands } from "../../types/structure/commands";
+import { configService } from "../../core/config/config.service";
 
 interface CommandCache {
     command: ConfigCommands;
@@ -77,7 +78,8 @@ class CommandLoader {
 
         const cached = this.commandsCache.get(actualName);
         if (cached) {
-            return cached.command;
+            const override = configService.getCommandOverride(actualName);
+            return override ? { ...cached.command, ...override } : cached.command;
         }
 
         const filePath = this.commandPaths.get(actualName);
@@ -107,7 +109,8 @@ class CommandLoader {
                 this.watchFile(filePath, actualName);
             }
 
-            return command;
+            const override = configService.getCommandOverride(actualName);
+            return override ? { ...command, ...override } : command;
         } catch (error) {
             logger.error(
                 `Failed to load command ${actualName}: ${
