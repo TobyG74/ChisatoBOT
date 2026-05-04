@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { Database } from "../../infrastructure/database";
 import { getClientInstance } from "../../libs/client/instance";
+import { logger } from "../../core/logger";
 
 export async function groupsRoutes(fastify: FastifyInstance) {
     // Get all groups
@@ -48,12 +49,27 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 Database.group.count({ where }),
             ]);
 
+            const client = getClientInstance();
+            const botJid = client?.user?.id?.split(":")[0] || "";
+
             return {
-                groups: groups.map((g) => ({
-                    ...g,
-                    participantsCount: g.participants?.length || 0,
-                    createdAt: new Date(g.creation * 1000).toISOString(),
-                })),
+                groups: groups.map((g) => {
+                    const botParticipant = botJid
+                        ? g.participants?.find((p) =>
+                              p.id?.split(":")[0] === botJid ||
+                              p.lid?.split(":")[0] === botJid
+                          )
+                        : undefined;
+                    const botIsAdmin =
+                        botParticipant?.admin === "admin" ||
+                        botParticipant?.admin === "superadmin";
+                    return {
+                        ...g,
+                        participantsCount: g.participants?.length || 0,
+                        createdAt: new Date(g.creation * 1000).toISOString(),
+                        botIsAdmin,
+                    };
+                }),
                 pagination: {
                     page: Number(page),
                     limit: Number(limit),
@@ -264,10 +280,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 try {
                     await client.groupLeave(groupId);
                 } catch (leaveError) {
-                    console.log(
-                        "Could not leave group (might already be removed):",
-                        leaveError
-                    );
+                    logger.error("Could not leave group (might already be removed):", leaveError);
                 }
             }
 
