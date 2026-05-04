@@ -1,4 +1,4 @@
-import type { proto } from "@whiskeysockets/baileys";
+import type { proto } from "baileys";
 
 declare type MessageSerialize = {
     id: string;

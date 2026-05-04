@@ -1,14 +1,7 @@
-declare type FacebookVideoResult = {
-    title: string;
-    duration: string;
+declare type FacebookResult = {
     thumbnail: string;
-    mp4: Array<{
+    videos: Array<{
         quality: string;
-        render: boolean;
-        type: "direct" | "render";
-        url?: string;
-        videoUrl?: string;
-        videoCodec?: string;
-        videoType?: string;
+        url: string;
     }>;
 }
