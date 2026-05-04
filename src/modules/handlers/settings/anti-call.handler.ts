@@ -1,4 +1,4 @@
-import type { WACallEvent } from "@whiskeysockets/baileys";
+import type { WACallEvent } from "baileys";
 import { Client } from "../../../libs";
 import { configService } from "../../../core/config";
 import { logger } from "../../../core/logger";

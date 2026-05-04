@@ -76,7 +76,7 @@ export class MessageContextBuilder {
                 groupMetadata = (await Chisato.groupMetadata(from).catch(() => null) || (await Group.get(from))) ?? (await Group.upsert(Chisato, from));
                 
                 if (groupMetadata) {
-                    groupSettingData = (await Group.get(from)) ?? (await Group.upsert(Chisato, from)).settings;
+                    groupSettingData = (await Group.get(from)) ?? (await Group.upsert(Chisato, from))?.settings;
                     groupName = groupMetadata.subject;
                     groupDescription = groupMetadata.desc;
                     groupParticipants = groupMetadata.participants;

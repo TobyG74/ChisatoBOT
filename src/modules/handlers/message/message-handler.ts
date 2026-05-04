@@ -41,8 +41,8 @@ export class MessageHandler {
             if (message.key.remoteJid === "status@broadcast") return;
             if (!message.type || message.type === "protocolMessage") return;
             
-            // Ignore bot's own messages (except in selfbot mode)
-            if (message.fromMe && !config.settings.selfbot) return;
+
+            if (!message.fromMe && config.settings.selfbot) return;
 
             // Auto-read messages
             if (config.settings.autoReadMessage && Chisato.readMessages) {
@@ -58,6 +58,7 @@ export class MessageHandler {
             );
 
             // Get command if exists
+            if (!context) return;
             const command = context.cmd
                 ? commands.get(context.cmd) ??
                   Array.from(commands.values()).find((v) =>
@@ -80,8 +81,6 @@ export class MessageHandler {
                     this.Database
                 );
             } else {
-                if (!context) return;
-
                 // Check premium expiry
                 await this.checkPremiumExpiry(Chisato, context, message);
 

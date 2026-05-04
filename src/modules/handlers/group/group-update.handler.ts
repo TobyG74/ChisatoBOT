@@ -1,6 +1,6 @@
 import {
     proto
-} from "@whiskeysockets/baileys";
+} from "baileys";
 import { GroupSerialize } from "../../../types/structure/serialize";
 import { Group as GroupDatabase } from "../../../libs/database";
 import { Client } from "../../../libs";
@@ -17,7 +17,7 @@ export class GroupUpdateHandler {
     async handle(Chisato: Client, message: GroupSerialize): Promise<void> {
         try {
             const dynamicImport = new Function('specifier', 'return import(specifier)');
-            const baileys = await dynamicImport("@whiskeysockets/baileys");
+            const baileys = await dynamicImport("baileys");
             const { proto } = baileys;
             
             const { parameters, from, participant, type, expiration, pushName } = message;
