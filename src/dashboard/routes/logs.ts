@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import fs from "fs";
 import path from "path";
+import { logger } from "../../core/logger/logger.service";
 
 // Log file path
 const LOG_FILE = path.join(process.cwd(), "temp", "dashboard-logs.json");
@@ -50,10 +51,10 @@ function loadLogs(): void {
                 }
             }
             
-            console.log(`[Dashboard] Loaded ${logs.length} logs from file`);
+            logger.info(`Dashboard: loaded ${logs.length} logs from file`);
         }
     } catch (error) {
-        console.error("[Dashboard] Failed to load logs:", error);
+        logger.error(`Dashboard: failed to load logs: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
@@ -63,7 +64,7 @@ function saveLogs(): void {
         ensureTempDir();
         fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2), "utf-8");
     } catch (error) {
-        console.error("[Dashboard] Failed to save logs:", error);
+        logger.error("[Dashboard] Failed to save logs:", error);
     }
 }
 
@@ -106,7 +107,7 @@ process.on("exit", () => {
         clearTimeout(saveTimeout);
     }
     saveLogs();
-    console.log("[Dashboard] Logs saved on exit");
+    logger.info("[Dashboard] Logs saved on exit");
 });
 
 process.on("SIGINT", () => {
@@ -114,7 +115,7 @@ process.on("SIGINT", () => {
         clearTimeout(saveTimeout);
     }
     saveLogs();
-    console.log("[Dashboard] Logs saved on SIGINT");
+    logger.info("[Dashboard] Logs saved on SIGINT");
     process.exit(0);
 });
 
@@ -123,7 +124,7 @@ process.on("SIGTERM", () => {
         clearTimeout(saveTimeout);
     }
     saveLogs();
-    console.log("[Dashboard] Logs saved on SIGTERM");
+    logger.info("[Dashboard] Logs saved on SIGTERM");
     process.exit(0);
 });
 
@@ -142,8 +143,9 @@ export async function logsRoutes(fastify: FastifyInstance) {
             };
 
             let filteredLogs = logs;
-            if (level) {
-                filteredLogs = logs.filter((log) => log.level === level);
+            if (level && level.trim() !== "") {
+                const levelUpper = level.trim().toUpperCase();
+                filteredLogs = logs.filter((log) => log.level.toUpperCase() === levelUpper);
             }
 
             const skip = (Number(page) - 1) * Number(limit);
