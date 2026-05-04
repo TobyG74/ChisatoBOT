@@ -1,5 +1,5 @@
-import type { WASocket } from "@whiskeysockets/baileys";
+import type { WASocket } from "baileys";
 
 declare type ChisatoMediaUpload = string | Buffer | Readable;
 
-declare type Chisato = Partial<WASocket>;
+declare type Chisato = Partial<Omit<WASocket, 'logger'>>;

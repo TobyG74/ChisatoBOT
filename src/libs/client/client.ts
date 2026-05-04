@@ -1,16 +1,17 @@
 console.clear();
-import type {
-    DisconnectReason as DisconnectReasonType,
-    proto,
-    AnyMessageContent,
-    WAProto,
-    WACallEvent,
-    BaileysEventMap,
-    WAMediaUpload,
-    WASocket,
-    Contact,
-    WAMessage,
-} from "@whiskeysockets/baileys";
+import {
+    type DisconnectReason as DisconnectReasonType,
+    type proto,
+    type AnyMessageContent,
+    type WAProto,
+    type WACallEvent,
+    type BaileysEventMap,
+    type WAMediaUpload,
+    type WASocket,
+    type Contact,
+    type WAMessage,
+    delay,
+} from "baileys";
 import { Boom } from "@hapi/boom";
 import { Cron } from "croner";
 import fs from "fs";
@@ -43,6 +44,9 @@ import { StickerGenerator, StickerType } from "../../utils/converter/sticker";
 /** Extensions */
 import "../../shared/extensions/string.extensions";
 
+/** Logger */
+import { logger } from "../../core/logger";
+
 /** Livs */
 import { User as UserDatabase, Group as GroupDatabase } from "../database";
 
@@ -60,7 +64,8 @@ let baileysModule: any = null;
 async function getBaileys() {
     if (!baileysModule) {
         const dynamicImport = new Function('specifier', 'return import(specifier)');
-        baileysModule = await dynamicImport("@whiskeysockets/baileys");
+        const m = await dynamicImport("baileys");
+        baileysModule = (typeof m.makeWASocket === 'function') ? m : (m.default ?? m);
     }
     return baileysModule;
 }
@@ -70,6 +75,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     private package: any;
     private time: string;
     private socketConfig: SocketConfig;
+    public logger = logger;
     constructor(socketConfig: SocketConfig) {
         super();
         this.config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
@@ -83,28 +89,72 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     /** Connect to Whatsapp */
     async connect(): Promise<void> {
         if (!process.env.DATABASE_URL) {
-            console.log(
-                clc.redBright("[ ") +
-                    clc.yellowBright("ERROR") +
-                    clc.redBright(" ] ") +
-                    clc.greenBright("Please set DATABASE_URL in .env file!")
-            );
+            this.logger.error("Please set DATABASE_URL in .env file!");
             return process.exit(0);
         }
 
         const baileys = await getBaileys();
-        const { default: makeWASocket, fetchLatestWaWebVersion, makeCacheableSignalKeyStore, DisconnectReason, downloadContentFromMessage, toBuffer, jidDecode } = baileys;
+        const { makeWASocket, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, DisconnectReason } = baileys;
 
-        const { version, isLatest } = await fetchLatestWaWebVersion({} as any);
-        const { state, saveCreds, clearState } =
+        const { version, isLatest } = await fetchLatestBaileysVersion({} as any);
+        let { state, saveCreds, clearState } =
             (this.socketConfig?.session === "single" &&
                 (await useSingleAuthState(Database))) ||
             (await useMultiAuthState(Database));
+
+        if (state.creds.me?.id && !state.creds.registered) {
+            this.logger.connect("Clearing incomplete session from previous pairing attempt...");
+            await clearState();
+            ({ state, saveCreds, clearState } =
+                (this.socketConfig?.session === "single" &&
+                    (await useSingleAuthState(Database))) ||
+                (await useMultiAuthState(Database)));
+        }
+
+        const isRegistered = state.creds.registered;
+        let pairMode = false;
+        let pairingPhoneNumber = "";
+
+        if (!isRegistered) {
+            if (process.env.PAIRING_NUMBER) {
+                pairMode = true;
+                pairingPhoneNumber = process.env.PAIRING_NUMBER.replace(/[^0-9]/g, "");
+            } else {
+                const readline = await import("readline");
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout,
+                });
+                const ask = (q: string): Promise<string> =>
+                    new Promise((resolve) => rl.question(q, resolve));
+
+                this.logger.info("\n┌─────────────────────────────────────┐");
+                this.logger.info("│        Choose Login Method          │");
+                this.logger.info("├─────────────────────────────────────┤");
+                this.logger.info("│  [1] QR Code                         │");
+                this.logger.info("│  [2] Pairing Code                    │");
+                this.logger.info("└─────────────────────────────────────┘");
+
+                const choice = await ask(clc.greenBright(" ► ") + "Your choice (1/2): ");
+
+                if (choice.trim() === "2") {
+                    pairMode = true;
+                    const phoneInput = await ask(
+                        clc.greenBright(" ► ") + "Enter phone number with country code (e.g. 628xxx): "
+                    );
+                    pairingPhoneNumber = phoneInput.replace(/[^0-9]/g, "");
+                }
+
+                rl.close();
+                console.log();
+            }
+        }
 
         /** Chisato as Client */
         const Chisato: Chisato = makeWASocket({
             ...this.socketConfig,
             version,
+            printQRInTerminal: false,
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(
@@ -112,34 +162,45 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                     Pino({ level: "silent" }).child({ level: "silent" })
                 ),
             },
+            logger: Pino({ level: "silent" }),
         });
+
+        const _requestPairingCode = Chisato.requestPairingCode;
+
+        if (pairMode && pairingPhoneNumber && _requestPairingCode) {
+            Chisato.ws.once("CB:iq,type:set,pair-device", async () => {
+                await delay(5000)
+                try {
+                    this.logger.connect(`Requesting pairing code for +${pairingPhoneNumber}...`);
+                    const code = await _requestPairingCode(pairingPhoneNumber, "CHISATOX");
+                    const formattedCode = code?.match(/.{1,4}/g)?.join("-") || code;
+                    this.logger.connect("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    this.logger.connect(`Pairing Code : ${formattedCode}`);
+                    this.logger.connect("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    this.logger.connect("Open WhatsApp > Linked Devices > Link with phone number");
+                    this.logger.connect("Waiting for code to be entered...");
+                } catch (error) {
+                    this.logger.connect(`Failed to get pairing code: ${error instanceof Error ? error.message : String(error)}`);
+                }
+            });
+        }
 
         /** Connection Update */
         Chisato.ev?.on("connection.update", async (connections) => {
             const { lastDisconnect, connection, qr } = connections;
 
-            if (qr) {
-                const hasAuthenticatedSession =
-                    state.creds.me?.id !== undefined;
+            if (qr && !pairMode) {
+                this.logger.status(
 
-                if (!hasAuthenticatedSession) {
-                    this.log(
-                        "connect",
-                        "QR Code received! Please scan the QR code below:"
-                    );
-                    qrcode.generate(qr, { small: true });
-                } else {
-                    this.log(
-                        "connect",
-                        "Re-authenticating with saved session, skipping QR display..."
-                    );
-                }
+                    "connect",
+                    "QR Code received! Please scan the QR code below:"
+                );
+                qrcode.generate(qr, { small: true });
             }
 
             if (connection === "connecting") {
-                this.log(
-                    "connect",
-                    `Successfully Registered ${commands.size} Commands!`
+                this.logger.info(
+                    `Registered ${commands.size} Commands — connecting...`
                 );
             } else if (connection === "close") {
                 let reason = new Boom(lastDisconnect?.error)?.output
@@ -147,8 +208,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 switch (reason) {
                     case DisconnectReason.restartRequired:
                         {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 "Restart required, reconnecting in 2s..."
                             );
@@ -157,8 +217,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         break;
                     case DisconnectReason.connectionLost:
                         {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 "Connection Lost! Reconnecting in 1s..."
                             );
@@ -167,8 +226,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         break;
                     case DisconnectReason.connectionClosed:
                         {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 "Connection Closed! Reconnecting in 1s..."
                             );
@@ -177,8 +235,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         break;
                     case DisconnectReason.connectionReplaced:
                         {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 "Connection Replaced! Another device connected."
                             );
@@ -186,8 +243,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         break;
                     case DisconnectReason.timedOut:
                         {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 "Timed Out! Reconnecting in 2s..."
                             );
@@ -196,26 +252,24 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         break;
                     case DisconnectReason.loggedOut:
                         {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
-                                "Session has been Logged Out! Please re-scan QR!"
+                                "Session has been Logged Out! Clearing session and reconnecting..."
                             );
                             await clearState();
+                            setTimeout(() => this.connect(), 2000);
                         }
                         break;
                     case DisconnectReason.forbidden:
                         if (tryConnect < 2) {
                             tryConnect++;
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 `Forbidden! Retry attempt ${tryConnect}/2 in 3s...`
                             );
                             setTimeout(() => this.connect(), 3000);
                         } else {
-                            this.log(
-                                "status",
+                            this.logger.status(
                                 `${reason}`,
                                 "Forbidden! Max retries reached. Please re-scan QR!"
                             );
@@ -226,15 +280,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason}`,
                                     `Unavailable Service! Retry attempt ${tryConnect}/2 in 3s...`
                                 );
                                 setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason}`,
                                     "Unavailable Service! Max retries reached. Please re-scan QR!"
                                 );
@@ -246,15 +298,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason}`,
                                     `Multidevice Mismatch! Retry attempt ${tryConnect}/2 in 3s...`
                                 );
                                 setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason}`,
                                     "Multidevice Mismatch! Max retries reached. Please re-scan QR!"
                                 );
@@ -266,15 +316,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason}`,
                                     `Bad Session! Retry attempt ${tryConnect}/2 in 3s...`
                                 );
                                 setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason}`,
                                     "Bad Session! Max retries reached. Please re-scan QR!"
                                 );
@@ -286,15 +334,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         {
                             if (tryConnect < 2) {
                                 tryConnect++;
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason || "Unknown"}`,
                                     `Connection error! Retry attempt ${tryConnect}/2 in 3s...`
                                 );
                                 setTimeout(() => this.connect(), 3000);
                             } else {
-                                this.log(
-                                    "status",
+                                this.logger.status(
                                     `${reason || "Unknown"}`,
                                     "Max retries reached. Please re-scan QR!"
                                 );
@@ -309,15 +355,41 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 /** Logger */
                 const userName = this.user?.name || "WhatsApp BOT";
                 const userId = this.user?.id?.split(":")[0] || "Unknown";
-                cfonts.say(userName, this.config.cfonts);
-                this.log("connect", "Success Connected!");
-                this.log("connect", "Bot is ready to receive messages");
-                this.log("connect", "Creator : Tobz");
-                this.log("connect", `Name    : ${userName}`);
-                this.log("connect", `Number  : ${userId}`);
-                this.log("connect", `Version : ${this.package.version}`);
-                this.log("connect", `WA Web Version : ${version}`);
-                this.log("connect", `Latest  : ${isLatest ? "YES" : "NO"}`);
+                cfonts.say("ChisatoBOT", this.config.cfonts);
+
+                const dw = (s: string) => [...s].reduce((n, c) => {
+                    const cp = c.codePointAt(0)!;
+                    return n + (cp >= 0x1100 && (cp <= 0x9FFF || (cp >= 0xF900 && cp <= 0xFFEF) || (cp >= 0x20000 && cp <= 0x2FFFF)) ? 2 : 1);
+                }, 0);
+
+                const rows: [string, string][] = [
+                    ["Creator", "Tobz"],
+                    ["Name",    userName],
+                    ["Number",  userId],
+                    ["Version", this.package.version],
+                    ["WA Web",  version.join(".")],
+                    ["Latest",  isLatest ? "YES" : "NO"],
+                ];
+
+                const KEY_W = Math.max(...rows.map(([k]) => k.length));
+                const VAL_W = Math.max(...rows.map(([, v]) => dw(v)));
+                const BOX_W = KEY_W + VAL_W + 5; 
+
+                console.log(clc.blackBright("┌" + "─".repeat(BOX_W) + "┐"));
+                for (const [k, v] of rows) {
+                    const pad = " ".repeat(VAL_W - dw(v));
+                    console.log(
+                        clc.blackBright("│ ") +
+                        clc.cyan(k.padEnd(KEY_W)) +
+                        clc.blackBright(" : ") +
+                        clc.whiteBright(v) + pad +
+                        clc.blackBright(" │")
+                    );
+                }
+                console.log(clc.blackBright("└" + "─".repeat(BOX_W) + "┘"));
+                this.logger.connect("Bot is ready to receive messages");
+                const dashPort = process.env.DASHBOARD_PORT || "3000";
+                this.logger.connect(`Dashboard server started on http://localhost:${dashPort}`);
 
                 /** Reset Limit */
                 this.reset();
@@ -335,15 +407,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         `• Version : ${this.package.version}\n` +
                         `• WA Web Version : ${version}\n` +
                         `• Latest  : ${isLatest ? "YES" : "NO"}\n`;
-                    this.log(
-                        "connect",
+                    this.logger.connect(
                         "Sending Online Notification to Owner..."
                     );
                     for (let owner of this.config.ownerNumber) {
                         await this.sendText(owner + "@s.whatsapp.net", str);
                     }
-                    this.log(
-                        "connect",
+                    this.logger.connect(
                         "Success Sending Online Notification to Owner!"
                     );
                 }
@@ -403,6 +473,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             Chisato.ev?.removeAllListeners(ev as keyof BaileysEventMap);
 
         for (const key of Object.keys(Chisato)) {
+            if (key === "logger") { delete (Chisato as any)[key]; continue; }
             (this as any)[key] = (Chisato as any)[key];
             if (!["ev", "ws"].includes(key)) delete (Chisato as any)[key];
         }
@@ -460,13 +531,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 commands.set(cmd.name, cmd);
                 /** Detect File Changes */
                 fs.watchFile(`${dir}/${dirName}/${file}`, async () => {
-                    console.log(
-                        clc.redBright(
-                            `[ ${clc.yellowBright(
-                                "UPDATE"
-                            )} ] ${clc.greenBright(file)} has been updated!`
-                        )
-                    );
+                    this.logger.info(`Hot-reload: ${file} updated, reloading...`);
                     delete require.cache[
                         require.resolve(`${dir}/${dirName}/${file}`)
                     ];
@@ -498,63 +563,9 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 },
             });
 
-            console.log(
-                clc.green.bold("[ ") +
-                    clc.white.bold("CRON") +
-                    clc.green.bold(" ] ") +
-                    clc.yellow.bold("Reset user limit...")
-            );
+            this.logger.info("Cron: user limits have been reset");
         });
     }
-
-    /** Beautify Logger */
-    public log = (
-        type: "status" | "info" | "error" | "eval" | "exec" | "connect",
-        text: string | Error,
-        text2?: string | Error
-    ) => {
-        switch (type.toLowerCase()) {
-            case "status":
-                return console.log(
-                    clc.green.bold("["),
-                    clc.yellow.bold(text),
-                    clc.green.bold("]"),
-                    clc.blue(util.inspect(text2))
-                );
-            case "info":
-                return console.log(
-                    clc.green.bold("["),
-                    clc.yellow.bold("INFO"),
-                    clc.green.bold("]"),
-                    clc.blue(util.inspect(text))
-                );
-            case "error":
-                return console.log(
-                    clc.green.bold("["),
-                    clc.red.bold("ERROR"),
-                    clc.green.bold("]"),
-                    clc.blue(util.inspect(text))
-                );
-            case "eval":
-                return console.log(
-                    clc.green.bold("["),
-                    clc.magenta.bold("EVAL"),
-                    clc.green.bold("]"),
-                    clc.blue(this.time),
-                    clc.green(util.inspect(text))
-                );
-            case "exec":
-                return console.log(
-                    clc.green.bold("["),
-                    clc.magenta.bold("EXEC"),
-                    clc.green.bold("]"),
-                    clc.blue(this.time),
-                    clc.green(util.inspect(text))
-                );
-            case "connect":
-                return console.log(clc.green.bold("[ ! ]"), clc.blue(text));
-        }
-    };
 
     /** Download Media from Message
      * @param message
@@ -621,6 +632,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         options: { pack: string; author: string },
         buffer: Buffer,
         type: StickerType,
+        isVideo?: boolean,
         quoted?: MessageSerialize
     ) => {
         try {
@@ -628,7 +640,8 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 type: type || "default",
                 pack: options.pack,
                 author: options.author,
-                quality: 80
+                quality: 80,
+                isVideo
             });
 
             return this.sendMessage!(jid, {
@@ -1067,91 +1080,9 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
 
         return msg as WAProto.WebMessageInfo;
     };
-
-    public getOrderDetails: Chisato["getOrderDetails"];
-    public getCatalog: Chisato["getCatalog"];
-    public getCollections: Chisato["getCollections"];
-    public productCreate: Chisato["productCreate"];
-    public productDelete: Chisato["productDelete"];
-    public productUpdate: Chisato["productUpdate"];
-    public sendMessageAck: Chisato["sendMessageAck"];
-    public sendRetryRequest: Chisato["sendRetryRequest"];
-    public rejectCall: Chisato["rejectCall"];
-    public getPrivacyTokens: Chisato["getPrivacyTokens"];
-    public assertSessions: Chisato["assertSessions"];
-    public relayMessage: Chisato["relayMessage"];
-    public sendReceipt: Chisato["sendReceipt"];
-    public sendReceipts: Chisato["sendReceipts"];
-    public readMessages: Chisato["readMessages"];
-    public refreshMediaConn: Chisato["refreshMediaConn"];
-    public waUploadToServer: Chisato["waUploadToServer"];
-    public fetchPrivacySettings: Chisato["fetchPrivacySettings"];
-    public updateMediaMessage: Chisato["updateMediaMessage"];
-    public sendMessage: Chisato["sendMessage"];
-    public groupMetadata: Chisato["groupMetadata"];
-    public groupCreate: Chisato["groupCreate"];
-    public groupLeave: Chisato["groupLeave"];
-    public groupUpdateSubject: Chisato["groupUpdateSubject"];
-    public groupRequestParticipantsList: Chisato["groupRequestParticipantsList"];
-    public groupRequestParticipantsUpdate: Chisato["groupRequestParticipantsUpdate"];
-    public groupParticipantsUpdate: Chisato["groupParticipantsUpdate"];
-    public groupUpdateDescription: Chisato["groupUpdateDescription"];
-    public groupInviteCode: Chisato["groupInviteCode"];
-    public groupRevokeInvite: Chisato["groupRevokeInvite"];
-    public groupAcceptInvite: Chisato["groupAcceptInvite"];
-    public groupAcceptInviteV4: Chisato["groupAcceptInviteV4"];
-    public groupGetInviteInfo: Chisato["groupGetInviteInfo"];
-    public groupToggleEphemeral: Chisato["groupToggleEphemeral"];
-    public groupSettingUpdate: Chisato["groupSettingUpdate"];
-    public groupMemberAddMode: Chisato["groupMemberAddMode"];
-    public groupJoinApprovalMode: Chisato["groupJoinApprovalMode"];
-    public groupFetchAllParticipating: Chisato["groupFetchAllParticipating"];
-    public upsertMessage: Chisato["upsertMessage"];
-    public appPatch: Chisato["appPatch"];
-    public sendPresenceUpdate: Chisato["sendPresenceUpdate"];
-    public presenceSubscribe: Chisato["presenceSubscribe"];
-    public profilePictureUrl: Chisato["profilePictureUrl"];
-    public onWhatsApp: Chisato["onWhatsApp"];
-    public fetchBlocklist: Chisato["fetchBlocklist"];
-    public fetchStatus: Chisato["fetchStatus"];
-    public updateProfilePicture: Chisato["updateProfilePicture"];
-    public removeProfilePicture: Chisato["removeProfilePicture"];
-    public updateProfileStatus: Chisato["updateProfileStatus"];
-    public updateProfileName: Chisato["updateProfileName"];
-    public updateBlockStatus: Chisato["updateBlockStatus"];
-    public updateLastSeenPrivacy: Chisato["updateLastSeenPrivacy"];
-    public updateOnlinePrivacy: Chisato["updateOnlinePrivacy"];
-    public updateProfilePicturePrivacy: Chisato["updateProfilePicturePrivacy"];
-    public updateStatusPrivacy: Chisato["updateStatusPrivacy"];
-    public updateReadReceiptsPrivacy: Chisato["updateReadReceiptsPrivacy"];
-    public updateGroupsAddPrivacy: Chisato["updateGroupsAddPrivacy"];
-    public updateDefaultDisappearingMode: Chisato["updateDefaultDisappearingMode"];
-    public getBusinessProfile: Chisato["getBusinessProfile"];
-    public resyncAppState: Chisato["resyncAppState"];
-    public chatModify: Chisato["chatModify"];
-    public cleanDirtyBits: Chisato["cleanDirtyBits"];
-    public addChatLabel: Chisato["addChatLabel"];
-    public removeChatLabel: Chisato["removeChatLabel"];
-    public addMessageLabel: Chisato["addMessageLabel"];
-    public removeMessageLabel: Chisato["removeMessageLabel"];
-    public star: Chisato["star"];
-    public type: Chisato["type"];
-    // public ws: Chisato["ws"];
-    // public ev: Chisato["ev"];
-    public authState: Chisato["authState"];
-    public signalRepository: Chisato["signalRepository"];
-    public user: Chisato["user"];
-    public generateMessageTag: Chisato["generateMessageTag"];
-    public query: Chisato["query"];
-    public waitForMessage: Chisato["waitForMessage"];
-    public waitForSocketOpen: Chisato["waitForSocketOpen"];
-    public sendRawMessage: Chisato["sendRawMessage"];
-    public sendNode: Chisato["sendNode"];
-    public logout: Chisato["logout"];
-    public end: Chisato["end"];
-    public onUnexpectedError: Chisato["onUnexpectedError"];
-    public uploadPreKeys: Chisato["uploadPreKeys"];
-    public uploadPreKeysToServerIfRequired: Chisato["uploadPreKeysToServerIfRequired"];
-    public requestPairingCode: Chisato["requestPairingCode"];
-    public waitForConnectionUpdate: Chisato["waitForConnectionUpdate"];
 }
+
+// Declaration merging: tells TypeScript that Client instances also have all
+// WASocket properties (assigned at runtime via the copy loop in connect()).
+// Excludes 'ev' since Client already uses its own EventEmitter for client events.
+export interface Client extends Omit<Chisato, 'ev' | 'logger'> {}

@@ -13,6 +13,7 @@ export function setDashboardLogHandler(handler: (level: string, message: string,
 export enum LogLevel {
     STATUS = "STATUS",
     INFO = "INFO",
+    WARN = "WARN",
     ERROR = "ERROR",
     EVAL = "EVAL",
     EXEC = "EXEC",
@@ -49,47 +50,39 @@ class LoggerService {
         return moment().format("DD/MM HH:mm:ss");
     }
 
+    private ts(): string {
+        return clc.blackBright(this.getTimestamp());
+    }
+
+    private pill(label: string, bg: (s: string) => string): string {
+        return bg(` ${label} `);
+    }
+
     private formatMessage(
         level: LogLevel,
         message: string,
         secondaryMessage?: string
     ): string {
-        const levelColor = this.getLevelColor(level);
-        const timestamp = this.getTimestamp();
-
-        const parts = [
-            clc.green.bold("["),
-            levelColor(level),
-            clc.green.bold("]"),
-        ];
-
-        if (level !== LogLevel.CONNECT) {
-            parts.push(clc.blue(timestamp));
-        }
-
-        parts.push(clc.green(message));
-
-        if (secondaryMessage) {
-            parts.push(clc.yellow.bold(secondaryMessage));
-        }
-
+        const ts = this.ts();
+        const badge = this.getLevelBadge(level);
+        const parts = [ts, badge, clc.whiteBright(message)];
+        if (secondaryMessage) parts.push(clc.yellow(secondaryMessage));
         return parts.join(" ");
     }
 
-    private getLevelColor(level: LogLevel): (text: string) => string {
+    private getLevelBadge(level: LogLevel): string {
         switch (level) {
-            case LogLevel.ERROR:
-                return clc.red.bold;
+            case LogLevel.ERROR:   return clc.bgRed.white.bold(" ERROR ");
+            case LogLevel.WARN:    return clc.bgYellow.black.bold(" WARN ");
             case LogLevel.EVAL:
-            case LogLevel.EXEC:
-                return clc.magenta.bold;
-            case LogLevel.COMMAND:
-            case LogLevel.MUTE:
-                return clc.yellow.bold;
-            case LogLevel.CHAT:
-                return clc.cyan.bold;
-            default:
-                return clc.yellow.bold;
+            case LogLevel.EXEC:   return clc.bgMagenta.white.bold(` ${level}  `);
+            case LogLevel.COMMAND: return clc.bgYellow.black.bold(" CMDS ");
+            case LogLevel.CHAT:   return clc.bgCyan.black.bold(" CHAT ");
+            case LogLevel.MUTE:   return clc.bgYellow.black.bold(" MUTE ");
+            case LogLevel.STATUS: return clc.bgYellow.black.bold(" STATUS ");
+            case LogLevel.CONNECT:return clc.bgGreen.black.bold(" CONN ");
+            case LogLevel.INFO:
+            default:              return clc.bgBlue.black.bold(" INFO ");
         }
     }
 
@@ -109,10 +102,17 @@ class LoggerService {
         }
     }
 
-    public error(message: string): void {
+    public warn(message: string): void {
+        console.log(this.formatMessage(LogLevel.WARN, message));
+        if (addDashboardLog) {
+            addDashboardLog(LogLevel.WARN, message);
+        }
+    }
+
+    public error(message: string, error?: any): void {
         console.log(this.formatMessage(LogLevel.ERROR, message));
         if (addDashboardLog) {
-            addDashboardLog(LogLevel.ERROR, message);
+            addDashboardLog(LogLevel.ERROR, message, error instanceof Error ? { message: error.message, stack: error.stack } : error);
         }
     }
 
@@ -133,7 +133,7 @@ class LoggerService {
     }
 
     public connect(message: string): void {
-        console.log(clc.green.bold("[ ! ]"), clc.blue(message));
+        console.log(this.ts(), clc.bgGreen.black.bold(" CONN "), clc.greenBright(message));
         if (addDashboardLog) {
             addDashboardLog(LogLevel.CONNECT, message);
         }
@@ -141,90 +141,41 @@ class LoggerService {
 
     public command(context: LogContext): void {
         const { pushName, groupName, commandName } = context;
-
-        if (groupName) {
-            console.log(
-                clc.green.bold("["),
-                clc.yellow.bold("CMDS"),
-                clc.green.bold("]"),
-                clc.blue(this.getTimestamp()),
-                "from",
-                clc.magenta.bold(pushName || "Unknown"),
-                "in",
-                clc.yellow.bold(groupName),
-                "|",
-                clc.green.bold(commandName || "")
-            );
-            if (addDashboardLog) {
-                addDashboardLog(LogLevel.COMMAND, `from ${pushName || "Unknown"} in ${groupName} | ${commandName || ""}`, context);
-            }
-        } else {
-            console.log(
-                clc.green.bold("["),
-                clc.yellow.bold("CMDS"),
-                clc.green.bold("]"),
-                clc.blue(this.getTimestamp()),
-                "from",
-                clc.magenta.bold(pushName || "Unknown"),
-                "|",
-                clc.green.bold(commandName || "")
-            );
-            if (addDashboardLog) {
-                addDashboardLog(LogLevel.COMMAND, `from ${pushName || "Unknown"} | ${commandName || ""}`, context);
-            }
+        const where = groupName
+            ? `${clc.magentaBright(pushName || "Unknown")} in ${clc.yellow(groupName)}`
+            : clc.magentaBright(pushName || "Unknown");
+        console.log(
+            this.ts(),
+            clc.bgYellow.black.bold(" CMDS "),
+            `${where} ${clc.blackBright("→")} ${clc.greenBright(commandName || "")}`
+        );
+        if (addDashboardLog) {
+            addDashboardLog(LogLevel.COMMAND, `from ${pushName || "Unknown"}${groupName ? ` in ${groupName}` : ""} | ${commandName || ""}`, context);
         }
     }
 
     public chat(context: LogContext): void {
         const { pushName, groupName, body } = context;
         const truncatedBody = body ? body.replace(/\n/g, " ").slice(0, 50) : "";
-
-        if (groupName) {
-            console.log(
-                clc.green.bold("["),
-                clc.cyan.bold("CHAT"),
-                clc.green.bold("]"),
-                clc.blue(this.getTimestamp()),
-                "from",
-                clc.magenta.bold(pushName || "Unknown"),
-                "in",
-                clc.yellow.bold(groupName),
-                "|",
-                clc.green.bold(truncatedBody)
-            );
-            if (addDashboardLog) {
-                addDashboardLog(LogLevel.CHAT, `from ${pushName || "Unknown"} in ${groupName} | ${truncatedBody}`, context);
-            }
-        } else {
-            console.log(
-                clc.green.bold("["),
-                clc.cyan.bold("CHAT"),
-                clc.green.bold("]"),
-                clc.blue(this.getTimestamp()),
-                "from",
-                clc.magenta.bold(pushName || "Unknown"),
-                "|",
-                clc.green.bold(truncatedBody)
-            );
-            if (addDashboardLog) {
-                addDashboardLog(LogLevel.CHAT, `from ${pushName || "Unknown"} | ${truncatedBody}`, context);
-            }
+        const where = groupName
+            ? `${clc.magentaBright(pushName || "Unknown")} in ${clc.yellow(groupName)}`
+            : clc.magentaBright(pushName || "Unknown");
+        console.log(
+            this.ts(),
+            clc.bgCyan.black.bold(" CHAT "),
+            `${where} ${clc.blackBright("│")} ${clc.whiteBright(truncatedBody)}`
+        );
+        if (addDashboardLog) {
+            addDashboardLog(LogLevel.CHAT, `from ${pushName || "Unknown"}${groupName ? ` in ${groupName}` : ""} | ${truncatedBody}`, context);
         }
     }
 
     public mute(context: LogContext): void {
         const { pushName, groupName, commandName } = context;
         console.log(
-            clc.green.bold("["),
-            clc.yellow.bold("MUTE"),
-            clc.green.bold("]"),
-            clc.blue(this.getTimestamp()),
-            "from",
-            clc.magenta.bold(pushName || "Unknown"),
-            "in",
-            clc.yellow.bold(groupName || ""),
-            "|",
-            clc.green.bold(commandName || "")
+            this.ts(),
+            clc.bgYellow.black.bold(" MUTE "),
+            `${clc.magentaBright(pushName || "Unknown")} in ${clc.yellow(groupName || "")} ${clc.blackBright("→")} ${clc.greenBright(commandName || "")}`
         );
         if (addDashboardLog) {
             addDashboardLog(LogLevel.MUTE, `from ${pushName || "Unknown"} in ${groupName || ""} | ${commandName || ""}`, context);
