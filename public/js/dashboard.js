@@ -8,7 +8,13 @@ let currentPage = { groups: 1, users: 1, logs: 1 };
 // Chart instances
 let userChart = null;
 let groupSettingsChart = null;
-let memoryChart = null;
+let memorySparklineChart = null;
+let _heapHistory = [];
+// Real-time system monitor intervals
+let _streamAbortController = null; // SSE stream controller
+let _uptimeTicker = null;         // 1s local uptime tick
+let _overviewStatsInterval = null; // 30s full stats refresh
+let _uptimeSeconds = 0;           // last known uptime from server
 
 // Authentication helper
 function getAuthToken() {
@@ -20,46 +26,46 @@ function getAuthHeaders() {
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function checkAuth() {
+function checkAuth() {
     const token = getAuthToken();
     if (!token) {
-        window.location.href = "/login.html";
+        window.location.replace("/login.html");
         return false;
     }
-
+    // Load admin profile from cache if available
     try {
-        const response = await authFetch(`${API_BASE}/auth/verify`, {
-            headers: getAuthHeaders(),
-        });
-
-        if (!response.ok) {
-            localStorage.removeItem("adminToken");
-            window.location.href = "/login.html";
-            return false;
-        }
-
-        const data = await response.json();
-        displayAdminInfo(data.admin);
-        return true;
-    } catch (error) {
-        console.error("Auth check failed:", error);
-        localStorage.removeItem("adminToken");
-        window.location.href = "/login.html";
-        return false;
-    }
+        const profile = localStorage.getItem("adminProfile");
+        if (profile) displayAdminInfo(JSON.parse(profile));
+    } catch (_) {}
+    return true;
 }
 
 function displayAdminInfo(admin) {
     const pageSubtitle = document.getElementById("page-subtitle");
     if (pageSubtitle && admin) {
-        const originalText = pageSubtitle.textContent;
-        pageSubtitle.innerHTML = `${originalText} | Logged in as: <strong>${admin.username}</strong>`;
+        const originalText = "Realtime system monitor and control center";
+        const roleLabel = (admin.role || "team").toUpperCase();
+        pageSubtitle.innerHTML = `${originalText} | +${admin.phoneNumber} <strong>[${roleLabel}]</strong>`;
     }
+    // Cache role for use in Settings/Maintenance views
+    if (admin) localStorage.setItem('adminProfile', JSON.stringify(admin));
 }
 
-function logout() {
-    localStorage.removeItem("adminToken");
-    window.location.href = "/login.html";
+async function logout() {
+    try {
+        const token = getAuthToken();
+        if (token) {
+            await fetch(`${API_BASE}/auth/logout`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+        }
+    } catch (error) {
+        console.error("Logout error:", error);
+    } finally {
+        localStorage.removeItem("adminToken");
+        window.location.href = "/login.html";
+    }
 }
 
 // Authenticated fetch wrapper
@@ -76,7 +82,7 @@ async function authFetch(url, options = {}) {
 
     if (response.status === 401) {
         localStorage.removeItem("adminToken");
-        window.location.href = "/login.html";
+        window.location.replace("/login.html");
         throw new Error("Unauthorized");
     }
 
@@ -84,26 +90,70 @@ async function authFetch(url, options = {}) {
 }
 
 // Initialize dashboard
-document.addEventListener("DOMContentLoaded", async () => {
-    // Check authentication first
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
-        return;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    try {
+        const profile = localStorage.getItem("adminProfile");
+        if (profile) displayAdminInfo(JSON.parse(profile));
+    } catch (_) {}
 
     setupNavigation();
     setupMobileMenu();
-    loadOverview();
+    initParticles();
     setupEventListeners();
-
-    setInterval(() => {
-        if (currentView === "overview") {
-            loadOverview();
-        }
-    }, 30000);
+    loadOverview();
+    startSystemRT();
 });
+// ── Background Particles (matches login page) ──────────────
+function initParticles() {
+    const canvas = document.getElementById('bg-particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+    const colors = ['rgba(99,102,241,', 'rgba(139,92,246,', 'rgba(6,182,212,'];
 
-// Setup mobile menu
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < 60; i++) {
+        particles.push({
+            x: Math.random() * (W || 1200), y: Math.random() * (H || 800),
+            r: Math.random() * 1.2 + 0.3,
+            vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            a: Math.random() * 0.4 + 0.08, life: Math.random() * Math.PI * 2,
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => {
+            p.life += 0.008;
+            const alpha = p.a * (0.5 + 0.5 * Math.sin(p.life));
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + alpha + ')'; ctx.fill();
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        });
+        particles.forEach((p, i) => {
+            for (let j = i + 1; j < particles.length; j++) {
+                const q = particles[j];
+                const dx = p.x - q.x, dy = p.y - q.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 90) {
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+                    ctx.strokeStyle = `rgba(99,102,241,${0.06 * (1 - dist / 90)})`;
+                    ctx.lineWidth = 0.5; ctx.stroke();
+                }
+            }
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+
+
 function setupMobileMenu() {
     const sidebar = document.getElementById("sidebar");
     const hamburgerBtn = document.getElementById("hamburger-btn");
@@ -113,11 +163,13 @@ function setupMobileMenu() {
     hamburgerBtn?.addEventListener("click", () => {
         sidebar.classList.add("mobile-open");
         mobileOverlay.classList.add("show");
+        if (hamburgerBtn) hamburgerBtn.classList.add("hamburger-hidden");
     });
 
     const closeSidebar = () => {
         sidebar.classList.remove("mobile-open");
         mobileOverlay.classList.remove("show");
+        if (hamburgerBtn) hamburgerBtn.classList.remove("hamburger-hidden");
     };
 
     closeSidebarBtn?.addEventListener("click", closeSidebar);
@@ -145,6 +197,8 @@ function setupNavigation() {
 
 // Switch between views
 function switchView(view) {
+    // Stop RT monitors when leaving overview
+    if (currentView === 'overview' && view !== 'overview') stopSystemRT();
     currentView = view;
 
     document.querySelectorAll(".nav-link").forEach((link) => {
@@ -166,12 +220,15 @@ function switchView(view) {
         users: "Users",
         logs: "Logs",
         system: "System Information",
+        settings: "Settings & Config",
+        commands: "Command Manager",
     };
-    document.getElementById("page-title").textContent = titles[view];
+    document.getElementById("page-title").textContent = titles[view] || view;
 
     switch (view) {
         case "overview":
             loadOverview();
+            startSystemRT();
             break;
         case "groups":
             loadGroups();
@@ -184,6 +241,12 @@ function switchView(view) {
             break;
         case "system":
             loadSystem();
+            break;
+        case "settings":
+            loadSettings();
+            break;
+        case "commands":
+            loadCommands();
             break;
     }
 }
@@ -227,152 +290,272 @@ function setupEventListeners() {
 // Load overview data
 async function loadOverview() {
     try {
-        const [stats, growth, system] = await Promise.all([
-            authFetch(`${API_BASE}/stats`).then((r) => r.json()),
-            authFetch(`${API_BASE}/stats/growth`).then((r) => r.json()),
-            authFetch(`${API_BASE}/stats/system`).then((r) => r.json()),
+        const [statsRes, growthRes, systemRes] = await Promise.all([
+            authFetch(`${API_BASE}/stats`),
+            authFetch(`${API_BASE}/stats/growth`),
+            authFetch(`${API_BASE}/stats/system`),
         ]);
 
-        // Update stats cards
-        document.getElementById("stat-users").textContent = stats.totalUsers;
-        document.getElementById("stat-groups").textContent = stats.totalGroups;
-        document.getElementById("stat-premium").textContent =
-            stats.premiumUsers;
-        document.getElementById("stat-banned").textContent =
-            stats.bannedUsers || 0;
-        document.getElementById("stat-uptime").textContent = stats.uptime;
+        const stats = statsRes.ok ? await statsRes.json() : {};
+        const growth = growthRes.ok ? await growthRes.json() : { users: { byRole: {} }, groups: { settingsEnabled: {} } };
+        const system = systemRes.ok ? await systemRes.json() : { memory: {}, platform: "—", nodeVersion: "—", pid: "—" };
 
-        // Update system info
-        document.getElementById("memory-usage").textContent =
-            system.memory.heapUsed;
-        document.getElementById("platform").textContent = system.platform;
-        document.getElementById("node-version").textContent =
-            system.nodeVersion;
-        document.getElementById("pid").textContent = system.pid;
+        // Update stats cards
+        document.getElementById("stat-users").textContent = stats.totalUsers ?? "—";
+        document.getElementById("stat-groups").textContent = stats.totalGroups ?? "—";
+        document.getElementById("stat-premium").textContent = stats.premiumUsers ?? "—";
+        document.getElementById("stat-banned").textContent = stats.bannedUsers ?? 0;
+        document.getElementById("stat-uptime").textContent = stats.uptime ?? "—";
+
+        // Update legacy sysinfo rows
+        document.getElementById("memory-usage").textContent = system.memory?.heapUsed ?? "—";
+        document.getElementById("platform").textContent = system.platform ?? "—";
+        document.getElementById("node-version").textContent = system.nodeVersion ?? "—";
+        document.getElementById("pid").textContent = system.pid ?? "—";
+
+        // Task Manager cards
+        updateTaskManager(system, stats);
 
         // Update charts
-        updateUserChart(growth.users.byRole);
-        updateGroupSettingsChart(growth.groups.settingsEnabled);
+        updateUserChart(growth.users?.byRole ?? {});
+        updateGroupSettingsChart(growth.groups?.settingsEnabled ?? {});
     } catch (error) {
-        console.error("Failed to load overview:", error);
+        if (error.message === "Unauthorized") return;
+        console.error("loadOverview failed:", error);
     }
 }
 
-// Update user distribution chart
-function updateUserChart(data) {
-    const ctx = document.getElementById("userChart").getContext("2d");
+function updateTaskManager(system, stats) {
+    // Prefer raw byte fields for precision; fall back to parsing formatted string
+    const heapUsed   = system.memory.heapUsedBytes  ?? parseMemory(system.memory.heapUsed);
+    const heapTotal  = system.memory.heapTotalBytes  ?? parseMemory(system.memory.heapTotal);
+    const rss        = system.memory.rssBytes        ?? parseMemory(system.memory.rss);
+    const external   = system.memory.externalBytes   ?? parseMemory(system.memory.external);
+    const heapPct    = heapTotal > 0 ? Math.min(100, (heapUsed  / heapTotal) * 100) : 0;
+    const rssPct     = Math.min(100, (rss      / (heapTotal * 2 || 1)) * 100);
+    const extPct     = Math.min(100, (external / (heapTotal      || 1)) * 100);
 
-    if (userChart) {
-        userChart.destroy();
+    const el = (id) => document.getElementById(id);
+    if (el('tm-heap-used')) flashUpdate(el('tm-heap-used'), system.memory.heapUsed);
+    if (el('tm-heap-bar')) el('tm-heap-bar').style.width = heapPct.toFixed(1) + '%';
+    if (el('tm-heap-sub')) el('tm-heap-sub').textContent = `of ${system.memory.heapTotal} total (${heapPct.toFixed(0)}%)`;
+    if (el('tm-rss')) flashUpdate(el('tm-rss'), system.memory.rss);
+    if (el('tm-rss-bar')) el('tm-rss-bar').style.width = rssPct.toFixed(1) + '%';
+    if (el('tm-external')) flashUpdate(el('tm-external'), system.memory.external);
+    if (el('tm-ext-bar')) el('tm-ext-bar').style.width = extPct.toFixed(1) + '%';
+    // OS Memory
+    if (system.os) {
+        const osPct = system.os.memPct;
+        if (el('tm-os-mem')) flashUpdate(el('tm-os-mem'), `${osPct}%`);
+        if (el('tm-os-mem-bar')) el('tm-os-mem-bar').style.width = osPct + '%';
+        if (el('tm-os-mem-sub')) el('tm-os-mem-sub').textContent = `${system.os.usedMem} of ${system.os.totalMem}`;
     }
 
-    userChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-            labels: Object.keys(data),
-            datasets: [
-                {
-                    data: Object.values(data),
-                    backgroundColor: [
-                        "#00d9ff",
-                        "#b967ff",
-                        "#ff006e",
-                        "#05ffa1",
-                    ],
-                    borderColor: ["#00d9ff", "#b967ff", "#ff006e", "#05ffa1"],
-                    borderWidth: 2,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: {
-                        color: "#00d9ff",
-                        font: {
-                            family: "'Orbitron', sans-serif",
-                            size: 12,
-                        },
-                    },
-                },
-            },
-        },
-    });
+    // Sparkline history (last 60 data points = 2 min at 2s interval)
+    _heapHistory.push(heapUsed / (1024 * 1024)); // MB
+    if (_heapHistory.length > 60) _heapHistory.shift();
+    updateSparkline();
 }
 
-// Update group settings chart
-function updateGroupSettingsChart(data) {
-    const ctx = document.getElementById("groupSettingsChart").getContext("2d");
+// Flash a value change on a DOM element
+function flashUpdate(el, newVal) {
+    if (el.textContent === newVal) return; // no change, skip
+    el.textContent = newVal;
+    el.classList.remove('tm-val-flash');
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add('tm-val-flash');
+}
 
-    if (groupSettingsChart) {
-        groupSettingsChart.destroy();
+// ── Real-Time System Monitor ──────────────────────────────
+function startSystemRT() {
+    stopSystemRT();
+    startSystemStream();
+    // Uptime ticker — ticks every second locally for smooth display
+    _uptimeTicker = setInterval(() => {
+        if (_uptimeSeconds <= 0) return;
+        _uptimeSeconds++;
+        const el = document.getElementById('stat-uptime');
+        if (el) el.textContent = formatUptimeLocal(_uptimeSeconds);
+    }, 1000);
+    // Refresh full stats+growth every 30s
+    _overviewStatsInterval = setInterval(() => {
+        if (currentView === 'overview') loadOverview();
+    }, 30000);
+}
+
+function stopSystemRT() {
+    if (_streamAbortController) { _streamAbortController.abort(); _streamAbortController = null; }
+    clearInterval(_uptimeTicker);        _uptimeTicker = null;
+    clearInterval(_overviewStatsInterval); _overviewStatsInterval = null;
+}
+
+async function startSystemStream() {
+    const controller = new AbortController();
+    _streamAbortController = controller;
+    try {
+        const response = await authFetch(`${API_BASE}/stats/stream`, { signal: controller.signal });
+        if (!response.ok) return;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const lines = buf.split('\n');
+            buf = lines.pop();
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                try {
+                    const data = JSON.parse(line.slice(6));
+                    if (data.uptimeSeconds) {
+                        _uptimeSeconds = data.uptimeSeconds;
+                    }
+                    updateTaskManager(data, null);
+                    if (data.platform) {
+                        const p = document.getElementById('platform');
+                        const nv = document.getElementById('node-version');
+                        const pid = document.getElementById('pid');
+                        const mu = document.getElementById('memory-usage');
+                        if (p) p.textContent = data.platform;
+                        if (nv) nv.textContent = data.nodeVersion ?? '—';
+                        if (pid) pid.textContent = data.pid ?? '—';
+                        if (mu) mu.textContent = data.memory?.heapUsed ?? '—';
+                    }
+                } catch { /* malformed chunk */ }
+            }
+        }
+    } catch (e) {
+        if (e.name === 'AbortError') return;
+        // Auto-reconnect after 3s on unexpected disconnect
+        if (_streamAbortController === controller) {
+            setTimeout(startSystemStream, 3000);
+        }
     }
+}
 
-    groupSettingsChart = new Chart(ctx, {
-        type: "bar",
+function formatUptimeLocal(s) {
+    const d   = Math.floor(s / 86400);
+    const h   = Math.floor((s % 86400) / 3600);
+    const m   = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    const parts = [];
+    if (d > 0) parts.push(d + 'd');
+    if (h > 0) parts.push(h + 'h');
+    if (m > 0) parts.push(m + 'm');
+    parts.push(sec + 's');
+    return parts.join(' ');
+}
+
+
+function updateSparkline() {
+    const canvas = document.getElementById('memorySparkline');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (memorySparklineChart) memorySparklineChart.destroy();
+    const labels = _heapHistory.map((_, i) => i === _heapHistory.length - 1 ? 'now' : '');
+    memorySparklineChart = new Chart(ctx, {
+        type: 'line',
         data: {
-            labels: Object.keys(data),
-            datasets: [
-                {
-                    label: "Groups",
-                    data: Object.values(data),
-                    backgroundColor: [
-                        "rgba(0, 217, 255, 0.8)",
-                        "rgba(185, 103, 255, 0.8)",
-                        "rgba(255, 0, 110, 0.8)",
-                        "rgba(5, 255, 161, 0.8)",
-                        "rgba(255, 251, 0, 0.8)",
-                        "rgba(255, 69, 0, 0.8)",
-                    ],
-                    borderColor: [
-                        "#00d9ff",
-                        "#b967ff",
-                        "#ff006e",
-                        "#05ffa1",
-                        "#fffb00",
-                        "#ff4500",
-                    ],
-                    borderWidth: 2,
-                },
-            ],
+            labels,
+            datasets: [{
+                data: _heapHistory,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99,102,241,0.08)',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: true,
+                tension: 0.4,
+            }],
         },
         options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false,
-                },
-            },
+            responsive: true, maintainAspectRatio: false,
+            animation: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + ' MB' } } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: "#00d9ff",
-                        font: {
-                            family: "'Orbitron', sans-serif",
-                        },
-                    },
-                    grid: {
-                        color: "rgba(185, 103, 255, 0.1)",
-                    },
-                },
-                x: {
-                    ticks: {
-                        color: "#00d9ff",
-                        font: {
-                            family: "'Orbitron', sans-serif",
-                        },
-                    },
-                    grid: {
-                        color: "rgba(185, 103, 255, 0.1)",
-                    },
-                },
+                x: { display: false },
+                y: { display: true, ticks: { color: '#4a5678', font: { size: 10 }, callback: v => v.toFixed(0) + ' MB' }, grid: { color: 'rgba(99,102,241,0.06)' } },
             },
         },
     });
 }
+
+// Update user distribution — CSS horizontal bars
+function updateUserChart(data) {
+    const total = Object.values(data).reduce((s, v) => s + v, 0);
+    const badge = document.getElementById('ud-total-badge');
+    if (badge) badge.textContent = `${total} total`;
+
+    const container = document.getElementById('user-distribution-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const ROLE_CONFIG = {
+        free:    { color: '#818cf8', bar: 'linear-gradient(90deg,#6366f1,#818cf8)' },
+        premium: { color: '#fbbf24', bar: 'linear-gradient(90deg,#f59e0b,#fbbf24)' },
+        owner:   { color: '#34d399', bar: 'linear-gradient(90deg,#10b981,#34d399)' },
+        banned:  { color: '#fb7185', bar: 'linear-gradient(90deg,#f43f5e,#fb7185)' },
+    };
+
+    const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+    sorted.forEach(([role, count]) => {
+        const cfg = ROLE_CONFIG[role] || { color: '#94a3b8', bar: 'linear-gradient(90deg,#64748b,#94a3b8)' };
+        const pct = total > 0 ? ((count / total) * 100) : 0;
+        const row = document.createElement('div');
+        row.className = 'dist-row';
+        row.innerHTML = `
+            <span class="dist-dot" style="background:${cfg.color}"></span>
+            <span class="dist-label">${role}</span>
+            <div class="dist-bar-track">
+                <div class="dist-bar-fill" style="width:0%;background:${cfg.bar}" data-target="${pct.toFixed(1)}"></div>
+            </div>
+            <span class="dist-count">${count}</span>
+            <span class="dist-pct">${pct.toFixed(0)}%</span>`;
+        container.appendChild(row);
+    });
+
+    // Animate bars after paint
+    requestAnimationFrame(() => {
+        container.querySelectorAll('.dist-bar-fill').forEach(el => {
+            el.style.width = el.dataset.target + '%';
+        });
+    });
+}
+
+// Update group settings — icon mini-card grid
+function updateGroupSettingsChart(data) {
+    const totalGroups = Object.values(data).reduce((s, v) => s + v, 0);
+    const badge = document.getElementById('gs-active-badge');
+    if (badge) badge.textContent = `${totalGroups} active`;
+
+    const container = document.getElementById('group-settings-grid');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const GS_CONFIG = {
+        antilink: { icon: 'fa-link-slash',    color: '#818cf8', bg: 'rgba(99,102,241,0.15)',  label: 'Anti-Link' },
+        antibot:  { icon: 'fa-robot',          color: '#f87171', bg: 'rgba(239,68,68,0.15)',   label: 'Anti-Bot'  },
+        welcome:  { icon: 'fa-door-open',      color: '#34d399', bg: 'rgba(16,185,129,0.15)',  label: 'Welcome'   },
+        notify:   { icon: 'fa-bell',           color: '#fbbf24', bg: 'rgba(245,158,11,0.15)',  label: 'Notify'    },
+        mute:     { icon: 'fa-microphone-slash',color: '#fb7185', bg: 'rgba(244,63,94,0.15)',  label: 'Mute'      },
+    };
+
+    Object.entries(data).forEach(([key, count]) => {
+        const cfg = GS_CONFIG[key] || { icon: 'fa-gear', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', label: key };
+        const isOn = count > 0;
+        const item = document.createElement('div');
+        item.className = `gs-item${isOn ? ' gs-on' : ''}`;
+        item.innerHTML = `
+            <div class="gs-icon" style="background:${isOn ? cfg.bg : 'rgba(148,163,184,0.06)'};color:${isOn ? cfg.color : '#4a5568'}">
+                <i class="fas ${cfg.icon}"></i>
+            </div>
+            <div class="gs-count" style="color:${isOn ? cfg.color : 'var(--text-subtle)'}">${count}</div>
+            <div class="gs-name">${cfg.label}</div>`;
+        container.appendChild(item);
+    });
+}
+
+
 
 // Load groups
 async function loadGroups(page = 1) {
@@ -389,49 +572,57 @@ async function loadGroups(page = 1) {
 
         if (data.groups.length === 0) {
             tbody.innerHTML =
-                '<tr><td colspan="5" class="text-center py-4" style="color: #b967ff;">No groups found</td></tr>';
+                '<tr><td colspan="6" class="table-empty">No groups found</td></tr>';
             return;
         }
 
+        const GS_ICONS = [
+            { key: 'antilink', check: s => s.antilink?.status, icon: 'fa-link-slash',      color: '#818cf8', label: 'Anti-Link' },
+            { key: 'antibot',  check: s => s.antibot,          icon: 'fa-robot',            color: '#f87171', label: 'Anti-Bot'  },
+            { key: 'welcome',  check: s => s.welcome,          icon: 'fa-door-open',        color: '#34d399', label: 'Welcome'   },
+            { key: 'notify',   check: s => s.notify,           icon: 'fa-bell',             color: '#fbbf24', label: 'Notify'    },
+            { key: 'mute',     check: s => s.mute,             icon: 'fa-microphone-slash', color: '#fb7185', label: 'Mute'      },
+        ];
+
         data.groups.forEach((group) => {
             const row = document.createElement("tr");
-            row.className = "border-b";
-            row.style.borderColor = "rgba(185, 103, 255, 0.2)";
+            row.className = "";
+
+            const settingIcons = GS_ICONS.map(({ check, icon, color, label }) => {
+                const on = check(group.settings || {});
+                return `<span title="${label}" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;font-size:0.7rem;
+                    background:${on ? `${color}22` : 'rgba(148,163,184,0.06)'};
+                    color:${on ? color : '#2d3a50'};
+                    border:1px solid ${on ? `${color}44` : 'transparent'};
+                    transition:all .2s">
+                    <i class="fas ${icon}"></i>
+                </span>`;
+            }).join('');
+
+            const botAdminBadge = group.botIsAdmin
+                ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);font-weight:600"><i class="fas fa-shield-halved" style="margin-right:3px"></i>Admin</span>`
+                : `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(148,163,184,0.08);color:#4a5678;border:1px solid rgba(148,163,184,0.15)">Member</span>`;
 
             row.innerHTML = `
-                <td class="px-2 md:px-4 py-2 text-xs md:text-sm">${escapeHtml(
-                    group.subject
-                )}</td>
-                <td class="px-2 md:px-4 py-2 text-xs md:text-sm">${
-                    group.participantsCount
-                }</td>
-                <td class="px-2 md:px-4 py-2">
-                    ${
-                        group.settings.antilink?.status
-                            ? '<span class="text-xs px-2 py-1 rounded" style="background: rgba(5, 255, 161, 0.2); color: #05ffa1; border: 1px solid #05ffa1;">Antilink</span>'
-                            : ""
-                    }
-                    ${
-                        group.settings.antibot
-                            ? '<span class="text-xs px-2 py-1 rounded" style="background: rgba(0, 217, 255, 0.2); color: #00d9ff; border: 1px solid #00d9ff;">Antibot</span>'
-                            : ""
-                    }
-                    ${
-                        group.settings.mute
-                            ? '<span class="text-xs px-2 py-1 rounded" style="background: rgba(255, 0, 110, 0.2); color: #ff006e; border: 1px solid #ff006e;">Muted</span>'
-                            : ""
-                    }
-                </td>
-                <td class="px-2 md:px-4 py-2 text-xs md:text-sm">${new Date(
-                    group.createdAt
-                ).toLocaleDateString()}</td>
-                <td class="px-2 md:px-4 py-2">
-                    <button class="btn-delete-group px-2 py-1 rounded text-xs hover:opacity-80"
-                        style="background: rgba(255, 0, 110, 0.2); color: #ff006e; border: 1px solid #ff006e;">
+                <td>${escapeHtml(group.subject)}</td>
+                <td>${group.participantsCount}</td>
+                <td><div style="display:flex;gap:3px;align-items:center">${settingIcons}</div></td>
+                <td>${botAdminBadge}</td>
+                <td>${new Date(group.createdAt).toLocaleDateString()}</td>
+                <td style="display:flex;gap:4px">
+                    <button class="btn-settings-group" title="Edit Settings" style="padding:4px 10px;border-radius:6px;font-size:0.8125rem;background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);cursor:pointer">
+                        <i class="fas fa-sliders"></i>
+                    </button>
+                    <button class="btn-delete-group" title="Delete" style="padding:4px 10px;border-radius:6px;font-size:0.8125rem;background:rgba(220,38,38,0.12);color:#f87171;border:1px solid rgba(220,38,38,0.25);cursor:pointer">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
+
+            const settingsBtn = row.querySelector(".btn-settings-group");
+            settingsBtn.addEventListener("click", () => {
+                openGroupModal(group);
+            });
 
             const deleteBtn = row.querySelector(".btn-delete-group");
             deleteBtn.addEventListener("click", () => {
@@ -470,58 +661,47 @@ async function loadUsers(page = 1) {
 
         if (data.users.length === 0) {
             tbody.innerHTML =
-                '<tr><td colspan="6" class="text-center py-4" style="color: #b967ff;">No users found</td></tr>';
+                '<tr><td colspan="6" class="table-empty">No users found</td></tr>';
             return;
         }
 
         data.users.forEach((user) => {
             const row = document.createElement("tr");
-            row.className = "border-b";
-            row.style.borderColor = "rgba(185, 103, 255, 0.2)";
+            row.className = "";
 
             row.innerHTML = `
-                <td class="px-2 md:px-4 py-2 font-mono text-xs">${escapeHtml(
-                    user.userId
-                ).substring(0, 20)}...</td>
-                <td class="px-2 md:px-4 py-2 text-xs md:text-sm">${escapeHtml(
-                    user.name || "Unknown"
-                )}</td>
-                <td class="px-2 md:px-4 py-2">
-                    <span class="text-xs px-2 py-1 rounded" style="${
+                <td style="font-family:monospace;font-size:0.8125rem">${escapeHtml(user.userId).substring(0, 20)}...</td>
+                <td>${escapeHtml(user.name || "Unknown")}</td>
+                <td>
+                    <span style="font-size:0.75rem;padding:2px 8px;border-radius:5px;${
                         user.role === "premium"
-                            ? "background: rgba(185, 103, 255, 0.2); color: #b967ff; border: 1px solid #b967ff;"
-                            : "background: rgba(0, 217, 255, 0.2); color: #00d9ff; border: 1px solid #00d9ff;"
-                    }">
-                        ${user.role}
-                    </span>
+                            ? "background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)"
+                            : "background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3)"
+                    }">${user.role}</span>
                 </td>
-                <td class="px-2 md:px-4 py-2 text-xs md:text-sm">${
-                    user.limit
-                }</td>
-                <td class="px-2 md:px-4 py-2">
+                <td>${user.limit}</td>
+                <td style="display:flex;gap:4px;flex-wrap:wrap;padding:0.6875rem 0.875rem">
                     ${
                         user.isBanned
-                            ? '<span class="text-xs px-2 py-1 rounded" style="background: rgba(255, 69, 0, 0.2); color: #ff4500; border: 1px solid #ff4500;">Banned</span>'
+                            ? '<span style="font-size:0.75rem;padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.15);color:#f87171;border:1px solid rgba(220,38,38,0.3)">Banned</span>'
                             : ""
                     }
                     ${
                         user.afk.status
-                            ? '<span class="text-xs px-2 py-1 rounded" style="background: rgba(255, 251, 0, 0.2); color: #fffb00; border: 1px solid #fffb00;">AFK</span>'
+                            ? '<span style="font-size:0.75rem;padding:2px 8px;border-radius:5px;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">AFK</span>'
                             : ""
                     }
                     ${
                         user.isExpired
-                            ? '<span class="text-xs px-2 py-1 rounded" style="background: rgba(255, 0, 110, 0.2); color: #ff006e; border: 1px solid #ff006e;">Expired</span>'
+                            ? '<span style="font-size:0.75rem;padding:2px 8px;border-radius:5px;background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.3)">Expired</span>'
                             : ""
                     }
                 </td>
-                <td class="px-2 md:px-4 py-2">
-                    <button class="btn-edit-user px-2 py-1 rounded text-xs mr-1 hover:opacity-80"
-                        style="background: rgba(0, 217, 255, 0.2); color: #00d9ff; border: 1px solid #00d9ff;">
+                <td>
+                    <button class="btn-edit-user" style="padding:4px 10px;border-radius:6px;font-size:0.8125rem;background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);cursor:pointer;margin-right:4px">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-delete-user px-2 py-1 rounded text-xs hover:opacity-80"
-                        style="background: rgba(255, 0, 110, 0.2); color: #ff006e; border: 1px solid #ff006e;">
+                    <button class="btn-delete-user" style="padding:4px 10px;border-radius:6px;font-size:0.8125rem;background:rgba(220,38,38,0.12);color:#f87171;border:1px solid rgba(220,38,38,0.25);cursor:pointer">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -550,7 +730,7 @@ async function loadUsers(page = 1) {
 // Load logs
 async function loadLogs(page = 1) {
     const level = document.getElementById("filter-log-level").value;
-    const params = new URLSearchParams({ page, limit: 50, level });
+    const params = new URLSearchParams({ page, limit: 100, level });
 
     try {
         const data = await authFetch(`${API_BASE}/logs?${params}`).then((r) =>
@@ -560,30 +740,54 @@ async function loadLogs(page = 1) {
         const container = document.getElementById("logs-container");
         container.innerHTML = "";
 
-        if (data.logs.length === 0) {
-            container.innerHTML =
-                '<p class="text-center" style="color: #b967ff;">No logs available</p>';
+        if (!data.logs || data.logs.length === 0) {
+            container.innerHTML = '<p class="table-empty">No logs available</p>';
             return;
         }
 
-        data.logs.forEach((log) => {
-            const logEl = document.createElement("div");
-            logEl.className = `p-3 rounded ${getLogLevelClass(log.level)}`;
-            logEl.innerHTML = `
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <span class="font-semibold">[${log.level.toUpperCase()}]</span>
-                        <span class="text-sm">${escapeHtml(log.message)}</span>
-                    </div>
-                    <span class="text-xs opacity-75">${new Date(
-                        log.timestamp
-                    ).toLocaleString()}</span>
-                </div>
-            `;
-            container.appendChild(logEl);
-        });
+        const lines = data.logs.map((log) => {
+            const { pill, textColor, bg, border } = getLogMeta(log.level);
+            const ts = formatLogTime(log.timestamp);
+            const msg = escapeHtml(log.message);
+            return `<div class="log-line" style="display:flex;align-items:flex-start;gap:0.625rem;padding:0.4375rem 0.875rem;border-bottom:1px solid rgba(99,102,241,0.05);transition:background 0.12s;" onmouseenter="this.style.background='rgba(99,102,241,0.04)'" onmouseleave="this.style.background=''">
+                <span style="flex-shrink:0;font-size:0.6875rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text-subtle);padding-top:1px;min-width:100px;white-space:nowrap;">${ts}</span>
+                <span style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;min-width:48px;padding:2px 6px;border-radius:5px;border:1px solid ${border};background:${bg};color:${textColor};">${pill}</span>
+                <span style="flex:1;font-family:'JetBrains Mono','Fira Code',monospace;font-size:0.8125rem;color:${textColor};line-height:1.55;word-break:break-all;white-space:pre-wrap;">${msg}</span>
+            </div>`;
+        }).join('');
+
+        container.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;">${lines}</div>`;
     } catch (error) {
         console.error("Failed to load logs:", error);
+    }
+}
+
+function formatLogTime(timestamp) {
+    try {
+        const d = new Date(timestamp);
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const dy = String(d.getDate()).padStart(2, '0');
+        const hr = String(d.getHours()).padStart(2, '0');
+        const mn = String(d.getMinutes()).padStart(2, '0');
+        const sc = String(d.getSeconds()).padStart(2, '0');
+        return `${mo}/${dy} ${hr}:${mn}:${sc}`;
+    } catch { return '—'; }
+}
+
+function getLogMeta(level) {
+    switch ((level || '').toLowerCase()) {
+        case 'error':
+            return { pill: 'ERROR', textColor: '#f87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.25)' };
+        case 'warn':
+            return { pill: 'WARN',  textColor: '#fbbf24', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' };
+        case 'info':
+            return { pill: 'INFO',  textColor: '#94a3b8', bg: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.20)' };
+        case 'debug':
+            return { pill: 'DEBUG', textColor: '#67e8f9', bg: 'rgba(6,182,212,0.10)',  border: 'rgba(6,182,212,0.20)' };
+        case 'connect':
+            return { pill: 'CONN',  textColor: '#34d399', bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.22)' };
+        default:
+            return { pill: (level || 'LOG').slice(0, 5).toUpperCase(), textColor: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.15)' };
     }
 }
 
@@ -609,14 +813,14 @@ async function loadSystem() {
 
         const details = document.getElementById("system-details");
         details.innerHTML = `
-            <div class="space-y-2">
-                <p><strong style="color: #ff006e;">Platform:</strong> <span style="color: #00d9ff;">${system.platform}</span></p>
-                <p><strong style="color: #ff006e;">Node Version:</strong> <span style="color: #00d9ff;">${system.nodeVersion}</span></p>
-                <p><strong style="color: #ff006e;">Process ID:</strong> <span style="color: #00d9ff;">${system.pid}</span></p>
-                <p><strong style="color: #ff006e;">Memory RSS:</strong> <span style="color: #00d9ff;">${system.memory.rss}</span></p>
-                <p><strong style="color: #ff006e;">Memory Heap Total:</strong> <span style="color: #00d9ff;">${system.memory.heapTotal}</span></p>
-                <p><strong style="color: #ff006e;">Memory Heap Used:</strong> <span style="color: #00d9ff;">${system.memory.heapUsed}</span></p>
-                <p><strong style="color: #ff006e;">Memory External:</strong> <span style="color: #00d9ff;">${system.memory.external}</span></p>
+            <div class="sysinfo-list">
+                <div class="sysinfo-row"><span class="sysinfo-key">Platform</span><span class="sysinfo-val">${system.platform}</span></div>
+                <div class="sysinfo-row"><span class="sysinfo-key">Node Version</span><span class="sysinfo-val">${system.nodeVersion}</span></div>
+                <div class="sysinfo-row"><span class="sysinfo-key">Process ID</span><span class="sysinfo-val">${system.pid}</span></div>
+                <div class="sysinfo-row"><span class="sysinfo-key">Memory RSS</span><span class="sysinfo-val">${system.memory.rss}</span></div>
+                <div class="sysinfo-row"><span class="sysinfo-key">Heap Total</span><span class="sysinfo-val">${system.memory.heapTotal}</span></div>
+                <div class="sysinfo-row"><span class="sysinfo-key">Heap Used</span><span class="sysinfo-val">${system.memory.heapUsed}</span></div>
+                <div class="sysinfo-row"><span class="sysinfo-key">External</span><span class="sysinfo-val">${system.memory.external}</span></div>
             </div>
         `;
 
@@ -647,11 +851,11 @@ function updateMemoryChart(memory) {
                         parseMemory(memory.external),
                     ],
                     backgroundColor: [
-                        "rgba(255, 0, 110, 0.8)",
-                        "rgba(5, 255, 161, 0.8)",
-                        "rgba(255, 251, 0, 0.8)",
+                        "rgba(244,63,94,0.8)",
+                        "rgba(16,185,129,0.8)",
+                        "rgba(245,158,11,0.8)",
                     ],
-                    borderColor: ["#ff006e", "#05ffa1", "#fffb00"],
+                    borderColor: ["#f43f5e", "#10b981", "#f59e0b"],
                     borderWidth: 2,
                 },
             ],
@@ -662,9 +866,9 @@ function updateMemoryChart(memory) {
                 legend: {
                     position: "bottom",
                     labels: {
-                        color: "#00d9ff",
+                        color: "#94a3b8",
                         font: {
-                            family: "'Orbitron', sans-serif",
+                            family: "'Inter', system-ui, sans-serif",
                             size: 12,
                         },
                     },
@@ -684,13 +888,11 @@ function updatePagination(type, pagination) {
     for (let i = 1; i <= pagination.totalPages; i++) {
         const btn = document.createElement("button");
         btn.textContent = i;
-        btn.className = `px-3 py-1 rounded glow-button`;
+        btn.className = `glow-button`;
         if (i === pagination.page) {
-            btn.style.cssText =
-                "background: linear-gradient(45deg, #ff006e, #b967ff); color: white;";
+            btn.style.cssText = "background:#6366f1;color:#fff;font-weight:600";
         } else {
-            btn.style.cssText =
-                "background: rgba(21, 25, 50, 0.8); color: #00d9ff; border: 1px solid rgba(185, 103, 255, 0.3);";
+            btn.style.cssText = "background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)";
         }
         btn.addEventListener("click", () => {
             currentPage[type] = i;
@@ -719,31 +921,6 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
-}
-
-function getLogLevelClass(level) {
-    switch (level.toLowerCase()) {
-        case "error":
-            return (
-                "border-l-4" +
-                ' style="background: rgba(255, 0, 110, 0.1); border-color: #ff006e; color: #ff006e;"'
-            );
-        case "warn":
-            return (
-                "border-l-4" +
-                ' style="background: rgba(255, 251, 0, 0.1); border-color: #fffb00; color: #fffb00;"'
-            );
-        case "info":
-            return (
-                "border-l-4" +
-                ' style="background: rgba(0, 217, 255, 0.1); border-color: #00d9ff; color: #00d9ff;"'
-            );
-        default:
-            return (
-                "border-l-4" +
-                ' style="background: rgba(185, 103, 255, 0.1); border-color: #b967ff; color: #b967ff;"'
-            );
-    }
 }
 
 function parseMemory(memStr) {
@@ -900,14 +1077,14 @@ async function updateGroupSettings(groupId, settings) {
         const data = await response.json();
 
         if (response.ok) {
-            alert("Group settings updated successfully!");
+            showToast("Group settings updated!", "success");
             closeGroupModal();
             loadGroups();
         } else {
-            alert(`Error: ${data.error}`);
+            showToast(data.error || "Failed to update settings", "error");
         }
     } catch (error) {
-        alert("Failed to update group settings");
+        showToast("Failed to update group settings", "error");
         console.error(error);
     }
 }
@@ -985,3 +1162,336 @@ window.addEventListener("click", (e) => {
         e.target.classList.remove("show");
     }
 });
+
+// ===== Toast Helper =====
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+    toast.innerHTML = `<i class="fas ${icon}"></i><span>${String(message)}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ===== Settings =====
+let _cachedConfig = null;
+const SETTING_META = [
+    { key: 'ownerNotifyOnline', name: 'Owner Notify Online', desc: 'Notifikasi ke owner saat bot online' },
+    { key: 'useLimit',          name: 'Use Limit',           desc: 'Aktifkan limit penggunaan command per user' },
+    { key: 'useCooldown',       name: 'Use Cooldown',        desc: 'Aktifkan cooldown antar penggunaan command' },
+    { key: 'selfbot',           name: 'Selfbot Mode',        desc: 'Bot hanya merespons owner saja' },
+    { key: 'autoReadMessage',   name: 'Auto Read Message',   desc: 'Otomatis centang biru pesan masuk' },
+    { key: 'autoReadStatus',    name: 'Auto Read Status',    desc: 'Otomatis lihat story kontak' },
+    { key: 'autoCorrect',       name: 'Auto Correct',        desc: 'Koreksi otomatis typo command' },
+];
+
+async function loadSettings() {
+    const profile = JSON.parse(localStorage.getItem('adminProfile') || '{}');
+    const isOwner = profile.role === 'owner';
+    document.getElementById('settings-owner-only')?.classList.toggle('hidden', isOwner);
+    document.getElementById('settings-content')?.classList.toggle('hidden', !isOwner);
+    if (!isOwner) return;
+    try {
+        const data = await authFetch(`${API_BASE}/config`).then(r => r.json());
+        if (!data.success) return showToast('Gagal memuat config', 'error');
+        _cachedConfig = data.config;
+        renderSettingsToggles(data.config.settings);
+        document.getElementById('cfg-prefix').value = data.config.prefix || '.';
+        document.getElementById('cfg-timezone').value = data.config.timeZone || '';
+        document.getElementById('cfg-limit').value = data.config.limit?.command || 30;
+        document.getElementById('cfg-call').value = data.config.call?.status || 'reject';
+        document.getElementById('cfg-sticker-pack').value = data.config.stickers?.packname || '';
+        document.getElementById('cfg-sticker-author').value = data.config.stickers?.author || '';
+    } catch { showToast('Gagal memuat settings', 'error'); }
+}
+
+function renderSettingsToggles(settings) {
+    const wrap = document.getElementById('settings-toggles');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    SETTING_META.forEach(({ key, name, desc }) => {
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        row.innerHTML = `
+            <div class="setting-info">
+                <div class="setting-name">${name}</div>
+                <div class="setting-desc">${desc}</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" data-key="${key}" ${settings[key] ? 'checked' : ''} />
+                <span class="toggle-slider"></span>
+            </label>`;
+        wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('input[type=checkbox]').forEach(chk => {
+        chk.addEventListener('change', async () => {
+            try {
+                const res = await authFetch(`${API_BASE}/config/settings`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [chk.dataset.key]: chk.checked }),
+                }).then(r => r.json());
+                showToast(res.success ? 'Setting diperbarui' : (res.message || 'Gagal'), res.success ? 'success' : 'error');
+                if (!res.success) chk.checked = !chk.checked;
+            } catch { chk.checked = !chk.checked; showToast('Koneksi bermasalah', 'error'); }
+        });
+    });
+}
+
+document.getElementById('settings-save')?.addEventListener('click', async () => {
+    try {
+        const res = await authFetch(`${API_BASE}/config/general`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prefix: document.getElementById('cfg-prefix').value,
+                timeZone: document.getElementById('cfg-timezone').value,
+                limit: { command: Number(document.getElementById('cfg-limit').value) },
+                call: { status: document.getElementById('cfg-call').value },
+                stickers: {
+                    packname: document.getElementById('cfg-sticker-pack').value,
+                    author: document.getElementById('cfg-sticker-author').value,
+                },
+            }),
+        }).then(r => r.json());
+        showToast(res.success ? 'Config disimpan!' : (res.message || 'Gagal'), res.success ? 'success' : 'error');
+    } catch { showToast('Gagal menyimpan config', 'error'); }
+});
+
+document.getElementById('settings-reset')?.addEventListener('click', () => {
+    if (_cachedConfig) {
+        renderSettingsToggles(_cachedConfig.settings);
+        document.getElementById('cfg-prefix').value = _cachedConfig.prefix || '.';
+        document.getElementById('cfg-timezone').value = _cachedConfig.timeZone || '';
+        document.getElementById('cfg-limit').value = _cachedConfig.limit?.command || 30;
+        document.getElementById('cfg-call').value = _cachedConfig.call?.status || 'reject';
+        document.getElementById('cfg-sticker-pack').value = _cachedConfig.stickers?.packname || '';
+        document.getElementById('cfg-sticker-author').value = _cachedConfig.stickers?.author || '';
+        showToast('Form direset ke nilai tersimpan');
+    }
+});
+
+let _maintenanceCommands = [];
+let _maintenance = [];
+
+async function toggleMaintenance(name) {
+    const inMaint = _maintenance.includes(name);
+    try {
+        let res;
+        if (inMaint) {
+            res = await authFetch(`${API_BASE}/config/maintenance/${encodeURIComponent(name)}`, { method: 'DELETE' }).then(r => r.json());
+        } else {
+            res = await authFetch(`${API_BASE}/config/maintenance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: name }),
+            }).then(r => r.json());
+        }
+        if (res.success) {
+            _maintenance = res.maintenance;
+            renderCommandsTable();
+            showToast(inMaint ? `${name} dihapus dari maintenance` : `${name} ditambah ke maintenance`);
+        } else {
+            showToast(res.message || 'Gagal', 'error');
+        }
+    } catch { showToast('Koneksi bermasalah', 'error'); }
+}
+
+let _allCommands = [];
+let _commandsPage = 1;
+const CMDS_PER_PAGE = 20;
+
+async function loadCommands() {
+    const profile = JSON.parse(localStorage.getItem('adminProfile') || '{}');
+    const isOwner = profile.role === 'owner';
+    document.getElementById('commands-owner-only')?.classList.toggle('hidden', isOwner);
+    document.getElementById('commands-content')?.classList.toggle('hidden', !isOwner);
+    if (!isOwner) return;
+
+    document.getElementById('commands-table').innerHTML = `<tr><td colspan="12" class="table-empty">Loading...</td></tr>`;
+    try {
+        const [cmdRes, maintRes] = await Promise.all([
+            authFetch(`${API_BASE}/config/commands`).then(r => r.json()),
+            authFetch(`${API_BASE}/config/maintenance`).then(r => r.json()),
+        ]);
+        if (!cmdRes.success) return showToast(cmdRes.message || 'Gagal memuat commands', 'error');
+        _allCommands = cmdRes.commands;
+        _maintenance = maintRes.maintenance || [];
+
+        // Populate category filter
+        const catSel = document.getElementById('filter-cmd-category');
+        const cats = [...new Set(_allCommands.map(c => c.category))].sort();
+        catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        _commandsPage = 1;
+        renderCommandsTable();
+    } catch { showToast('Gagal memuat commands', 'error'); }
+}
+
+function renderCommandsTable() {
+    const search = (document.getElementById('search-commands')?.value || '').toLowerCase();
+    const cat = document.getElementById('filter-cmd-category')?.value || '';
+    const overrideFilter = document.getElementById('filter-cmd-override')?.value || '';
+
+    let filtered = _allCommands.filter(c => {
+        if (search && !c.name.includes(search) && !c.description?.toLowerCase().includes(search)) return false;
+        if (cat && c.category !== cat) return false;
+        if (overrideFilter === 'overridden' && !c.override) return false;
+        return true;
+    });
+
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / CMDS_PER_PAGE));
+    _commandsPage = Math.min(_commandsPage, totalPages);
+    const start = (_commandsPage - 1) * CMDS_PER_PAGE;
+    const page = filtered.slice(start, start + CMDS_PER_PAGE);
+
+    const tbody = document.getElementById('commands-table');
+
+    function badge(val, def) {
+        const effective = val ?? def;
+        const hasOverride = val !== null && val !== undefined;
+        const color = effective ? '#22c55e' : 'var(--text-subtle)';
+        const icon = effective ? 'check' : 'times';
+        return `<i class="fas fa-${icon}" style="color:${color};${hasOverride ? 'font-weight:700;' : ''}"></i>`;
+    }
+    function numBadge(val, def) {
+        const hasOverride = val !== null && val !== undefined;
+        const display = hasOverride ? val : (def ?? '—');
+        return `<span style="color:${hasOverride ? '#a5b4fc' : 'var(--text-subtle)'}">${display}</span>`;
+    }
+
+    if (!page.length) {
+        tbody.innerHTML = `<tr><td colspan="12" class="table-empty">Tidak ada command ditemukan</td></tr>`;
+    } else {
+        tbody.innerHTML = page.map(cmd => {
+            const ov = cmd.override || {};
+            const hasOverride = !!cmd.override && Object.keys(cmd.override).length > 0;
+            const inMaint = _maintenance.includes(cmd.name);
+            const maintBtn = `<label class="toggle-switch toggle-green" title="${inMaint ? 'Nonaktifkan maintenance' : 'Aktifkan maintenance'}" onclick="event.preventDefault();toggleMaintenance('${cmd.name}')">
+                <input type="checkbox" ${inMaint ? 'checked' : ''} readonly />
+                <span class="toggle-slider"></span>
+            </label>`;
+            return `<tr>
+                <td><strong style="color:var(--text)">${cmd.name}</strong>
+                    ${cmd.alias?.length ? `<br><span style="font-size:0.7rem;color:var(--text-subtle)">${cmd.alias.join(', ')}</span>` : ''}
+                </td>
+                <td><span style="font-size:0.75rem;background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:6px;color:#a5b4fc">${cmd.category}</span></td>
+                <td class="hide-sm" style="text-align:center">${badge(ov.isOwner !== undefined ? ov.isOwner : null, cmd.isOwner)}</td>
+                <td class="hide-sm" style="text-align:center">${badge(ov.isTeam !== undefined ? ov.isTeam : null, cmd.isTeam)}</td>
+                <td class="hide-sm" style="text-align:center">${badge(ov.isPremium !== undefined ? ov.isPremium : null, cmd.isPremium)}</td>
+                <td class="hide-sm" style="text-align:center">${badge(ov.isPrivate !== undefined ? ov.isPrivate : null, cmd.isPrivate)}</td>
+                <td class="hide-sm" style="text-align:center">${badge(ov.isGroup !== undefined ? ov.isGroup : null, cmd.isGroup)}</td>
+                <td class="hide-sm">${numBadge(ov.cooldown !== undefined ? ov.cooldown : null, cmd.cooldown)}s</td>
+                <td class="hide-sm">${numBadge(ov.limit !== undefined ? ov.limit : null, cmd.limit)}</td>
+                <td>${hasOverride ? '<span style="font-size:0.75rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;padding:2px 8px;border-radius:6px;">Modified</span>' : '<span style="color:var(--text-subtle);font-size:0.75rem;">Default</span>'}</td>
+                <td style="text-align:center">${maintBtn}</td>
+                <td><button onclick="openCommandModal('${cmd.name}')" class="btn btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.8rem;"><i class="fas fa-pen"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Pagination
+    const pag = document.getElementById('commands-pagination');
+    if (pag) {
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<button class="glow-button ${i === _commandsPage ? 'btn-primary' : 'btn-ghost'}" onclick="goCommandsPage(${i})">${i}</button>`;
+        }
+        pag.innerHTML = html;
+    }
+}
+
+function goCommandsPage(page) {
+    _commandsPage = page;
+    renderCommandsTable();
+}
+
+function openCommandModal(name) {
+    const cmd = _allCommands.find(c => c.name === name);
+    if (!cmd) return;
+    const ov = cmd.override || {};
+
+    document.getElementById('cmd-modal-name').textContent = name;
+    document.getElementById('cmd-modal-cmdname').value = name;
+
+    // Set effective values (override takes precedence, else file default)
+    const fields = ['isOwner','isTeam','isPremium','isPrivate','isGroup','isGroupAdmin','isGroupOwner','isBotAdmin'];
+    fields.forEach(f => {
+        const el = document.getElementById(`cmd-${f}`);
+        if (el) el.checked = ov[f] !== undefined ? ov[f] : cmd[f] || false;
+    });
+
+    const cdEl = document.getElementById('cmd-cooldown');
+    const limEl = document.getElementById('cmd-limit');
+    if (cdEl) cdEl.value = ov.cooldown !== undefined ? ov.cooldown : (cmd.cooldown ?? '');
+    if (limEl) limEl.value = ov.limit !== undefined ? ov.limit : (cmd.limit ?? '');
+
+    document.getElementById('command-modal').classList.add('show');
+}
+
+function closeCommandModal() {
+    document.getElementById('command-modal').classList.remove('show');
+}
+
+document.getElementById('command-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('cmd-modal-cmdname').value;
+    const payload = {
+        isOwner: document.getElementById('cmd-isOwner').checked,
+        isTeam: document.getElementById('cmd-isTeam').checked,
+        isPremium: document.getElementById('cmd-isPremium').checked,
+        isPrivate: document.getElementById('cmd-isPrivate').checked,
+        isGroup: document.getElementById('cmd-isGroup').checked,
+        isGroupAdmin: document.getElementById('cmd-isGroupAdmin').checked,
+        isGroupOwner: document.getElementById('cmd-isGroupOwner').checked,
+        isBotAdmin: document.getElementById('cmd-isBotAdmin').checked,
+        cooldown: document.getElementById('cmd-cooldown').value !== '' ? Number(document.getElementById('cmd-cooldown').value) : null,
+        limit: document.getElementById('cmd-limit').value !== '' ? Number(document.getElementById('cmd-limit').value) : null,
+    };
+    // Remove null values
+    Object.keys(payload).forEach(k => payload[k] === null && delete payload[k]);
+
+    try {
+        const res = await authFetch(`${API_BASE}/config/commands/${encodeURIComponent(name)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }).then(r => r.json());
+
+        if (res.success) {
+            showToast(`Override saved for ${name}`);
+            closeCommandModal();
+            loadCommands();
+        } else {
+            showToast(res.message || 'Gagal menyimpan', 'error');
+        }
+    } catch { showToast('Koneksi bermasalah', 'error'); }
+});
+
+document.getElementById('cmd-reset-btn')?.addEventListener('click', async () => {
+    const name = document.getElementById('cmd-modal-cmdname').value;
+    if (!name) return;
+    if (!confirm(`Reset semua override untuk command "${name}"?`)) return;
+    try {
+        const res = await authFetch(`${API_BASE}/config/commands/${encodeURIComponent(name)}/override`, { method: 'DELETE' }).then(r => r.json());
+        if (res.success) {
+            showToast(`Override reset for ${name}`);
+            closeCommandModal();
+            loadCommands();
+        } else {
+            showToast(res.message || 'Gagal reset', 'error');
+        }
+    } catch { showToast('Koneksi bermasalah', 'error'); }
+});
+
+document.getElementById('refresh-commands')?.addEventListener('click', () => loadCommands());
+document.getElementById('search-commands')?.addEventListener('input', debounce(() => renderCommandsTable(), 300));
+document.getElementById('filter-cmd-category')?.addEventListener('change', () => renderCommandsTable());
+document.getElementById('filter-cmd-override')?.addEventListener('change', () => renderCommandsTable());
+

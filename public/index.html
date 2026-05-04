@@ -1,1173 +1,608 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="id">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>ChisatoBot Dashboard</title>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <meta name="description" content="ChisatoBot monitoring and control dashboard." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>tailwind.config={important:true,corePlugins:{preflight:false}}</script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
         <style>
-            @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap");
-
+            *, *::before, *::after { box-sizing: border-box; }
             :root {
-                --neon-pink: #ff006e;
-                --neon-blue: #00d9ff;
-                --neon-purple: #b967ff;
-                --neon-yellow: #fffb00;
-                --neon-green: #05ffa1;
-                --dark-bg: #0a0e27;
-                --darker-bg: #050810;
-                --card-bg: #151932;
-                --border-color: rgba(185, 103, 255, 0.3);
+                --bg:#060d1f; --bg-card:rgba(13,22,45,0.9); --bg-input:rgba(4,10,23,0.8);
+                --border:rgba(99,102,241,0.12); --border-strong:rgba(99,102,241,0.22);
+                --accent:#6366f1; --text:#f0f4ff; --text-muted:#94a3b8; --text-subtle:#4a5678;
+                --sidebar-w:252px; --radius:14px;
             }
-
-            * {
-                font-family: "Orbitron", sans-serif;
+            html,body{background:var(--bg);margin:0;padding:0;min-height:100vh}
+            body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;
+                background-image:radial-gradient(ellipse 80% 50% at 15% -10%,rgba(99,102,241,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 110%,rgba(139,92,246,.10) 0%,transparent 60%)}
+            .sidebar{position:fixed;left:0;top:0;height:100%;width:var(--sidebar-w);
+                background:linear-gradient(180deg,rgba(5,10,25,.97) 0%,rgba(4,8,20,.99) 100%);
+                border-right:1px solid var(--border);display:flex;flex-direction:column;
+                transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:50;
+                box-shadow:4px 0 30px rgba(0,0,0,.3);backdrop-filter:blur(12px)}
+            @media(max-width:767px){.sidebar{transform:translateX(-100%)}}
+            .sidebar.mobile-open{transform:translateX(0)!important}
+            #mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:40;backdrop-filter:blur(4px)}
+            #mobile-overlay.show{display:block}
+            .nav-link{display:flex;align-items:center;gap:.75rem;padding:.5625rem .875rem;border-radius:10px;font-size:.875rem;font-weight:600;color:var(--text-subtle);text-decoration:none;cursor:pointer;transition:all .18s ease;border:none;background:transparent;width:100%;text-align:left;position:relative;overflow:hidden}
+            .nav-link::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:0;background:linear-gradient(180deg,#6366f1,#8b5cf6);border-radius:0 3px 3px 0;transition:height .2s ease}
+            .nav-link:hover{background:rgba(99,102,241,.08);color:var(--text)}.nav-link:hover::before{height:60%}
+            .sidebar-active{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.08))!important;color:#a5b4fc!important;border:1px solid rgba(99,102,241,.18)!important}
+            .sidebar-active::before{height:70%!important}
+            .nav-logout:hover{background:rgba(239,68,68,.08)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.15)!important}
+            .hamburger-btn{position:fixed;top:1rem;left:1rem;z-index:60;background:rgba(13,22,45,.9);border:1px solid var(--border);backdrop-filter:blur(12px);color:var(--text-muted);border-radius:10px;padding:.5rem .6rem;cursor:pointer;display:none;transition:all .15s;align-items:center}
+            .hamburger-btn:hover{color:var(--text);border-color:var(--accent)}
+            .hamburger-hidden{display:none!important}
+            .close-btn{position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--text-subtle);cursor:pointer;padding:.3rem;border-radius:6px;font-size:.875rem}
+            .close-btn:hover{color:var(--text)}
+            .main-content{margin-left:var(--sidebar-w);padding:2rem 2rem 3rem;min-height:100vh;position:relative;z-index:1}
+            @media(max-width:767px){.main-content{margin-left:0;padding:4.5rem 1rem 2rem}.hamburger-btn{display:flex}}
+            @media(min-width:768px){.hamburger-btn{display:none!important}.close-btn{display:none!important}}
+            .stat-card,.section-card,.tm-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(12px);transition:border-color .2s}
+            .stat-card:hover,.section-card:hover,.tm-card:hover{border-color:var(--border-strong)}
+            .stat-card{padding:1.375rem;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;min-width:0;transition:all .22s ease}
+            .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,102,241,.4),transparent);opacity:0;transition:opacity .22s}
+            .stat-card:hover{box-shadow:0 8px 32px rgba(0,0,0,.3);transform:translateY(-2px)}.stat-card:hover::before{opacity:1}
+            .section-card{padding:1.625rem;margin-bottom:1.5rem}.section-card:last-child{margin-bottom:0}
+            .tm-card{padding:1.25rem}
+            .section-title{font-size:.875rem;font-weight:700;color:var(--text);margin:0 0 1.25rem;display:flex;align-items:center;gap:.5rem;letter-spacing:-.01em}
+            .section-title::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,#6366f1,#8b5cf6)}
+            .stat-label{font-size:.75rem;font-weight:600;color:var(--text-subtle);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em}
+            .stat-value{font-size:1.875rem;font-weight:800;color:var(--text);letter-spacing:-.04em;line-height:1}
+            .stat-sm{font-size:1.125rem!important}
+            .stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.125rem;flex-shrink:0}
+            .si-indigo{background:rgba(99,102,241,.15);color:#818cf8;box-shadow:0 0 20px rgba(99,102,241,.15)}
+            .si-emerald{background:rgba(16,185,129,.15);color:#34d399;box-shadow:0 0 20px rgba(16,185,129,.12)}
+            .si-amber{background:rgba(245,158,11,.15);color:#fbbf24;box-shadow:0 0 20px rgba(245,158,11,.12)}
+            .si-rose{background:rgba(244,63,94,.15);color:#fb7185;box-shadow:0 0 20px rgba(244,63,94,.12)}
+            .si-sky{background:rgba(14,165,233,.15);color:#38bdf8;box-shadow:0 0 20px rgba(14,165,233,.12)}
+            .toolbar-input,.toolbar-select,.form-input,.form-select{background:var(--bg-input);border:1px solid var(--border);border-radius:9px;padding:.4375rem .875rem;font-size:.875rem;font-family:inherit;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;backdrop-filter:blur(8px)}
+            .toolbar-input:focus,.toolbar-select:focus,.form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+            .toolbar-input::placeholder,.form-input::placeholder{color:var(--text-subtle)}
+            .toolbar-select option,.form-select option{background:#0d1630;color:var(--text)}
+            .data-table{width:100%;border-collapse:collapse;font-size:.875rem}
+            .data-table thead{background:rgba(99,102,241,.04)}
+            .data-table th{text-align:left;padding:.625rem 1rem;color:var(--text-subtle);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);white-space:nowrap}
+            .data-table td{padding:.75rem 1rem;color:var(--text-muted);border-bottom:1px solid rgba(99,102,241,.06);vertical-align:middle}
+            .data-table tbody tr:last-child td{border-bottom:none}
+            .data-table tbody tr:hover td{background:rgba(99,102,241,.05);color:var(--text)}
+            .btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border-radius:9px;font-size:.875rem;font-family:inherit;font-weight:600;cursor:pointer;border:none;white-space:nowrap;transition:all .18s ease}
+            .btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0)}
+            .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}.btn-primary:hover{box-shadow:0 4px 20px rgba(99,102,241,.45)}
+            .btn-success{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}.btn-success:hover{box-shadow:0 4px 16px rgba(22,163,74,.4)}
+            .btn-danger{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff}.btn-danger:hover{box-shadow:0 4px 16px rgba(220,38,38,.4)}
+            .btn-ghost{background:transparent;border:1px solid var(--border-strong);color:var(--text-muted)}.btn-ghost:hover{background:rgba(99,102,241,.07);color:var(--text);border-color:var(--accent);transform:none}
+            .glow-button{padding:.375rem .75rem;border-radius:8px;border:none;cursor:pointer;font-size:.875rem;font-family:inherit;transition:all .15s;font-weight:600}
+            .toggle-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+            .toggle-switch input{opacity:0;width:0;height:0}
+            .toggle-slider{position:absolute;cursor:pointer;inset:0;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);border-radius:24px;transition:all .25s ease}
+            .toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--text-subtle);border-radius:50%;transition:all .25s ease}
+            .toggle-switch input:checked+.toggle-slider{background:rgba(99,102,241,.25);border-color:var(--accent)}
+            .toggle-switch input:checked+.toggle-slider::before{transform:translateX(18px);background:#818cf8;box-shadow:0 0 8px rgba(99,102,241,.6)}
+            .toggle-switch.toggle-green input:checked+.toggle-slider{background:rgba(34,197,94,.2);border-color:#22c55e}
+            .toggle-switch.toggle-green input:checked+.toggle-slider::before{background:#4ade80;box-shadow:0 0 8px rgba(34,197,94,.5)}
+            .modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);justify-content:center;align-items:center}
+            .modal.show{display:flex}
+            .modal-box{background:rgba(10,18,40,.95);border:1px solid var(--border-strong);border-radius:18px;padding:2rem;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;animation:modalIn .22s cubic-bezier(.16,1,.3,1) both;backdrop-filter:blur(20px);box-shadow:0 32px 80px rgba(0,0,0,.6)}
+            @keyframes modalIn{from{transform:translateY(-20px) scale(.97);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+            .toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.5rem}
+            .toast{display:flex;align-items:center;gap:.625rem;background:rgba(10,18,40,.95);border:1px solid var(--border-strong);backdrop-filter:blur(16px);border-radius:12px;padding:.75rem 1rem;font-size:.875rem;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .3s cubic-bezier(.16,1,.3,1) both;min-width:240px;max-width:340px}
+            .toast.toast-success{border-color:rgba(34,197,94,.3)}.toast.toast-success i{color:#22c55e}
+            .toast.toast-error{border-color:rgba(239,68,68,.3)}.toast.toast-error i{color:#ef4444}
+            @keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+            @keyframes toastOut{to{opacity:0;transform:translateY(8px) scale(.97)}}
+            .bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+            .bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.03) 1px,transparent 1px);background-size:60px 60px}
+            .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 10s ease-in-out infinite}
+            .bg-orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,.1),transparent 70%);top:-15%;left:-10%}
+            .bg-orb-2{width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,.08),transparent 70%);bottom:-10%;right:-8%;animation-delay:-4s}
+            .bg-orb-3{width:250px;height:250px;background:radial-gradient(circle,rgba(6,182,212,.06),transparent 70%);top:40%;right:15%;animation-delay:-7s}
+            @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(15px,-20px) scale(1.04)}66%{transform:translate(-10px,10px) scale(.96)}}
+            #bg-particles{position:absolute;inset:0}
+            .tm-val{font-size:1.5rem;font-weight:800;color:var(--text);letter-spacing:-.03em;margin-bottom:.625rem;transition:color .2s}
+            .tm-val-flash{animation:val-flash .4s ease}
+            @keyframes val-flash{0%{color:#a5b4fc}100%{color:var(--text)}}
+            .tm-bar-track{height:6px;background:rgba(99,102,241,.1);border-radius:6px;overflow:hidden}
+            .tm-bar-fill{height:100%;border-radius:6px;transition:width 1s cubic-bezier(0.4,0,0.2,1)}
+            .tm-bar-indigo{background:linear-gradient(90deg,#6366f1,#8b5cf6)}.tm-bar-emerald{background:linear-gradient(90deg,#10b981,#34d399)}
+            .tm-bar-amber{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.tm-bar-rose{background:linear-gradient(90deg,#f43f5e,#fb7185)}
+            .realtime-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;color:#22c55e;font-weight:600}
+            .realtime-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse-dot 1.5s ease infinite}
+            @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+            .dist-row{display:flex;align-items:center;gap:.75rem}.dist-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+            .dist-label{font-size:.8125rem;font-weight:600;color:var(--text-muted);min-width:70px;text-transform:capitalize}
+            .dist-bar-track{flex:1;height:7px;background:rgba(148,163,184,.08);border-radius:10px;overflow:hidden}
+            .dist-bar-fill{height:100%;border-radius:10px;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+            .dist-count{font-size:.8125rem;font-weight:700;color:var(--text);min-width:28px;text-align:right}
+            .dist-pct{font-size:.7rem;color:var(--text-subtle);min-width:36px;text-align:right}
+            .gs-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;padding:.875rem .5rem;background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1);border-radius:12px;transition:all .18s ease;cursor:default}
+            .gs-item.gs-on{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.2)}
+            .gs-item:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+            .gs-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+            .gs-count{font-size:1.25rem;font-weight:800;color:var(--text);letter-spacing:-.03em;line-height:1}
+            .gs-name{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+            .maint-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:8px;padding:.3125rem .625rem;font-size:.8rem;font-weight:600}
+            .maint-tag button{background:none;border:none;cursor:pointer;color:rgba(239,68,68,.6);font-size:.7rem;padding:0;transition:color .15s;line-height:1}
+            .maint-tag button:hover{color:#f87171}
+            .sysinfo-row{display:flex;justify-content:space-between;align-items:center;padding:.5625rem .75rem;font-size:.875rem;border-radius:8px;transition:background .15s}
+            .sysinfo-row:hover{background:rgba(99,102,241,.05)}.sysinfo-key{color:var(--text-muted);font-weight:500}.sysinfo-val{color:var(--text);font-weight:600;font-size:.8125rem}
+            .setting-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-radius:10px;transition:background .15s;gap:1rem}
+            .setting-row:hover{background:rgba(99,102,241,.05)}
+            .setting-info{flex:1;min-width:0}.setting-name{font-size:.875rem;font-weight:600;color:var(--text);margin-bottom:2px}.setting-desc{font-size:.75rem;color:var(--text-subtle);line-height:1.4}
+            .checkbox-item{display:flex;align-items:center;gap:.625rem;cursor:pointer;font-size:.875rem;color:var(--text-muted);padding:.5rem .75rem;border-radius:8px;transition:background .15s}
+            .checkbox-item:hover{background:rgba(99,102,241,.06);color:var(--text)}.form-checkbox{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+            .table-empty{text-align:center;padding:2.5rem;color:var(--text-subtle);font-size:.875rem}
+            .logs-container{max-height:600px;overflow-y:auto;background:rgba(4,8,20,.6);border:1px solid var(--border);border-radius:10px;font-family:'JetBrains Mono',monospace}
+            ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}
+            ::-webkit-scrollbar-thumb{background:rgba(99,102,241,.2);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:rgba(99,102,241,.35)}
+            canvas{background:transparent!important}.hidden{display:none!important}
+            @media(max-width:767px){
+                .section-card{padding:.875rem}
+                .stat-card{padding:1rem}
+                .stat-value{font-size:1.5rem}
+                .modal-box{padding:1.25rem;border-radius:14px;width:95%}
+                .page-title{font-size:1.25rem!important}
+                .page-header{margin-bottom:1rem!important;padding-bottom:.875rem}
+                .tm-val{font-size:1.25rem}
             }
-
-            body {
-                background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
-                background-attachment: fixed;
-            }
-
-            .neon-text {
-                text-shadow: 0 0 10px currentColor, 0 0 20px currentColor,
-                    0 0 30px currentColor;
-            }
-
-            .card {
-                transition: all 0.3s ease;
-                background: var(--card-bg);
-                border: 1px solid var(--border-color);
-                position: relative;
-                overflow: hidden;
-            }
-
-            .card::before {
-                content: "";
-                position: absolute;
-                top: -2px;
-                left: -2px;
-                right: -2px;
-                bottom: -2px;
-                background: linear-gradient(
-                    45deg,
-                    var(--neon-pink),
-                    var(--neon-blue),
-                    var(--neon-purple)
-                );
-                border-radius: inherit;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                z-index: -1;
-            }
-
-            .card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 30px rgba(185, 103, 255, 0.4);
-            }
-
-            .card:hover::before {
-                opacity: 0.2;
-            }
-
-            .sidebar-active {
-                background: linear-gradient(
-                    90deg,
-                    rgba(255, 0, 110, 0.2),
-                    rgba(0, 217, 255, 0.2)
-                );
-                border-left: 3px solid var(--neon-pink);
-                box-shadow: 0 0 15px rgba(255, 0, 110, 0.3);
-            }
-
-            .nav-link:hover {
-                background: rgba(185, 103, 255, 0.1);
-                box-shadow: 0 0 10px rgba(185, 103, 255, 0.2);
-            }
-
-            .glow-button {
-                position: relative;
-                overflow: hidden;
-                transition: all 0.3s ease;
-            }
-
-            .glow-button:hover {
-                box-shadow: 0 0 20px currentColor;
-                transform: scale(1.05);
-            }
-
-            .grid-bg {
-                background-image: linear-gradient(
-                        rgba(185, 103, 255, 0.1) 1px,
-                        transparent 1px
-                    ),
-                    linear-gradient(
-                        90deg,
-                        rgba(185, 103, 255, 0.1) 1px,
-                        transparent 1px
-                    );
-                background-size: 50px 50px;
-            }
-
-            .scan-line {
-                position: fixed;
-                width: 100%;
-                height: 2px;
-                background: linear-gradient(
-                    90deg,
-                    transparent,
-                    var(--neon-blue),
-                    transparent
-                );
-                animation: scan 4s linear infinite;
-                pointer-events: none;
-                z-index: 9999;
-            }
-
-            @keyframes scan {
-                0% {
-                    top: 0;
-                }
-                100% {
-                    top: 100%;
-                }
-            }
-
-            @keyframes pulse-glow {
-                0%,
-                100% {
-                    opacity: 1;
-                }
-                50% {
-                    opacity: 0.5;
-                }
-            }
-
-            .pulse-glow {
-                animation: pulse-glow 2s ease-in-out infinite;
-            }
-
-            input,
-            select,
-            table {
-                background: rgba(21, 25, 50, 0.8) !important;
-                border-color: var(--border-color) !important;
-                color: var(--neon-blue) !important;
-            }
-
-            input::placeholder {
-                color: rgba(0, 217, 255, 0.5) !important;
-            }
-
-            option {
-                background: #0a0e27 !important;
-                color: #00d9ff !important;
-            }
-
-            table thead {
-                background: rgba(185, 103, 255, 0.1) !important;
-            }
-
-            table tbody tr:hover {
-                background: rgba(255, 0, 110, 0.1) !important;
-            }
-
-            canvas {
-                background: transparent !important;
-            }
-
-            ::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
-            }
-
-            ::-webkit-scrollbar-track {
-                background: var(--darker-bg);
-            }
-
-            ::-webkit-scrollbar-thumb {
-                background: linear-gradient(
-                    var(--neon-pink),
-                    var(--neon-purple)
-                );
-                border-radius: 5px;
-            }
-
-            ::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(
-                    var(--neon-blue),
-                    var(--neon-green)
-                );
-            }
-
-            /* Responsive Styles */
-            #sidebar {
-                transition: transform 0.3s ease;
-            }
-
-            @media (max-width: 768px) {
-                #sidebar {
-                    transform: translateX(-100%);
-                    z-index: 50;
-                }
-
-                #sidebar.mobile-open {
-                    transform: translateX(0);
-                }
-
-                .main-content {
-                    margin-left: 0 !important;
-                }
-
-                #mobile-overlay {
-                    display: none;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.7);
-                    z-index: 40;
-                }
-
-                #mobile-overlay.show {
-                    display: block;
-                }
-
-                .grid-bg {
-                    background-size: 30px 30px;
-                }
-
-                .card:hover {
-                    transform: translateY(-2px);
-                }
-            }
-
-            @media (min-width: 769px) {
-                #hamburger-btn {
-                    display: none !important;
-                }
-            }
-
-            @media (max-width: 1024px) {
-                .text-3xl {
-                    font-size: 1.5rem !important;
-                }
-
-                .text-2xl {
-                    font-size: 1.25rem !important;
-                }
-            }
-
-            /* Modal Styles */
-            .modal {
-                display: none;
-                position: fixed;
-                z-index: 100;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(5px);
-            }
-
-            .modal.show {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .modal-content {
-                background: var(--card-bg);
-                border: 2px solid var(--border-color);
-                border-radius: 12px;
-                padding: 2rem;
-                max-width: 500px;
-                width: 90%;
-                max-height: 90vh;
-                overflow-y: auto;
-                box-shadow: 0 0 50px rgba(185, 103, 255, 0.5);
-                animation: modalSlideIn 0.3s ease;
-            }
-
-            @keyframes modalSlideIn {
-                from {
-                    transform: translateY(-50px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
-
-            .modal-close {
-                background: rgba(255, 0, 110, 0.2);
-                color: var(--neon-pink);
-                border: 1px solid var(--neon-pink);
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .modal-close:hover {
-                background: var(--neon-pink);
-                color: white;
-                box-shadow: 0 0 15px var(--neon-pink);
-            }
-
-            .form-checkbox {
-                width: 20px;
-                height: 20px;
-                accent-color: var(--neon-blue);
-                cursor: pointer;
-            }
-        </style>
+</style>
     </head>
-    <body class="grid-bg">
-        <div class="scan-line"></div>
+    <script>
+        // Auth guard — runs before body renders
+        if (!localStorage.getItem("adminToken")) {
+            window.location.replace("/login.html");
+        }
+    </script>
+    <body>
+        <!-- Animated Background (same as login) -->
+        <div class="bg-canvas">
+            <div class="bg-grid"></div>
+            <div class="bg-orb bg-orb-1"></div>
+            <div class="bg-orb bg-orb-2"></div>
+            <div class="bg-orb bg-orb-3"></div>
+            <canvas id="bg-particles"></canvas>
+        </div>
 
         <!-- Mobile Overlay -->
         <div id="mobile-overlay"></div>
 
-        <!-- Hamburger Menu Button (Mobile Only) -->
-        <button
-            id="hamburger-btn"
-            class="fixed top-4 left-4 z-50 p-3 rounded-lg glow-button"
-            style="
-                background: linear-gradient(45deg, #ff006e, #b967ff);
-                color: white;
-                display: block;
-            "
-        >
-            <i class="fas fa-bars text-xl"></i>
+        <!-- Hamburger (Mobile) -->
+        <button id="hamburger-btn" class="hamburger-btn md:hidden fixed top-4 left-4 z-[60] items-center">
+            <i class="fas fa-bars"></i>
         </button>
 
         <!-- Sidebar -->
-        <div
-            class="fixed left-0 top-0 h-full w-64 shadow-lg"
-            style="
-                background: linear-gradient(180deg, #0a0e27 0%, #1a1a3e 100%);
-                border-right: 2px solid rgba(185, 103, 255, 0.3);
-            "
-            id="sidebar"
-        >
-            <!-- Close Button (Mobile Only) -->
-            <button
-                id="close-sidebar-btn"
-                class="absolute top-4 right-4 p-2 rounded-lg md:hidden"
-                style="color: #ff006e; background: rgba(255, 0, 110, 0.2)"
-            >
-                <i class="fas fa-times text-xl"></i>
+        <aside id="sidebar" class="sidebar">
+            <button id="close-sidebar-btn" class="close-btn absolute top-3 right-3">
+                <i class="fas fa-times"></i>
             </button>
-
-            <div
-                class="p-6 border-b"
-                style="border-color: rgba(185, 103, 255, 0.3)"
-            >
-                <h1
-                    class="text-xl md:text-2xl font-bold neon-text"
-                    style="color: #ff006e"
-                >
-                    <i class="fas fa-robot pulse-glow"></i> ChisatoBot
-                </h1>
-                <p class="text-xs md:text-sm" style="color: #00d9ff">
-                    Monitoring Dashboard
-                </p>
-            </div>
-
-            <nav class="p-4">
-                <a
-                    href="#"
-                    class="nav-link flex items-center p-3 mb-2 rounded sidebar-active transition-all"
-                    data-view="overview"
-                    style="color: #00d9ff"
-                >
-                    <i class="fas fa-home w-6"></i>
-                    <span>Overview</span>
-                </a>
-                <a
-                    href="#"
-                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
-                    data-view="groups"
-                    style="color: #00d9ff; transition: all 0.3s"
-                >
-                    <i class="fas fa-users w-6"></i>
-                    <span>Groups</span>
-                </a>
-                <a
-                    href="#"
-                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
-                    data-view="users"
-                    style="color: #00d9ff; transition: all 0.3s"
-                >
-                    <i class="fas fa-user w-6"></i>
-                    <span>Users</span>
-                </a>
-                <a
-                    href="#"
-                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
-                    data-view="logs"
-                    style="color: #00d9ff; transition: all 0.3s"
-                >
-                    <i class="fas fa-file-alt w-6"></i>
-                    <span>Logs</span>
-                </a>
-                <a
-                    href="#"
-                    class="nav-link flex items-center p-3 mb-2 rounded hover:bg-opacity-20 transition-all"
-                    data-view="system"
-                    style="color: #00d9ff; transition: all 0.3s"
-                >
-                    <i class="fas fa-server w-6"></i>
-                    <span>System</span>
-                </a>
-                
-                <!-- Logout Button -->
-                <div class="mt-4 pt-4 border-t" style="border-color: rgba(185, 103, 255, 0.3)">
-                    <button
-                        onclick="logout()"
-                        class="nav-link flex items-center p-3 rounded hover:bg-opacity-20 transition-all w-full text-left"
-                        style="color: #ff006e; transition: all 0.3s"
-                    >
-                        <i class="fas fa-sign-out-alt w-6"></i>
-                        <span>Logout</span>
-                    </button>
+            <div class="sidebar-header flex items-center gap-3.5 px-5 py-5 border-b border-[rgba(99,102,241,0.12)]" style="background:linear-gradient(135deg,rgba(99,102,241,0.06),transparent)">
+                <div class="sidebar-logo flex-shrink-0 flex items-center justify-center text-white" style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:1rem;box-shadow:0 4px 16px rgba(99,102,241,0.4)"><i class="fas fa-robot"></i></div>
+                <div>
+                    <h1 class="sidebar-title text-[0.9375rem] font-extrabold tracking-tight" style="background:linear-gradient(135deg,#f0f4ff,#c7d2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">ChisatoBot</h1>
+                    <p class="sidebar-desc text-[0.6875rem] text-[#4a5678] mt-0.5 tracking-wide">Monitoring Dashboard</p>
                 </div>
+            </div>
+            <nav class="sidebar-nav flex-1 py-3 px-2.5 overflow-y-auto">
+                <a href="#" class="nav-link sidebar-active" data-view="overview">
+                    <i class="fas fa-home w-[18px] flex-shrink-0 text-center text-sm"></i><span>Overview</span>
+                </a>
+                <a href="#" class="nav-link" data-view="groups">
+                    <i class="fas fa-users w-[18px] flex-shrink-0 text-center text-sm"></i><span>Groups</span>
+                </a>
+                <a href="#" class="nav-link" data-view="users">
+                    <i class="fas fa-user w-[18px] flex-shrink-0 text-center text-sm"></i><span>Users</span>
+                </a>
+                <a href="#" class="nav-link" data-view="logs">
+                    <i class="fas fa-file-alt w-[18px] flex-shrink-0 text-center text-sm"></i><span>Logs</span>
+                </a>
+                <div class="sidebar-section-label text-[0.6rem] font-bold text-[#4a5678] uppercase tracking-[0.1em] px-3 pt-4 pb-1">Owner</div>
+                <a href="#" class="nav-link" data-view="commands" id="nav-commands">
+                    <i class="fas fa-terminal w-[18px] flex-shrink-0 text-center text-sm"></i><span>Commands</span>
+                </a>
+                <a href="#" class="nav-link" data-view="settings" id="nav-settings">
+                    <i class="fas fa-sliders w-[18px] flex-shrink-0 text-center text-sm"></i><span>Settings</span>
+                </a>
             </nav>
-        </div>
+            <div class="sidebar-footer py-3 px-2.5 border-t border-[rgba(99,102,241,0.12)]">
+                <button onclick="logout()" class="nav-link nav-logout">
+                    <i class="fas fa-sign-out-alt w-[18px] flex-shrink-0 text-center text-sm"></i><span>Logout</span>
+                </button>
+            </div>
+        </aside>
 
         <!-- Main Content -->
-        <div
-            class="main-content md:ml-64 p-4 md:p-6 lg:p-8"
-            style="min-height: 100vh; background: #0a0e27"
-        >
-            <!-- Header -->
-            <div class="mb-6 md:mb-8 mt-16 md:mt-0">
-                <h2
-                    class="text-2xl md:text-3xl font-bold neon-text"
-                    style="color: #ff006e"
-                    id="page-title"
-                >
-                    Overview
-                </h2>
-                <p
-                    class="text-sm md:text-base"
-                    style="color: #b967ff"
-                    id="page-subtitle"
-                >
-                    Monitor your bot's performance and statistics
-                </p>
+        <main class="main-content">
+            <div class="page-header mb-8 flex flex-col gap-1 pb-5 border-b border-[rgba(99,102,241,0.12)]">
+                <h2 class="page-title text-[1.625rem] font-extrabold tracking-tight m-0" id="page-title" style="background:linear-gradient(135deg,#f0f4ff 0%,#c7d2fe 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Overview</h2>
+                <p class="page-subtitle text-sm text-[#94a3b8]" id="page-subtitle">Realtime system monitor and control center</p>
             </div>
 
-            <!-- Content Area -->
             <div id="content">
                 <!-- Overview View -->
                 <div id="view-overview" class="view-content">
-                    <!-- Stats Cards -->
-                    <div
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-                    >
-                        <div class="card rounded-lg shadow-md p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm" style="color: #00d9ff">
-                                        Total Users
-                                    </p>
-                                    <p
-                                        class="text-3xl font-bold neon-text"
-                                        style="color: #00d9ff"
-                                        id="stat-users"
-                                    >
-                                        -
-                                    </p>
-                                </div>
-                                <div
-                                    class="p-4 rounded-full"
-                                    style="background: rgba(0, 217, 255, 0.2)"
-                                >
-                                    <i
-                                        class="fas fa-user text-2xl pulse-glow"
-                                        style="color: #00d9ff"
-                                    ></i>
-                                </div>
+                    <div class="stats-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <p class="stat-label">Total Users</p>
+                                <p class="stat-value" id="stat-users">—</p>
+                            </div>
+                            <div class="stat-icon si-indigo"><i class="fas fa-user"></i></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <p class="stat-label">Total Groups</p>
+                                <p class="stat-value" id="stat-groups">—</p>
+                            </div>
+                            <div class="stat-icon si-emerald"><i class="fas fa-users"></i></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <p class="stat-label">Premium Users</p>
+                                <p class="stat-value" id="stat-premium">—</p>
+                            </div>
+                            <div class="stat-icon si-amber"><i class="fas fa-crown"></i></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <p class="stat-label">Banned Users</p>
+                                <p class="stat-value" id="stat-banned">—</p>
+                            </div>
+                            <div class="stat-icon si-rose"><i class="fas fa-ban"></i></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <p class="stat-label">Uptime</p>
+                                <p class="stat-value stat-sm" id="stat-uptime">—</p>
+                            </div>
+                            <div class="stat-icon si-sky"><i class="fas fa-clock"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" style="align-items:stretch">
+                        <!-- User Distribution — clean role breakdown -->
+                        <div class="section-card" style="display:flex;flex-direction:column">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+                                <h3 class="section-title" style="margin:0;">User Distribution</h3>
+                                <span id="ud-total-badge" style="font-size:0.75rem;font-weight:700;color:var(--text-subtle);background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);padding:3px 10px;border-radius:20px;">— total</span>
+                            </div>
+                            <div id="user-distribution-list" style="display:flex;flex-direction:column;gap:0.75rem;flex:1">
+                                <div class="dist-row-placeholder" style="color:var(--text-subtle);font-size:0.875rem;">Loading...</div>
                             </div>
                         </div>
 
-                        <div class="card rounded-lg shadow-md p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm" style="color: #05ffa1">
-                                        Total Groups
-                                    </p>
-                                    <p
-                                        class="text-3xl font-bold neon-text"
-                                        style="color: #05ffa1"
-                                        id="stat-groups"
-                                    >
-                                        -
-                                    </p>
-                                </div>
-                                <div
-                                    class="p-4 rounded-full"
-                                    style="background: rgba(5, 255, 161, 0.2)"
-                                >
-                                    <i
-                                        class="fas fa-users text-2xl pulse-glow"
-                                        style="color: #05ffa1"
-                                    ></i>
-                                </div>
+                        <!-- Group Settings — icon + count grid -->
+                        <div class="section-card" style="display:flex;flex-direction:column">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+                                <h3 class="section-title" style="margin:0;">Group Settings</h3>
+                                <span id="gs-active-badge" style="font-size:0.75rem;font-weight:700;color:#34d399;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:3px 10px;border-radius:20px;">— groups</span>
                             </div>
-                        </div>
-
-                        <div class="card rounded-lg shadow-md p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm" style="color: #b967ff">
-                                        Premium Users
-                                    </p>
-                                    <p
-                                        class="text-3xl font-bold neon-text"
-                                        style="color: #b967ff"
-                                        id="stat-premium"
-                                    >
-                                        -
-                                    </p>
-                                </div>
-                                <div
-                                    class="p-4 rounded-full"
-                                    style="background: rgba(185, 103, 255, 0.2)"
-                                >
-                                    <i
-                                        class="fas fa-crown text-2xl pulse-glow"
-                                        style="color: #b967ff"
-                                    ></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card rounded-lg shadow-md p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm" style="color: #fffb00">
-                                        Banned Users
-                                    </p>
-                                    <p
-                                        class="text-3xl font-bold neon-text"
-                                        style="color: #fffb00"
-                                        id="stat-banned"
-                                    >
-                                        -
-                                    </p>
-                                </div>
-                                <div
-                                    class="p-4 rounded-full"
-                                    style="background: rgba(255, 251, 0, 0.2)"
-                                >
-                                    <i
-                                        class="fas fa-ban text-2xl pulse-glow"
-                                        style="color: #fffb00"
-                                    ></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card rounded-lg shadow-md p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm" style="color: #ff006e">
-                                        Uptime
-                                    </p>
-                                    <p
-                                        class="text-2xl font-bold neon-text"
-                                        style="color: #ff006e"
-                                        id="stat-uptime"
-                                    >
-                                        -
-                                    </p>
-                                </div>
-                                <div
-                                    class="p-4 rounded-full"
-                                    style="background: rgba(255, 0, 110, 0.2)"
-                                >
-                                    <i
-                                        class="fas fa-clock text-2xl pulse-glow"
-                                        style="color: #ff006e"
-                                    ></i>
-                                </div>
+                            <div id="group-settings-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:0.625rem;align-content:start;flex:1">
+                                <div style="color:var(--text-subtle);font-size:0.875rem;">Loading...</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Charts -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div class="card rounded-lg shadow-md p-6">
-                            <h3
-                                class="text-lg font-semibold mb-4 neon-text"
-                                style="color: #ff006e"
-                            >
-                                User Distribution
-                            </h3>
-                            <canvas id="userChart"></canvas>
-                        </div>
 
-                        <div class="card rounded-lg shadow-md p-6">
-                            <h3
-                                class="text-lg font-semibold mb-4 neon-text"
-                                style="color: #00d9ff"
-                            >
-                                Group Settings
-                            </h3>
-                            <canvas id="groupSettingsChart"></canvas>
+                    <!-- Task Manager System Monitor -->
+                    <div class="section-card" style="margin-bottom:1rem;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+                            <h3 class="section-title" style="margin:0;">System Monitor</h3>
+                            <span class="realtime-badge">Live</span>
                         </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="card rounded-lg shadow-md p-6">
-                        <h3
-                            class="text-lg font-semibold mb-4 neon-text"
-                            style="color: #b967ff"
-                        >
-                            System Information
-                        </h3>
-                        <div
-                            id="system-info"
-                            class="space-y-2 text-sm"
-                            style="color: #00d9ff"
-                        >
-                            <p>
-                                <strong style="color: #ff006e"
-                                    >Memory Usage:</strong
-                                >
-                                <span id="memory-usage">-</span>
-                            </p>
-                            <p>
-                                <strong style="color: #ff006e"
-                                    >Platform:</strong
-                                >
-                                <span id="platform">-</span>
-                            </p>
-                            <p>
-                                <strong style="color: #ff006e"
-                                    >Node Version:</strong
-                                >
-                                <span id="node-version">-</span>
-                            </p>
-                            <p>
-                                <strong style="color: #ff006e"
-                                    >Process ID:</strong
-                                >
-                                <span id="pid">-</span>
-                            </p>
+                        <div class="tm-grid grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="tm-card">
+                                <div class="flex items-center justify-between text-[0.7rem] font-bold uppercase tracking-widest text-[#4a5678] mb-2"><span>Heap Used</span><i class="fas fa-memory" style="color:#818cf8"></i></div>
+                                <div class="tm-val" id="tm-heap-used">—</div>
+                                <div class="tm-bar-track"><div class="tm-bar-fill tm-bar-indigo" id="tm-heap-bar" style="width:0%"></div></div>
+                                <div class="text-[0.75rem] text-[#4a5678] mt-1.5" id="tm-heap-sub">of — total</div>
+                            </div>
+                            <div class="tm-card">
+                                <div class="flex items-center justify-between text-[0.7rem] font-bold uppercase tracking-widest text-[#4a5678] mb-2"><span>RSS Memory</span><i class="fas fa-server" style="color:#38bdf8"></i></div>
+                                <div class="tm-val" id="tm-rss">—</div>
+                                <div class="tm-bar-track"><div class="tm-bar-fill tm-bar-emerald" id="tm-rss-bar" style="width:0%"></div></div>
+                                <div class="text-[0.75rem] text-[#4a5678] mt-1.5" id="tm-rss-sub">Resident set size</div>
+                            </div>
+                            <div class="tm-card">
+                                <div class="flex items-center justify-between text-[0.7rem] font-bold uppercase tracking-widest text-[#4a5678] mb-2"><span>External</span><i class="fas fa-microchip" style="color:#fbbf24"></i></div>
+                                <div class="tm-val" id="tm-external">—</div>
+                                <div class="tm-bar-track"><div class="tm-bar-fill tm-bar-amber" id="tm-ext-bar" style="width:0%"></div></div>
+                                <div class="text-[0.75rem] text-[#4a5678] mt-1.5">C++ objects linked to JS</div>
+                            </div>
+                            <div class="tm-card">
+                                <div class="flex items-center justify-between text-[0.7rem] font-bold uppercase tracking-widest text-[#4a5678] mb-2"><span>OS Memory</span><i class="fas fa-server" style="color:#fb7185"></i></div>
+                                <div class="tm-val stat-sm" id="tm-os-mem">—</div>
+                                <div class="tm-bar-track"><div class="tm-bar-fill tm-bar-rose" id="tm-os-mem-bar" style="width:0%"></div></div>
+                                <div class="text-[0.75rem] text-[#4a5678] mt-1.5" id="tm-os-mem-sub">of total server RAM</div>
+                            </div>
+                        </div>
+                        <!-- Mini sparkline memory chart -->
+                        <div class="section-card" style="background:rgba(99,102,241,0.03);padding:1rem;border:1px solid rgba(99,102,241,0.08);">
+                            <div class="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-[#4a5678] mb-3">Heap Memory History (last 2 min)</div>
+                            <div class="h-20 relative"><canvas id="memorySparkline"></canvas></div>
+                        </div>
+                        <!-- Sysinfo rows -->
+                        <div style="margin-top:1rem;">
+                            <div class="sysinfo-row"><span class="sysinfo-key">Platform</span><span class="sysinfo-val" id="platform">—</span></div>
+                            <div class="sysinfo-row"><span class="sysinfo-key">Node Version</span><span class="sysinfo-val" id="node-version">—</span></div>
+                            <div class="sysinfo-row"><span class="sysinfo-key">Process ID</span><span class="sysinfo-val" id="pid">—</span></div>
+                            <div class="sysinfo-row"><span class="sysinfo-key">Memory Usage</span><span class="sysinfo-val" id="memory-usage">—</span></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Groups View -->
                 <div id="view-groups" class="view-content hidden">
-                    <div class="card rounded-lg shadow-md p-4 md:p-6">
-                        <div
-                            class="flex flex-col md:flex-row gap-2 md:gap-0 md:justify-between md:items-center mb-4"
-                        >
-                            <input
-                                type="text"
-                                id="search-groups"
-                                placeholder="Search groups..."
-                                class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
-                                style="
-                                    background: rgba(21, 25, 50, 0.8);
-                                    border-color: rgba(185, 103, 255, 0.3);
-                                    color: #00d9ff;
-                                    box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
-                                "
-                            />
+                    <div class="section-card">
+                        <div class="toolbar flex flex-wrap gap-2 justify-between items-center mb-5">
+                            <input type="text" id="search-groups" placeholder="Search groups..." class="toolbar-input" />
                             <div class="flex gap-2">
-                                <button
-                                    id="refresh-groups"
-                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
-                                    style="
-                                        background: linear-gradient(
-                                            45deg,
-                                            #ff006e,
-                                            #b967ff
-                                        );
-                                        color: white;
-                                    "
-                                >
-                                    <i class="fas fa-sync-alt"></i>
-                                    <span class="hidden sm:inline"
-                                        >Refresh</span
-                                    >
+                                <button id="refresh-groups" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                                 </button>
                             </div>
                         </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full" style="color: #00d9ff">
+                        <div class="table-wrap overflow-x-auto rounded-[10px]">
+                            <table class="data-table">
                                 <thead>
-                                    <tr
-                                        style="
-                                            background: rgba(
-                                                185,
-                                                103,
-                                                255,
-                                                0.1
-                                            );
-                                            border-bottom: 2px solid
-                                                rgba(185, 103, 255, 0.3);
-                                        "
-                                    >
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Group Name
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Participants
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Settings
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Created
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Actions
-                                        </th>
+                                    <tr>
+                                        <th>Group Name</th>
+                                        <th>Participants</th>
+                                        <th>Settings</th>
+                                        <th>Bot Admin</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="groups-table">
-                                    <tr>
-                                        <td
-                                            colspan="4"
-                                            class="text-center py-4"
-                                            style="color: #00d9ff"
-                                        >
-                                            Loading...
-                                        </td>
-                                    </tr>
+                                    <tr><td colspan="6" class="table-empty">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
-
-                        <div
-                            id="groups-pagination"
-                            class="mt-4 flex justify-center space-x-2"
-                        ></div>
+                        <div id="groups-pagination" class="pagination mt-5 flex justify-center gap-1.5"></div>
                     </div>
                 </div>
 
                 <!-- Users View -->
                 <div id="view-users" class="view-content hidden">
-                    <div class="card rounded-lg shadow-md p-4 md:p-6">
-                        <div
-                            class="flex flex-col md:flex-row gap-2 md:gap-0 md:justify-between md:items-center mb-4"
-                        >
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <input
-                                    type="text"
-                                    id="search-users"
-                                    placeholder="Search users..."
-                                    class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
-                                    style="
-                                        background: rgba(21, 25, 50, 0.8);
-                                        border-color: rgba(185, 103, 255, 0.3);
-                                        color: #00d9ff;
-                                        box-shadow: 0 0 10px
-                                            rgba(0, 217, 255, 0.2);
-                                    "
-                                />
-                                <select
-                                    id="filter-role"
-                                    class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
-                                    style="
-                                        background: rgba(21, 25, 50, 0.8);
-                                        border-color: rgba(185, 103, 255, 0.3);
-                                        color: #00d9ff;
-                                        box-shadow: 0 0 10px
-                                            rgba(0, 217, 255, 0.2);
-                                    "
-                                >
+                    <div class="section-card">
+                        <div class="toolbar flex flex-wrap gap-2 justify-between items-center mb-5">
+                            <div class="toolbar-filters flex flex-wrap gap-2">
+                                <input type="text" id="search-users" placeholder="Search users..." class="toolbar-input" />
+                                <select id="filter-role" class="toolbar-select">
                                     <option value="">All Roles</option>
                                     <option value="free">Free</option>
                                     <option value="premium">Premium</option>
                                 </select>
-                                <select
-                                    id="filter-banned"
-                                    class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
-                                    style="
-                                        background: rgba(21, 25, 50, 0.8);
-                                        border-color: rgba(185, 103, 255, 0.3);
-                                        color: #00d9ff;
-                                        box-shadow: 0 0 10px
-                                            rgba(0, 217, 255, 0.2);
-                                    "
-                                >
+                                <select id="filter-banned" class="toolbar-select">
                                     <option value="">All Status</option>
                                     <option value="banned">Banned</option>
                                     <option value="active">Active</option>
                                 </select>
                             </div>
                             <div class="flex gap-2">
-                                <button
-                                    id="add-user-btn"
-                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
-                                    style="
-                                        background: linear-gradient(
-                                            45deg,
-                                            #05ffa1,
-                                            #00d9ff
-                                        );
-                                        color: #0a0e27;
-                                    "
-                                >
-                                    <i class="fas fa-plus"></i>
-                                    <span class="hidden sm:inline"
-                                        >Add User</span
-                                    >
+                                <button id="add-user-btn" class="btn btn-success">
+                                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Add User</span>
                                 </button>
-                                <button
-                                    id="refresh-users"
-                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
-                                    style="
-                                        background: linear-gradient(
-                                            45deg,
-                                            #ff006e,
-                                            #b967ff
-                                        );
-                                        color: white;
-                                    "
-                                >
-                                    <i class="fas fa-sync-alt"></i>
-                                    <span class="hidden sm:inline"
-                                        >Refresh</span
-                                    >
+                                <button id="refresh-users" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                                 </button>
                             </div>
                         </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full" style="color: #00d9ff">
+                        <div class="table-wrap overflow-x-auto rounded-[10px]">
+                            <table class="data-table">
                                 <thead>
-                                    <tr
-                                        style="
-                                            background: rgba(
-                                                185,
-                                                103,
-                                                255,
-                                                0.1
-                                            );
-                                            border-bottom: 2px solid
-                                                rgba(185, 103, 255, 0.3);
-                                        "
-                                    >
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            User ID
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Name
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Role
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Limit
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Status
-                                        </th>
-                                        <th
-                                            class="px-2 md:px-4 py-2 text-left text-xs md:text-sm"
-                                            style="color: #ff006e"
-                                        >
-                                            Actions
-                                        </th>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Limit</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="users-table">
-                                    <tr>
-                                        <td
-                                            colspan="6"
-                                            class="text-center py-4"
-                                            style="color: #00d9ff"
-                                        >
-                                            Loading...
-                                        </td>
-                                    </tr>
+                                    <tr><td colspan="6" class="table-empty">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
-
-                        <div
-                            id="users-pagination"
-                            class="mt-4 flex justify-center space-x-2"
-                        ></div>
+                        <div id="users-pagination" class="pagination mt-5 flex justify-center gap-1.5"></div>
                     </div>
                 </div>
 
                 <!-- Logs View -->
                 <div id="view-logs" class="view-content hidden">
-                    <div class="card rounded-lg shadow-md p-4 md:p-6">
-                        <div
-                            class="flex flex-col md:flex-row gap-2 md:gap-0 md:justify-between md:items-center mb-4"
-                        >
-                            <select
-                                id="filter-log-level"
-                                class="px-3 md:px-4 py-2 border rounded-lg focus:outline-none text-sm md:text-base"
-                                style="
-                                    background: rgba(21, 25, 50, 0.8);
-                                    border-color: rgba(185, 103, 255, 0.3);
-                                    color: #00d9ff;
-                                    box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
-                                "
-                            >
+                    <div class="section-card">
+                        <div class="toolbar flex flex-wrap gap-2 justify-between items-center mb-5">
+                            <select id="filter-log-level" class="toolbar-select">
                                 <option value="">All Levels</option>
-                                <option value="info">Info</option>
-                                <option value="warn">Warning</option>
-                                <option value="error">Error</option>
+                                <option value="INFO">Info</option>
+                                <option value="WARN">Warn</option>
+                                <option value="ERROR">Error</option>
+                                <option value="CONNECT">Connect</option>
+                                <option value="CMDS">Command</option>
+                                <option value="CHAT">Chat</option>
+                                <option value="STATUS">Status</option>
+                                <option value="EVAL">Eval</option>
+                                <option value="EXEC">Exec</option>
+                                <option value="MUTE">Mute</option>
                             </select>
                             <div class="flex gap-2">
-                                <button
-                                    id="refresh-logs"
-                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
-                                    style="
-                                        background: linear-gradient(
-                                            45deg,
-                                            #00d9ff,
-                                            #05ffa1
-                                        );
-                                        color: white;
-                                    "
-                                >
-                                    <i class="fas fa-sync-alt"></i>
-                                    <span class="hidden sm:inline"
-                                        >Refresh</span
-                                    >
+                                <button id="refresh-logs" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                                 </button>
-                                <button
-                                    id="clear-logs"
-                                    class="px-3 md:px-4 py-2 rounded-lg glow-button text-sm md:text-base"
-                                    style="
-                                        background: linear-gradient(
-                                            45deg,
-                                            #ff006e,
-                                            #ff4500
-                                        );
-                                        color: white;
-                                    "
-                                >
-                                    <i class="fas fa-trash"></i>
-                                    <span class="hidden sm:inline">Clear</span>
+                                <button id="clear-logs" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> <span class="hidden sm:inline">Clear</span>
                                 </button>
                             </div>
                         </div>
-
-                        <div
-                            id="logs-container"
-                            class="space-y-2 max-h-96 overflow-y-auto"
-                        >
-                            <p class="text-center" style="color: #b967ff">
-                                Loading logs...
-                            </p>
+                        <div id="logs-container" class="logs-container">
+                            <p class="table-empty">Loading logs...</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- System View -->
-                <div id="view-system" class="view-content hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="card rounded-lg shadow-md p-6">
-                            <h3
-                                class="text-lg font-semibold mb-4 neon-text"
-                                style="color: #ff006e"
-                            >
-                                Memory Usage
-                            </h3>
-                            <canvas id="memoryChart"></canvas>
-                        </div>
 
-                        <div class="card rounded-lg shadow-md p-6">
-                            <h3
-                                class="text-lg font-semibold mb-4 neon-text"
-                                style="color: #00d9ff"
-                            >
-                                System Details
-                            </h3>
-                            <div
-                                id="system-details"
-                                class="space-y-3"
-                                style="color: #00d9ff"
-                            ></div>
+                <!-- Commands View -->
+                <div id="view-commands" class="view-content hidden">
+                    <div id="commands-owner-only" class="hidden">
+                        <div class="section-card" style="text-align:center;padding:3rem;">
+                            <i class="fas fa-lock" style="font-size:2rem;color:var(--text-subtle);margin-bottom:1rem;"></i>
+                            <p style="color:var(--text-muted);font-size:0.9rem;">Fitur ini hanya bisa diakses oleh <strong>Owner</strong>.</p>
+                        </div>
+                    </div>
+                    <div id="commands-content">
+                        <div class="section-card">
+                            <div class="toolbar flex flex-wrap gap-2 justify-between items-center mb-4">
+                                <div class="flex flex-wrap gap-2">
+                                    <input type="text" id="search-commands" placeholder="Cari command..." class="toolbar-input" />
+                                    <select id="filter-cmd-category" class="toolbar-select">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                    <select id="filter-cmd-override" class="toolbar-select">
+                                        <option value="">All</option>
+                                        <option value="overridden">Has Override</option>
+                                    </select>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button id="refresh-commands" class="btn btn-primary"><i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span></button>
+                                </div>
+                            </div>
+                            <div class="table-wrap overflow-x-auto rounded-[10px]">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Command</th>
+                                            <th>Category</th>
+                                            <th class="hidden sm:table-cell">Owner</th>
+                                            <th class="hidden sm:table-cell">Team</th>
+                                            <th class="hidden sm:table-cell">Premium</th>
+                                            <th class="hidden sm:table-cell">Private</th>
+                                            <th class="hidden sm:table-cell">Group</th>
+                                            <th class="hidden sm:table-cell">Cooldown</th>
+                                            <th class="hidden sm:table-cell">Limit</th>
+                                            <th>Override</th>
+                                            <th>Maintenance</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="commands-table">
+                                        <tr><td colspan="12" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="commands-pagination" class="pagination mt-5 flex justify-center gap-1.5"></div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Settings View -->
+                <div id="view-settings" class="view-content hidden">
+                    <div id="settings-owner-only" class="hidden">
+                        <div class="section-card" style="text-align:center;padding:3rem;">
+                            <i class="fas fa-lock" style="font-size:2rem;color:var(--text-subtle);margin-bottom:1rem;"></i>
+                            <p style="color:var(--text-muted);font-size:0.9rem;">Fitur ini hanya bisa diakses oleh <strong>Owner</strong>.</p>
+                        </div>
+                    </div>
+                    <div id="settings-content">
+                        <!-- Bot Settings Toggles -->
+                        <div class="section-card" style="margin-bottom:1rem;">
+                            <h3 class="section-title">Bot Settings</h3>
+                            <div id="settings-toggles"></div>
+                        </div>
+                        <!-- General Config -->
+                        <div class="section-card" style="margin-bottom:1rem;">
+                            <h3 class="section-title">General Config</h3>
+                            <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
+                                <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Prefix</label>
+                                <input type="text" id="cfg-prefix" class="form-input w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5" maxlength="5" placeholder="." />
+                            </div>
+                            <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
+                                <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Time Zone</label>
+                                <input type="text" id="cfg-timezone" class="form-input w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5" placeholder="Asia/Jakarta" />
+                            </div>
+                            <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
+                                <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Command Limit</label>
+                                <input type="number" id="cfg-limit" class="form-input w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5" min="1" placeholder="30" />
+                            </div>
+                            <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
+                                <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Anti-Call</label>
+                                <select id="cfg-call" class="form-input form-select w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5">
+                                    <option value="reject">Reject</option>
+                                    <option value="accept">Accept</option>
+                                    <option value="off">Off</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Sticker Config -->
+                        <div class="section-card" style="margin-bottom:1rem;">
+                            <h3 class="section-title">Sticker Config</h3>
+                            <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
+                                <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Pack Name</label>
+                                <input type="text" id="cfg-sticker-pack" class="form-input w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5" placeholder="Made by ChisatoBOT" />
+                            </div>
+                            <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
+                                <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Author</label>
+                                <input type="text" id="cfg-sticker-author" class="form-input w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5" placeholder="@username" />
+                            </div>
+                        </div>
+                        <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+                            <button id="settings-reset" class="btn btn-ghost"><i class="fas fa-rotate-left"></i> Reset</button>
+                            <button id="settings-save" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </div>
+
+
             </div>
-        </div>
+        </main>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toast-container"></div>
 
         <!-- User Modal -->
         <div id="user-modal" class="modal">
-            <div class="modal-content">
-                <div class="flex justify-between items-center mb-4">
-                    <h2
-                        class="text-xl font-bold neon-text"
-                        style="color: #ff006e"
-                    >
-                        <span id="user-modal-title">Add User</span>
-                    </h2>
-                    <button class="modal-close" onclick="closeUserModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <div class="modal-box">
+                <div class="modal-header flex justify-between items-center mb-6">
+                    <h2 class="modal-title text-base font-bold text-[#f0f4ff] m-0 tracking-tight"><span id="user-modal-title">Add User</span></h2>
+                    <button class="modal-close-btn bg-[rgba(99,102,241,0.08)] border border-[rgba(99,102,241,0.12)] text-[#4a5678] cursor-pointer px-2 py-1.5 rounded-lg text-sm transition-all hover:text-[#f0f4ff] hover:bg-[rgba(99,102,241,0.15)] hover:border-[#6366f1]" onclick="closeUserModal()"><i class="fas fa-times"></i></button>
                 </div>
-                <form id="user-form" class="space-y-4">
+                <form id="user-form" class="modal-form flex flex-col gap-4">
                     <input type="hidden" id="user-form-mode" value="create" />
-                    <div>
-                        <label class="block mb-2" style="color: #00d9ff"
-                            >User ID (Phone Number)</label
-                        >
-                        <input
-                            type="text"
-                            id="user-userId"
-                            required
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                            placeholder="628123456789@s.whatsapp.net"
-                            style="
-                                background: rgba(21, 25, 50, 0.8);
-                                border-color: rgba(185, 103, 255, 0.3);
-                                color: #00d9ff;
-                            "
-                        />
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="user-userId">User ID (Phone Number)</label>
+                        <input type="text" id="user-userId" required class="form-input" placeholder="628123456789@s.whatsapp.net" />
                     </div>
-                    <div>
-                        <label class="block mb-2" style="color: #00d9ff"
-                            >Name</label
-                        >
-                        <input
-                            type="text"
-                            id="user-name"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                            placeholder="User Name"
-                            style="
-                                background: rgba(21, 25, 50, 0.8);
-                                border-color: rgba(185, 103, 255, 0.3);
-                                color: #00d9ff;
-                            "
-                        />
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="user-name">Name</label>
+                        <input type="text" id="user-name" class="form-input" placeholder="User Name" />
                     </div>
-                    <div>
-                        <label class="block mb-2" style="color: #00d9ff"
-                            >Role</label
-                        >
-                        <select
-                            id="user-role"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                            style="
-                                background: rgba(21, 25, 50, 0.8);
-                                border-color: rgba(185, 103, 255, 0.3);
-                                color: #00d9ff;
-                            "
-                        >
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="user-role">Role</label>
+                        <select id="user-role" class="form-select">
                             <option value="free">Free</option>
                             <option value="premium">Premium</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block mb-2" style="color: #00d9ff"
-                            >Limit</label
-                        >
-                        <input
-                            type="number"
-                            id="user-limit"
-                            value="20"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                            style="
-                                background: rgba(21, 25, 50, 0.8);
-                                border-color: rgba(185, 103, 255, 0.3);
-                                color: #00d9ff;
-                            "
-                        />
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="user-limit">Limit</label>
+                        <input type="number" id="user-limit" value="20" class="form-input" />
                     </div>
-                    <div>
-                        <label class="block mb-2" style="color: #00d9ff"
-                            >Expired (timestamp, 0 for never)</label
-                        >
-                        <input
-                            type="number"
-                            id="user-expired"
-                            value="0"
-                            class="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                            style="
-                                background: rgba(21, 25, 50, 0.8);
-                                border-color: rgba(185, 103, 255, 0.3);
-                                color: #00d9ff;
-                            "
-                        />
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="user-expired">Expired (timestamp, 0 = never)</label>
+                        <input type="number" id="user-expired" value="0" class="form-input" />
                     </div>
-                    <div class="flex gap-2 justify-end">
-                        <button
-                            type="button"
-                            onclick="closeUserModal()"
-                            class="px-4 py-2 rounded-lg"
-                            style="
-                                background: rgba(185, 103, 255, 0.2);
-                                color: #b967ff;
-                                border: 1px solid #b967ff;
-                            "
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-4 py-2 rounded-lg glow-button"
-                            style="
-                                background: linear-gradient(
-                                    45deg,
-                                    #05ffa1,
-                                    #00d9ff
-                                );
-                                color: #0a0e27;
-                            "
-                        >
-                            <i class="fas fa-save"></i> Save
-                        </button>
+                    <div class="modal-actions flex gap-2 justify-end mt-2">
+                        <button type="button" onclick="closeUserModal()" class="btn btn-ghost">Cancel</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
                     </div>
                 </form>
             </div>
@@ -1175,125 +610,78 @@
 
         <!-- Group Settings Modal -->
         <div id="group-modal" class="modal">
-            <div class="modal-content">
-                <div class="flex justify-between items-center mb-4">
-                    <h2
-                        class="text-xl font-bold neon-text"
-                        style="color: #ff006e"
-                    >
-                        Edit Group Settings
-                    </h2>
-                    <button class="modal-close" onclick="closeGroupModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <div class="modal-box">
+                <div class="modal-header flex justify-between items-center mb-6">
+                    <h2 class="modal-title text-base font-bold text-[#f0f4ff] m-0 tracking-tight">Edit Group Settings</h2>
+                    <button class="modal-close-btn bg-[rgba(99,102,241,0.08)] border border-[rgba(99,102,241,0.12)] text-[#4a5678] cursor-pointer px-2 py-1.5 rounded-lg text-sm transition-all hover:text-[#f0f4ff] hover:border-[#6366f1]" onclick="closeGroupModal()"><i class="fas fa-times"></i></button>
                 </div>
-                <form id="group-form" class="space-y-4">
+                <form id="group-form" class="modal-form flex flex-col gap-4">
                     <input type="hidden" id="group-groupId" />
-                    <div>
-                        <label class="block mb-2" style="color: #00d9ff"
-                            >Group Name</label
-                        >
-                        <input
-                            type="text"
-                            id="group-name"
-                            disabled
-                            class="w-full px-4 py-2 border rounded-lg opacity-60"
-                            style="
-                                background: rgba(21, 25, 50, 0.8);
-                                border-color: rgba(185, 103, 255, 0.3);
-                                color: #00d9ff;
-                            "
-                        />
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider">Group Name</label>
+                        <input type="text" id="group-name" disabled class="form-input" style="opacity:0.5" />
                     </div>
-                    <div class="space-y-2">
-                        <label
-                            class="flex items-center gap-2"
-                            style="color: #00d9ff"
-                        >
-                            <input
-                                type="checkbox"
-                                id="group-antilink"
-                                class="form-checkbox"
-                            />
-                            <span>Antilink</span>
-                        </label>
-                        <label
-                            class="flex items-center gap-2"
-                            style="color: #00d9ff"
-                        >
-                            <input
-                                type="checkbox"
-                                id="group-antibot"
-                                class="form-checkbox"
-                            />
-                            <span>Antibot</span>
-                        </label>
-                        <label
-                            class="flex items-center gap-2"
-                            style="color: #00d9ff"
-                        >
-                            <input
-                                type="checkbox"
-                                id="group-welcome"
-                                class="form-checkbox"
-                            />
-                            <span>Welcome Message</span>
-                        </label>
-                        <label
-                            class="flex items-center gap-2"
-                            style="color: #00d9ff"
-                        >
-                            <input
-                                type="checkbox"
-                                id="group-notify"
-                                class="form-checkbox"
-                            />
-                            <span>Notifications</span>
-                        </label>
-                        <label
-                            class="flex items-center gap-2"
-                            style="color: #00d9ff"
-                        >
-                            <input
-                                type="checkbox"
-                                id="group-mute"
-                                class="form-checkbox"
-                            />
-                            <span>Mute</span>
-                        </label>
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider">Settings</label>
+                        <div class="checkbox-group flex flex-col gap-1">
+                            <label class="checkbox-item"><input type="checkbox" id="group-antilink" class="form-checkbox" /><span>Antilink</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="group-antibot" class="form-checkbox" /><span>Antibot</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="group-welcome" class="form-checkbox" /><span>Welcome Message</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="group-notify" class="form-checkbox" /><span>Notifications</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="group-mute" class="form-checkbox" /><span>Mute</span></label>
+                        </div>
                     </div>
-                    <div class="flex gap-2 justify-end">
-                        <button
-                            type="button"
-                            onclick="closeGroupModal()"
-                            class="px-4 py-2 rounded-lg"
-                            style="
-                                background: rgba(185, 103, 255, 0.2);
-                                color: #b967ff;
-                                border: 1px solid #b967ff;
-                            "
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-4 py-2 rounded-lg glow-button"
-                            style="
-                                background: linear-gradient(
-                                    45deg,
-                                    #05ffa1,
-                                    #00d9ff
-                                );
-                                color: #0a0e27;
-                            "
-                        >
-                            <i class="fas fa-save"></i> Save Settings
-                        </button>
+                    <div class="modal-actions flex gap-2 justify-end mt-2">
+                        <button type="button" onclick="closeGroupModal()" class="btn btn-ghost">Cancel</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save Settings</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <script src="/js/dashboard.js"></script>
+        <!-- Command Override Modal -->
+        <div id="command-modal" class="modal">
+            <div class="modal-box">
+                <div class="modal-header flex justify-between items-center mb-6">
+                    <h2 class="modal-title text-base font-bold text-[#f0f4ff] m-0 tracking-tight">Edit Command: <span id="cmd-modal-name">—</span></h2>
+                    <button class="modal-close-btn bg-[rgba(99,102,241,0.08)] border border-[rgba(99,102,241,0.12)] text-[#4a5678] cursor-pointer px-2 py-1.5 rounded-lg text-sm transition-all hover:text-[#f0f4ff] hover:border-[#6366f1]" onclick="closeCommandModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <form id="command-form" class="modal-form flex flex-col gap-4">
+                    <input type="hidden" id="cmd-modal-cmdname" />
+                    <p class="text-[0.8rem] text-[#4a5678] m-0">Nilai default dari file command. Override akan menimpa nilai tersebut saat runtime.</p>
+                    <div class="form-group flex flex-col gap-1.5">
+                        <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider">Permissions</label>
+                        <div class="checkbox-group flex flex-col gap-1">
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isOwner" class="form-checkbox" /><span>Owner Only</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isTeam" class="form-checkbox" /><span>Team Only</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isPremium" class="form-checkbox" /><span>Premium Only</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isPrivate" class="form-checkbox" /><span>Private (DM only)</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isGroup" class="form-checkbox" /><span>Group Only</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isGroupAdmin" class="form-checkbox" /><span>Group Admin Only</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isGroupOwner" class="form-checkbox" /><span>Group Owner Only</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="cmd-isBotAdmin" class="form-checkbox" /><span>Bot Admin Required</span></label>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="form-group flex flex-col gap-1.5">
+                            <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="cmd-cooldown">Cooldown (detik)</label>
+                            <input type="number" id="cmd-cooldown" class="form-input" min="0" placeholder="0 = default file" />
+                        </div>
+                        <div class="form-group flex flex-col gap-1.5">
+                            <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" for="cmd-limit">Limit</label>
+                            <input type="number" id="cmd-limit" class="form-input" min="0" placeholder="0 = default file" />
+                        </div>
+                    </div>
+                    <div class="modal-actions flex gap-2 justify-end mt-2">
+                        <button type="button" id="cmd-reset-btn" class="btn btn-danger"><i class="fas fa-trash"></i> Reset Override</button>
+                        <button type="button" onclick="closeCommandModal()" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="/js/dashboard.js?v=4"></script>
     </body>
 </html>
+
