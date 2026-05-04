@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { Database } from "../../infrastructure/database";
+import os from "os";
 
 export async function statsRoutes(fastify: FastifyInstance) {
     // Get overall statistics
@@ -109,22 +110,96 @@ export async function statsRoutes(fastify: FastifyInstance) {
     // Get memory usage
     fastify.get("/system", async (request, reply) => {
         try {
+            const uptime = process.uptime();
             const memoryUsage = process.memoryUsage();
+            const totalMem = os.totalmem();
+            const freeMem = os.freemem();
+            const usedMem = totalMem - freeMem;
+            const memPct = Math.round((usedMem / totalMem) * 100);
             return {
                 memory: {
                     rss: formatBytes(memoryUsage.rss),
                     heapTotal: formatBytes(memoryUsage.heapTotal),
                     heapUsed: formatBytes(memoryUsage.heapUsed),
                     external: formatBytes(memoryUsage.external),
+                    rssBytes: memoryUsage.rss,
+                    heapTotalBytes: memoryUsage.heapTotal,
+                    heapUsedBytes: memoryUsage.heapUsed,
+                    externalBytes: memoryUsage.external,
+                },
+                os: {
+                    totalMem: formatBytes(totalMem),
+                    freeMem: formatBytes(freeMem),
+                    usedMem: formatBytes(usedMem),
+                    totalMemBytes: totalMem,
+                    usedMemBytes: usedMem,
+                    memPct,
                 },
                 cpu: process.cpuUsage(),
                 platform: process.platform,
                 nodeVersion: process.version,
                 pid: process.pid,
+                uptimeSeconds: Math.floor(uptime),
+                uptime: formatUptime(uptime),
             };
         } catch (error) {
             reply.status(500).send({ error: "Failed to fetch system info" });
         }
+    });
+
+    // Real-time SSE stream — pushes system data every 1 second
+    fastify.get("/stream", async (request, reply) => {
+        reply.raw.writeHead(200, {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        });
+        reply.raw.flushHeaders();
+
+        const sendData = () => {
+            try {
+                const uptime = process.uptime();
+                const memoryUsage = process.memoryUsage();
+                const totalMem = os.totalmem();
+                const freeMem = os.freemem();
+                const usedMem = totalMem - freeMem;
+                const memPct = Math.round((usedMem / totalMem) * 100);
+                const data = {
+                    memory: {
+                        rss: formatBytes(memoryUsage.rss),
+                        heapTotal: formatBytes(memoryUsage.heapTotal),
+                        heapUsed: formatBytes(memoryUsage.heapUsed),
+                        external: formatBytes(memoryUsage.external),
+                        rssBytes: memoryUsage.rss,
+                        heapTotalBytes: memoryUsage.heapTotal,
+                        heapUsedBytes: memoryUsage.heapUsed,
+                        externalBytes: memoryUsage.external,
+                    },
+                    os: {
+                        totalMem: formatBytes(totalMem),
+                        freeMem: formatBytes(freeMem),
+                        usedMem: formatBytes(usedMem),
+                        totalMemBytes: totalMem,
+                        usedMemBytes: usedMem,
+                        memPct,
+                    },
+                    uptimeSeconds: Math.floor(uptime),
+                    platform: process.platform,
+                    nodeVersion: process.version,
+                    pid: process.pid,
+                };
+                reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+            } catch { /* client disconnected */ }
+        };
+
+        sendData();
+        const interval = setInterval(sendData, 1000);
+
+        await new Promise<void>((resolve) => {
+            request.raw.on("close", () => { clearInterval(interval); resolve(); });
+            request.raw.on("error", () => { clearInterval(interval); resolve(); });
+        });
     });
 }
 
