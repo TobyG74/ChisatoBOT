@@ -6,7 +6,8 @@ let baileysModule: any = null;
 async function getBaileys() {
     if (!baileysModule) {
         const dynamicImport = new Function('specifier', 'return import(specifier)');
-        baileysModule = await dynamicImport("@whiskeysockets/baileys");
+        const m = await dynamicImport("baileys");
+        baileysModule = (typeof m.makeWASocket === 'function') ? m : (m.default ?? m);
     }
     return baileysModule;
 }

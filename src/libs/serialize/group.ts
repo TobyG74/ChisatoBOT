@@ -1,4 +1,4 @@
-import type { WAMessage } from "@whiskeysockets/baileys";
+import type { WAMessage } from "baileys";
 import { GroupSerialize } from "../../types/structure/serialize";
 
 export const group = async (message: WAMessage): Promise<GroupSerialize> => {

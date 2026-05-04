@@ -66,7 +66,7 @@ export class Group {
                         settings: true,
                     },
                 });
-                Chisato.log("info", `Added New Group Metadata ${groupId}`);
+                Chisato.logger.info(`Added New Group Metadata ${groupId}`);
                 resolve(metadata);
             } catch (err) {
                 reject(err);

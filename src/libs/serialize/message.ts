@@ -1,4 +1,4 @@
-import type { WAMessage } from "@whiskeysockets/baileys";
+import type { WAMessage } from "baileys";
 import { MessageSerialize } from "../../types/structure/serialize";
 import { Client } from "..";
 
@@ -46,7 +46,7 @@ export const message = async (
             ? await Chisato.decodeJid(m.key.participantAlt)
             : m.fromMe
             ? await Chisato.decodeJid(Chisato.user.id)
-            : m.from;
+            : await Chisato.decodeJid(m.key.remoteJidAlt);
         m.body =
             m.type === "conversation"
                 ? m.message.conversation

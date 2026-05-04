@@ -58,7 +58,7 @@ export class User {
                         },
                     },
                 });
-                Chisato.log("info", `Added New User ${userId}`);
+                Chisato.logger.info(`Added New User ${userId}`);
                 resolve(metadata);
             } catch (err) {
                 reject(err);
