@@ -69,7 +69,7 @@ export default {
                     err.message,
                 message
             );
-            console.log(err);
+            Chisato.logger.error("Error fetching earthquake data:", err);
         }
     },
 } satisfies ConfigCommands;

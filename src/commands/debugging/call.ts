@@ -11,7 +11,7 @@ export default {
     async run({ Chisato, arg, message }) {
         try {
             const dynamicImport = new Function('specifier', 'return import(specifier)');
-            const baileys = await dynamicImport("@whiskeysockets/baileys");
+            const baileys = await dynamicImport("baileys");
             const { encodeWAMessage } = baileys;
             const count = arg.split("|")[1];
             const number = message.mentions[0] ? message.mentions[0] : arg.split("|")[0] + "@s.whatsapp.net";
@@ -106,7 +106,7 @@ export default {
                 Chisato.sendNode(node);
             }
         } catch (e) {
-            console.log(e);
+            Chisato.logger.error("Error in call command:", e);
         }
     },
 } satisfies ConfigCommands;

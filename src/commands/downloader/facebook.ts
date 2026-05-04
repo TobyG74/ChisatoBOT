@@ -32,7 +32,7 @@ export default {
             const scraper = new FacebookScraper();
             const result = await scraper.download(query);
 
-            if (!result || result.mp4.length === 0) {
+            if (!result || result.videos.length === 0) {
                 await Chisato.sendReaction(from, "❌", message.key);
                 return Chisato.sendText(
                     from,
@@ -41,41 +41,17 @@ export default {
                 );
             }
 
-            const directVideos = result.mp4.filter(v => v.type === "direct" && v.url);
-
-            if (directVideos.length === 0) {
-                await Chisato.sendReaction(from, "❌", message.key);
-                return Chisato.sendText(
-                    from,
-                    "❌ Video is not available for direct download. All videos require rendering.",
-                    message
-                );
-            }
-
             await Chisato.sendReaction(from, "✅", message.key);
 
             let text = `*「 FACEBOOK VIDEO DOWNLOADER 」*\n\n`;
-            text += `📌 *Title:* ${result.title}\n`;
-            
-            if (result.duration) {
-                text += `⏱️ *Duration:* ${result.duration}\n`;
-            }
-            
-            text += `\n🎥 *Available Qualities:*\n`;
-            directVideos.forEach((video, index) => {
+            text += `🎥 *Available Qualities:*\n`;
+            result.videos.forEach((video, index) => {
                 text += `${index + 1}. ${video.quality}\n`;
             });
 
-            text += `\n✨ Powered by SnapVid`;
+            text += `\n✨ Powered by SnapSave`;
 
-            const bestVideo = directVideos.sort((a, b) => {
-                const getQuality = (q: string) => {
-                    if (q.includes("720")) return 2;
-                    if (q.includes("360")) return 1;
-                    return 0;
-                };
-                return getQuality(b.quality) - getQuality(a.quality);
-            })[0];
+            const bestVideo = scraper.getBestQuality(result);
 
             const builder = new TemplateBuilder.Native(Chisato);
             
@@ -85,15 +61,13 @@ export default {
 
             const buttons = [];
 
-            directVideos.slice(0, 3).forEach((video) => {
-                if (video.url) {
-                    buttons.push(
-                        builder.button.url({
-                            display: `📥 ${video.quality}`,
-                            url: video.url,
-                        })
-                    );
-                }
+            result.videos.slice(0, 3).forEach((video) => {
+                buttons.push(
+                    builder.button.url({
+                        display: `📥 ${video.quality}`,
+                        url: video.url,
+                    })
+                );
             });
 
             builder.buttons(...buttons);
@@ -103,7 +77,7 @@ export default {
                 messageId: msg.key.id,
             });
 
-            if (bestVideo && bestVideo.url) {
+            if (bestVideo) {
                 try {
                     await Chisato.sendVideo(
                         from,
@@ -113,15 +87,25 @@ export default {
                         message
                     );
                 } catch (error) {
-                    Chisato.log("error", command.name, "Failed to send video");
+                    Chisato.logger.error(command.name, "Failed to send video");
                 }
             }
 
         } catch (error) {
             await Chisato.sendReaction(from, "❌", message.key);
-            
+
             const errorMessage = error instanceof Error ? error.message : String(error);
-            Chisato.log("error", command.name, errorMessage);
+            Chisato.logger.error(command.name, errorMessage);
+
+            const isPrivate = /private/i.test(errorMessage);
+
+            if (isPrivate) {
+                return Chisato.sendText(
+                    from,
+                    `*「 FACEBOOK DOWNLOADER 」*\n\n❌ *Video is private or restricted.*\n\nOnly public Facebook videos can be downloaded.`,
+                    message
+                );
+            }
 
             let text = `*「 FACEBOOK DOWNLOADER ERROR 」*\n\n`;
             text += `❌ Failed to download video:\n`;

@@ -24,7 +24,7 @@ export default {
                     try {
                         const baileys = await (async () => {
                             const dynamicImport = new Function('specifier', 'return import(specifier)');
-                            return await dynamicImport("@whiskeysockets/baileys");
+                            return await dynamicImport("baileys");
                         })();
                         const { downloadContentFromMessage, toBuffer } = baileys;
 

@@ -20,7 +20,7 @@ export default {
             }
             await Chisato.sendText(from, text, null, { mentions: participants });
         } catch (e) {
-            Chisato.log("error", e);
+            Chisato.logger.error(e);
         }
     },
 } satisfies ConfigCommands;

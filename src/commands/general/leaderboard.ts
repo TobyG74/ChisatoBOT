@@ -117,7 +117,7 @@ ${prefix}${command.name} 20`
             await Chisato.sendReaction(from, "✅", message.key);
         } catch (error) {
             await Chisato.sendReaction(from, "❌", message.key);
-            Chisato.log("error", `Leaderboard command error:`, error);
+            Chisato.logger.error(`Leaderboard command error:`, error);
             await Chisato.sendText(
                 from,
                 "❌ Failed to retrieve leaderboard. Please try again.",

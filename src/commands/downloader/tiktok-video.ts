@@ -39,7 +39,7 @@ export default {
         })
             .then(async (res) => {
                 if (res.status === "error") {
-                    Chisato.log("error", command.name, res.message);
+                    Chisato.logger.error(command.name, res.message);
                     return Chisato.sendText(from, res.message, message);
                 }
                 if (res.result.type === "image")
@@ -76,7 +76,7 @@ export default {
             })
             .catch(async (e) => {
                 await Chisato.sendReaction(from, "❌", message.key);
-                Chisato.log("error", command.name, e);
+                Chisato.logger.error(command.name, e);
                 Chisato.sendText(
                     from,
                     "There is an error. Please report it to the bot creator immediately!\nMessage : " +

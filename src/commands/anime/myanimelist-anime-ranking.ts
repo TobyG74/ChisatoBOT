@@ -36,14 +36,12 @@ export default {
             // Sort by rank (ascending)
             const sortedData = data.sort((a, b) => a.rank - b.rank);
 
-            console.log(
-                `Preparing carousel with ${sortedData.length} cards...`
-            );
+            Chisato.logger.info(`Fetched ${sortedData.length} anime for type "${type}" from MAL ranking.`);
 
             const cards = [];
             for (const anime of sortedData) {
                 if (!anime || !anime.title || !anime.images) {
-                    console.error("Invalid anime data found, skipping:", anime);
+                    Chisato.logger.error(`Invalid anime data found, skipping:`, anime);
                     continue;
                 }
 
@@ -108,7 +106,7 @@ export default {
                 }
             });
 
-            console.log("Carousel message generated, sending...");
+            Chisato.logger.info("Carousel message generated, sending...");
 
             const builtMessage = await builder
                 .mainBody(
@@ -126,10 +124,10 @@ export default {
             });
             await Chisato.sendReaction(from, "✅", message.key);
 
-            console.log("Carousel sent successfully!");
+            Chisato.logger.info("Carousel sent successfully!");
         } catch (error: any) {
             await Chisato.sendReaction(from, "❌", message.key);
-            console.error("Error fetching MAL ranking:", error);
+            Chisato.logger.error("Error fetching MAL ranking:", error);
 
             let errorMessage = "❌ *Error!*\n\n";
 

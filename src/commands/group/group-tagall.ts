@@ -21,7 +21,7 @@ export default {
                 mentions: groupParticipants.map((e) => e.id),
             });
         } catch (e) {
-            Chisato.log("error", e);
+            Chisato.logger.error(e);
         }
     },
 } satisfies ConfigCommands;

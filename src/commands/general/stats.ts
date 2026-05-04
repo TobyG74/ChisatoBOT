@@ -90,7 +90,7 @@ ${prefix}${command.name} @user - View someone's stats
             
             await Chisato.sendText(from, text, message);
         } catch (error) {
-            Chisato.log("error", `Stats command error:`, error);
+            Chisato.logger.error(`Stats command error:`, error);
             await Chisato.sendText(
                 from,
                 "❌ Failed to retrieve statistics. Please try again.",

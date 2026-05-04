@@ -1,9 +1,4 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import moment from "moment-timezone";
-
-const ping = function (timestamp: number, now: number) {
-    return moment.duration(now - Number(moment(timestamp * 1000))).asSeconds();
-};
 
 export default {
     name: "ping",
@@ -11,11 +6,19 @@ export default {
     category: "misc",
     description: "See the ping of bot",
     async run({ Chisato, from, message }) {
-        const text = `Ping : ${ping(message.messageTimestamp, Date.now())} seconds`;
-        await Chisato.sendText(from, text, message, {
-            contextInfo: {
-                expiration: 0,
-            },
+        const start = Date.now();
+        const sent = await Chisato.sendText(from, "🏓 Pong!", message, {
+            contextInfo: { expiration: 0 },
+        });
+        const latency = Date.now() - start;
+
+        const ms = latency < 1000
+            ? `${latency}ms`
+            : `${(latency / 1000).toFixed(2)}s`;
+
+        await Chisato.sendMessage(from, {
+            text: `🏓 Pong!\n⚡ Ping : ${ms}`,
+            edit: sent!.key,
         });
     },
 } satisfies ConfigCommands;

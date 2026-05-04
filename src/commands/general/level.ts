@@ -80,7 +80,7 @@ ${prefix}${command.name} @user - Check someone's level
             
             await Chisato.sendText(from, text, message);
         } catch (error) {
-            Chisato.log("error", `Level command error:`, error);
+            Chisato.logger.error(`Level command error:`, error);
             await Chisato.sendText(
                 from,
                 "❌ Failed to retrieve level information. Please try again.",

@@ -9,7 +9,7 @@ export default {
     example: `• {prefix}{command.name} @tag|Hello|Hi`,
     async run({ Chisato, from, message, command }) {
         const dynamicImport = new Function('specifier', 'return import(specifier)');
-        const baileys = await dynamicImport("@whiskeysockets/baileys");
+        const baileys = await dynamicImport("baileys");
         const { generateWAMessageFromContent } = baileys;
         const { arg } = message;
         let tag = arg.split("|")[0]; // Target Jid

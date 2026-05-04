@@ -201,7 +201,7 @@ export default {
                 })
             );
 
-            console.log(`Preparing carousel with ${cards.length} cards...`);
+            Chisato.logger.info(`Preparing carousel with ${cards.length} cards...`);
 
             let paginationText = "";
             if (page > 1 || res.length >= 10) {
@@ -225,7 +225,7 @@ export default {
                 .cards(cards)
                 .render();
 
-            console.log("Carousel message generated, sending...");
+            Chisato.logger.info("Carousel message generated, sending...");
 
             await Chisato.relayMessage(from, msg.message, {
                 messageId: msg.key.id,
@@ -276,7 +276,7 @@ export default {
                 }
             }
 
-            console.log("Carousel sent successfully!");
+            Chisato.logger.info("Carousel sent successfully!");
         } catch (err: any) {
             if (err?.response?.status === 404) {
                 return Chisato.sendText(from, "Not found!", message);
@@ -287,7 +287,7 @@ export default {
                     err.message,
                 message
             );
-            console.log(err);
+            Chisato.logger.error("Failed to fetch or send wallpapers:", err);
         }
     },
 } satisfies ConfigCommands;

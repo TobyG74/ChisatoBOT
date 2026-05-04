@@ -14,7 +14,7 @@ export default {
     async run({ Chisato, query, from, message }) {
         let buffer: Buffer | null;
         const groups = Object.entries(
-            await Chisato.groupFetchAllParticipating()
+            await Chisato.groupFetchAllParticipating() as Record<string, any>
         )
             .slice(0)
             .map((entry) => entry[1])

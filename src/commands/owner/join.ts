@@ -89,12 +89,12 @@ export default {
                             `Let's have fun together! 🎉`
                     );
                 } catch (error) {
-                    console.log("Note: Could not send greeting message to new group (this is normal)");
+                    Chisato.logger.error("Note: Could not send greeting message to new group (this is normal)", error);
                 }
             }, 5000);
 
         } catch (error: any) {
-            console.error("Join group error:", error);
+            Chisato.logger.error("Join group error:", error);
 
             let errorMessage = "Failed to join the group.";
 

@@ -116,7 +116,7 @@ export default {
                         message
                     );
                 } catch (error) {
-                    Chisato.log("error", command.name, "Failed to send image");
+                    Chisato.logger.error(command.name, "Failed to send image");
                     for (let i = 1; i < Math.min(results.length, 5); i++) {
                         try {
                             const Axios = require("axios");
@@ -274,7 +274,7 @@ export default {
             await Chisato.sendReaction(from, "❌", message.key);
             
             const errorMessage = error instanceof Error ? error.message : String(error);
-            Chisato.log("error", command.name, errorMessage);
+            Chisato.logger.error(command.name, errorMessage);
 
             let text = `*「 GOOGLE IMAGE SEARCH ERROR 」*\n\n`;
             text += `❌ Failed to search images:\n`;

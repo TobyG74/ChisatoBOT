@@ -60,6 +60,7 @@ export default {
                 { pack: stickers.packname, author: stickers.author },
                 Buffer.from(await (await fetch(result.url)).arrayBuffer()),
                 "default",
+                false,
                 message
             );
 

@@ -37,10 +37,10 @@ export default {
         }
 
         try {
-            const groups = await Chisato.groupFetchAllParticipating();
+            const groups = await Chisato.groupFetchAllParticipating() as Record<string, any>;
             const groupList = Object.values(groups);
 
-            groupList.sort((a, b) => b.participants.length - a.participants.length);
+            groupList.sort((a: any, b: any) => b.participants.length - a.participants.length);
 
             if (groupIndex >= groupList.length) {
                 await Chisato.sendText(

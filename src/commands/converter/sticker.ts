@@ -23,6 +23,7 @@ export default {
                     { pack: stickers.packname, author: stickers.author },
                     buffer,
                     type || "default",
+                    false,
                     message
                 );
                 buffer = null;
@@ -36,12 +37,14 @@ export default {
                         message
                     );
                 buffer = quoted !== null ? await quoted.download() : await message.download();
+                
                 await Chisato.sendMediaAsSticker(
                     from,
                     { pack: stickers.packname, author: stickers.author },
                     buffer,
                     type || "default",
-                    message
+                    true ,
+                    message,
                 );
                 buffer = null;
             } else {
@@ -70,6 +73,7 @@ export default {
                 `❌ Failed to convert to sticker. Please try again.\n\nError: ${errorMessage}`,
                 message
             );
+            Chisato.logger.error("Error converting to sticker:", error);
         }
     },
 } satisfies ConfigCommands;

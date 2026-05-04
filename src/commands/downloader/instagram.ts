@@ -1,4 +1,4 @@
-import type { ConfigCommands } from "../../types/structure/commands";
+﻿import type { ConfigCommands } from "../../types/structure/commands";
 import { InstagramScraper } from "../../utils/scrapers/downloader/instagram.scraper";
 import { Validators } from "../../utils/core";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
@@ -11,16 +11,16 @@ export default {
     description: "Download Image or Video from Instagram",
     cooldown: 5,
     limit: 2,
-    example: `*「 INSTAGRAM DOWNLOADER 」*
+    example: `*ã€Œ INSTAGRAM DOWNLOADER ã€*
 
-📥 Download images or videos from Instagram!
+ðŸ“¥ Download images or videos from Instagram!
 
-📝 *How to use:*
+ðŸ“ *How to use:*
 {prefix}{command.name} [url]
 
-💡 *Example:*
-• {prefix}{command.name} https://www.instagram.com/p/xxxxx/
-• {prefix}{command.alias} https://www.instagram.com/reel/xxxxx/`,
+ðŸ’¡ *Example:*
+â€¢ {prefix}{command.name} https://www.instagram.com/p/xxxxx/
+â€¢ {prefix}{command.alias} https://www.instagram.com/reel/xxxxx/`,
     async run({ Chisato, from, query, prefix, message, command }) {
         if (!query || !Validators.isURL(query)) {
             return;
@@ -46,7 +46,7 @@ export default {
 
                 let text = `*「 INSTAGRAM VIDEO DOWNLOADER 」*\n\n`;
                 text += `🎥 *Type:* Video\n`;
-                text += `\n✨ Powered by SnapVid`;
+                text += `\n✨ Powered by SnapSave`;
 
                 const builder = new TemplateBuilder.Native(Chisato);
                 
@@ -56,7 +56,7 @@ export default {
 
                 builder.buttons(
                     builder.button.url({
-                        display: "📥 Download Video",
+                        display: "🎥 Download Video",
                         url: result.video.url,
                     })
                 );
@@ -75,7 +75,7 @@ export default {
                         message
                     );
                 } catch (error) {
-                    Chisato.log("error", command.name, "Failed to send video");
+                    Chisato.logger.error(command.name, "Failed to send video");
                 }
 
             } else if (result.type === "image") {
@@ -106,7 +106,7 @@ export default {
                     let text = `*「 INSTAGRAM IMAGE DOWNLOADER 」*\n\n`;
                     text += `🖼️ *Type:* Image\n`;
                     text += `📊 *Quality:* ${bestQuality.quality}\n`;
-                    text += `\n✨ Powered by SnapVid`;
+                    text += `\n✨ Powered by SnapSave`;
 
                     const builder = new TemplateBuilder.Native(Chisato);
                     
@@ -116,7 +116,7 @@ export default {
 
                     builder.buttons(
                         builder.button.url({
-                            display: "📥 Download Image",
+                            display: "🖼️ Download Image",
                             url: bestQuality.url,
                         })
                     );
@@ -134,7 +134,7 @@ export default {
                             message
                         );
                     } catch (error) {
-                        Chisato.log("error", command.name, "Failed to send image");
+                        Chisato.logger.error(command.name, "Failed to send image");
                     }
 
                 } else {
@@ -150,7 +150,8 @@ export default {
                                 try {
                                     const response = await Axios.get(bestQuality.url, {
                                         responseType: "arraybuffer",
-                                        timeout: 15000,
+                                        timeout: 20000,
+                                        headers: bestQuality.headers ?? {},
                                     });
                                     imageBuffer = Buffer.from(response.data);
                                 } catch (err: any) {
@@ -169,7 +170,7 @@ export default {
                                 header: imageBuffer,
                                 buttons: [
                                     builder.button.url({
-                                        display: "📥 Full Quality",
+                                        display: "🖼️ Full Quality",
                                         url: bestQuality?.url || imageItem.defaultUrl,
                                     }),
                                     builder.button.copy({
@@ -187,8 +188,8 @@ export default {
                             `*「 INSTAGRAM IMAGE DOWNLOADER 」*\n\n` +
                             `🖼️ *Type:* Image Carousel\n` +
                             `📊 *Total Images:* ${result.images.length}\n\n` +
-                            `✨ Powered by SnapVid\n\n` +
-                            `Swipe to see all images! 👉`
+                            `✨ Powered by SnapSave\n\n` +
+                            `Swipe to see all images! 👆`
                         )
                         .mainFooter("Instagram Image Downloader")
                         .cards(cards)
@@ -204,7 +205,7 @@ export default {
             await Chisato.sendReaction(from, "❌", message.key);
             
             const errorMessage = error instanceof Error ? error.message : String(error);
-            Chisato.log("error", command.name, errorMessage);
+            Chisato.logger.error(command.name, errorMessage);
 
             let text = `*「 INSTAGRAM DOWNLOADER ERROR 」*\n\n`;
             text += `❌ Failed to download media:\n`;

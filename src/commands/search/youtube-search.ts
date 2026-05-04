@@ -144,7 +144,7 @@ export default {
                 })
             );
 
-            console.log(`Preparing carousel with ${cards.length} cards...`);
+            Chisato.logger.info(`Preparing carousel with ${cards.length} cards...`);
 
             const msg = await builder
                 .mainHeader(`YouTube Search - ${query}`, undefined)
@@ -156,17 +156,17 @@ export default {
                 .cards(cards)
                 .render();
 
-            console.log("Carousel message generated, sending...");
+            Chisato.logger.info("Carousel message generated, sending...");
 
             await Chisato.relayMessage(from, msg.message, {
                 messageId: msg.key.id,
             });
             await Chisato.sendReaction(from, "✅", message.key);
 
-            console.log("Carousel sent successfully!");
+            Chisato.logger.info("Carousel sent successfully!");
         } catch (err: any) {
             await Chisato.sendReaction(from, "❌", message.key);
-            Chisato.log("error", command.name, err);
+            Chisato.logger.error(command.name, err);
             Chisato.sendText(
                 from,
                 "There is an error. Please report it to the bot creator immediately!\nMessage: " +

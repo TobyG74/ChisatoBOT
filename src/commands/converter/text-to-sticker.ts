@@ -33,6 +33,7 @@ export default {
                 { pack: stickers.packname, author: stickers.author },
                 imageBuffer,
                 "default",
+                false,
                 message
             );
 

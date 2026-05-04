@@ -36,14 +36,12 @@ export default {
             // Sort by rank (ascending)
             const sortedData = data.sort((a, b) => a.rank - b.rank);
 
-            console.log(
-                `Preparing carousel with ${sortedData.length} cards...`
-            );
+            Chisato.logger.info(`Fetched ${sortedData.length} manga for type "${type}" from MAL ranking.`);
 
             const cards = [];
             for (const manga of sortedData) {
                 if (!manga || !manga.title || !manga.images) {
-                    console.error("Invalid manga data found, skipping:", manga);
+                    Chisato.logger.error(`Invalid manga data found, skipping: ${JSON.stringify(manga)}`);
                     continue;
                 }
 
@@ -65,7 +63,7 @@ export default {
                     });
                     imageBuffer = Buffer.from(response.data);
                 } catch (error) {
-                    console.error(
+                    Chisato.logger.error(
                         `Failed to download image for ${mangaTitle}:`,
                         error
                     );
@@ -108,7 +106,7 @@ export default {
                 }
             });
 
-            console.log("Carousel message generated, sending...");
+            Chisato.logger.info("Carousel message generated, sending...");
 
             const builtMessage = await builder
                 .mainBody(
@@ -126,10 +124,10 @@ export default {
             });
             await Chisato.sendReaction(from, "✅", message.key);
 
-            console.log("Carousel sent successfully!");
+            Chisato.logger.info("Carousel sent successfully!");
         } catch (error: any) {
             await Chisato.sendReaction(from, "❌", message.key);
-            console.error("Error fetching MAL manga ranking:", error);
+            Chisato.logger.error("Error fetching MAL manga ranking:", error);
 
             let errorMessage = "❌ *Error!*\n\n";
 

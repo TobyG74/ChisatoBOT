@@ -11,7 +11,7 @@ export default {
         await Chisato.sendReaction(from, "⏳", msg.key);
 
         try {
-            const groups = await Chisato.groupFetchAllParticipating();
+            const groups = await Chisato.groupFetchAllParticipating() as Record<string, any>;
             const groupList = Object.values(groups);
 
             if (groupList.length === 0) {
@@ -26,7 +26,7 @@ export default {
                 return;
             }
 
-            groupList.sort((a, b) => b.participants.length - a.participants.length);
+            groupList.sort((a: any, b: any) => b.participants.length - a.participants.length);
 
             let text = `*「 LIST GROUP 」*\n\n`;
             text += `📊 Total Groups: ${groupList.length}\n\n`;
