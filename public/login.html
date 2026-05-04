@@ -1,297 +1,708 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>ChisatoBot - Admin Login</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
+        <title>Chisato Dashboard — Login</title>
+        <meta name="description" content="Login ke Chisato Dashboard untuk mengelola bot WhatsApp Anda." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
         <style>
-            @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap");
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
             :root {
-                --neon-pink: #ff006e;
-                --neon-blue: #00d9ff;
-                --neon-purple: #b967ff;
-                --neon-yellow: #fffb00;
-                --neon-green: #05ffa1;
-                --dark-bg: #0a0e27;
-                --darker-bg: #050810;
-                --card-bg: #151932;
-                --border-color: rgba(185, 103, 255, 0.3);
-            }
-
-            * {
-                font-family: "Orbitron", sans-serif;
+                --bg: #050b18;
+                --bg-card: rgba(13, 22, 45, 0.75);
+                --bg-input: rgba(6, 11, 24, 0.8);
+                --border: rgba(99, 102, 241, 0.15);
+                --border-hover: rgba(99, 102, 241, 0.35);
+                --accent: #6366f1;
+                --accent2: #8b5cf6;
+                --accent3: #06b6d4;
+                --text: #f0f4ff;
+                --text-muted: #94a3b8;
+                --text-subtle: #4a5678;
+                --glow: rgba(99, 102, 241, 0.25);
             }
 
             body {
-                background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
-                background-attachment: fixed;
+                font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+                background-color: var(--bg);
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-            }
-
-            .neon-text {
-                text-shadow: 0 0 10px currentColor, 0 0 20px currentColor,
-                    0 0 30px currentColor;
-            }
-
-            .login-card {
-                background: var(--card-bg);
-                border: 2px solid var(--border-color);
-                border-radius: 16px;
-                padding: 3rem;
-                max-width: 450px;
-                width: 90%;
-                box-shadow: 0 0 50px rgba(185, 103, 255, 0.3);
-                position: relative;
+                padding: 1.5rem;
+                -webkit-font-smoothing: antialiased;
                 overflow: hidden;
-            }
-
-            .login-card::before {
-                content: "";
-                position: absolute;
-                top: -2px;
-                left: -2px;
-                right: -2px;
-                bottom: -2px;
-                background: linear-gradient(
-                    45deg,
-                    var(--neon-pink),
-                    var(--neon-blue),
-                    var(--neon-purple)
-                );
-                border-radius: inherit;
-                opacity: 0.1;
-                z-index: -1;
-                animation: borderPulse 3s ease-in-out infinite;
-            }
-
-            @keyframes borderPulse {
-                0%,
-                100% {
-                    opacity: 0.1;
-                }
-                50% {
-                    opacity: 0.3;
-                }
-            }
-
-            @keyframes pulse-glow {
-                0%,
-                100% {
-                    opacity: 1;
-                }
-                50% {
-                    opacity: 0.5;
-                }
-            }
-
-            .pulse-glow {
-                animation: pulse-glow 2s ease-in-out infinite;
-            }
-
-            input {
-                background: rgba(21, 25, 50, 0.8) !important;
-                border: 1px solid var(--border-color) !important;
-                color: var(--neon-blue) !important;
-                transition: all 0.3s ease;
-            }
-
-            input:focus {
-                outline: none;
-                border-color: var(--neon-pink) !important;
-                box-shadow: 0 0 20px rgba(255, 0, 110, 0.3);
-            }
-
-            input::placeholder {
-                color: rgba(0, 217, 255, 0.5) !important;
-            }
-
-            .glow-button {
                 position: relative;
-                overflow: hidden;
-                transition: all 0.3s ease;
             }
 
-            .glow-button:hover {
-                box-shadow: 0 0 30px currentColor;
-                transform: scale(1.02);
-            }
-
-            .scan-line {
+            /* ── Animated Background ─────────────────── */
+            .bg-canvas {
                 position: fixed;
-                width: 100%;
-                height: 2px;
-                background: linear-gradient(
-                    90deg,
-                    transparent,
-                    var(--neon-blue),
-                    transparent
-                );
-                animation: scan 4s linear infinite;
-                pointer-events: none;
-                z-index: 9999;
+                inset: 0;
+                z-index: 0;
+                overflow: hidden;
             }
 
-            @keyframes scan {
-                0% {
-                    top: 0;
-                }
-                100% {
-                    top: 100%;
-                }
+            .bg-gradient {
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(ellipse 80% 60% at 20% -5%, rgba(99, 102, 241, 0.18) 0%, transparent 60%),
+                    radial-gradient(ellipse 60% 50% at 85% 110%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
+                    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(6, 182, 212, 0.05) 0%, transparent 70%);
             }
 
-            .grid-bg {
-                background-image: linear-gradient(
-                        rgba(185, 103, 255, 0.1) 1px,
-                        transparent 1px
-                    ),
-                    linear-gradient(
-                        90deg,
-                        rgba(185, 103, 255, 0.1) 1px,
-                        transparent 1px
-                    );
-                background-size: 50px 50px;
+            .grid-lines {
+                position: absolute;
+                inset: 0;
+                background-image:
+                    linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+                background-size: 60px 60px;
             }
 
-            .error-message {
-                background: rgba(255, 0, 110, 0.2);
-                border: 1px solid var(--neon-pink);
-                color: var(--neon-pink);
-                padding: 1rem;
-                border-radius: 8px;
-                margin-bottom: 1rem;
+            .orb {
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(80px);
+                animation: orbFloat 8s ease-in-out infinite;
+            }
+            .orb-1 {
+                width: 400px; height: 400px;
+                background: radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%);
+                top: -10%; left: -5%;
+                animation-delay: 0s;
+            }
+            .orb-2 {
+                width: 300px; height: 300px;
+                background: radial-gradient(circle, rgba(139,92,246,0.1), transparent 70%);
+                bottom: -5%; right: -5%;
+                animation-delay: -3s;
+            }
+            .orb-3 {
+                width: 200px; height: 200px;
+                background: radial-gradient(circle, rgba(6,182,212,0.08), transparent 70%);
+                top: 40%; right: 20%;
+                animation-delay: -5s;
+            }
+
+            @keyframes orbFloat {
+                0%, 100% { transform: translate(0, 0) scale(1); }
+                33% { transform: translate(20px, -15px) scale(1.05); }
+                66% { transform: translate(-10px, 10px) scale(0.95); }
+            }
+
+            /* ── Particles ───────────────────────────── */
+            #particles-canvas { position: absolute; inset: 0; }
+
+            /* ── Card ────────────────────────────────── */
+            .card-wrapper { position: relative; z-index: 10; width: 100%; max-width: 460px; }
+
+            .card {
+                background: var(--bg-card);
+                backdrop-filter: blur(24px) saturate(180%);
+                -webkit-backdrop-filter: blur(24px) saturate(180%);
+                border: 1px solid var(--border);
+                border-radius: 24px;
+                padding: 2.75rem;
+                box-shadow:
+                    0 0 0 1px rgba(255,255,255,0.03) inset,
+                    0 32px 80px -12px rgba(0,0,0,0.6),
+                    0 0 60px rgba(99,102,241,0.08);
+                animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+            }
+
+            @keyframes cardIn {
+                from { opacity: 0; transform: translateY(24px) scale(0.97); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+
+            /* ── Logo ────────────────────────────────── */
+            .logo-wrap {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 2rem;
+            }
+
+            .logo-ring {
+                position: relative;
+                width: 72px; height: 72px;
+                margin-bottom: 1.25rem;
+            }
+
+            .logo-ring::before {
+                content: '';
+                position: absolute;
+                inset: -3px;
+                border-radius: 50%;
+                background: conic-gradient(from 0deg, #6366f1, #8b5cf6, #06b6d4, #6366f1);
+                animation: spinRing 4s linear infinite;
+                z-index: 0;
+            }
+
+            .logo-ring::after {
+                content: '';
+                position: absolute;
+                inset: -3px;
+                border-radius: 50%;
+                background: conic-gradient(from 0deg, #6366f1, #8b5cf6, #06b6d4, #6366f1);
+                animation: spinRing 4s linear infinite;
+                filter: blur(6px);
+                opacity: 0.4;
+                z-index: 0;
+            }
+
+            @keyframes spinRing {
+                to { transform: rotate(360deg); }
+            }
+
+            .logo-icon {
+                position: relative;
+                width: 72px; height: 72px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #0d1630, #1a1f42);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.75rem; color: #fff;
+                z-index: 1;
+                border: 2px solid rgba(6,11,24,0.9);
+            }
+
+            .logo-icon i {
+                background: linear-gradient(135deg, #818cf8, #c4b5fd);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: var(--text);
+                text-align: center;
+                letter-spacing: -0.03em;
+                margin-bottom: 0.375rem;
+                background: linear-gradient(135deg, #f0f4ff 0%, #c7d2fe 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .subtitle {
+                font-size: 0.875rem;
+                color: var(--text-muted);
+                text-align: center;
+            }
+
+            /* ── Divider ─────────────────────────────── */
+            .top-divider {
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+                margin-bottom: 2rem;
+            }
+
+            /* ── Alerts ──────────────────────────────── */
+            .alert {
                 display: none;
+                align-items: flex-start;
+                gap: 0.625rem;
+                border-radius: 12px;
+                padding: 0.875rem 1rem;
+                font-size: 0.875rem;
+                line-height: 1.5;
+                margin-bottom: 1.5rem;
+                animation: alertSlide 0.25s ease both;
+            }
+            .alert.show { display: flex; }
+            .alert i { flex-shrink: 0; margin-top: 2px; }
+
+            @keyframes alertSlide {
+                from { opacity: 0; transform: translateY(-8px); }
+                to { opacity: 1; transform: translateY(0); }
             }
 
-            .error-message.show {
-                display: block;
+            .alert-error {
+                background: rgba(239,68,68,0.08);
+                border: 1px solid rgba(239,68,68,0.25);
+                color: #fca5a5;
+                box-shadow: 0 0 20px rgba(239,68,68,0.05);
+            }
+            .alert-success {
+                background: rgba(34,197,94,0.08);
+                border: 1px solid rgba(34,197,94,0.25);
+                color: #86efac;
+                box-shadow: 0 0 20px rgba(34,197,94,0.05);
+            }
+
+            /* ── Form ────────────────────────────────── */
+            .form-group { margin-bottom: 1.25rem; }
+
+            label {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: var(--text-muted);
+                margin-bottom: 0.5rem;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }
+            label i { color: var(--accent); font-size: 0.75rem; }
+
+            .input-wrap {
+                position: relative;
+            }
+
+            .input-prefix {
+                position: absolute;
+                left: 0.875rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-subtle);
+                font-size: 1rem;
+                pointer-events: none;
+                transition: color 0.2s;
+            }
+
+            input[type="tel"] {
+                width: 100%;
+                background: var(--bg-input);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 0.75rem 0.875rem 0.75rem 2.5rem;
+                font-size: 0.9375rem;
+                font-family: inherit;
+                font-weight: 500;
+                color: var(--text);
+                outline: none;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+            input[type="tel"]:hover { border-color: var(--border-hover); }
+            input[type="tel"]:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(99,102,241,0.15), 0 0 20px rgba(99,102,241,0.08);
+            }
+            input[type="tel"]:focus + .input-focus-ring { opacity: 1; }
+            input[type="tel"]::placeholder { color: var(--text-subtle); }
+
+            .input-wrap:focus-within .input-prefix { color: var(--accent); }
+
+            /* ── Submit Button ───────────────────────── */
+            .btn-submit {
+                width: 100%;
+                position: relative;
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                padding: 0.8125rem 1rem;
+                font-size: 0.9375rem;
+                font-family: inherit;
+                font-weight: 700;
+                cursor: pointer;
+                margin-top: 0.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+                letter-spacing: -0.01em;
+                overflow: hidden;
+            }
+
+            .btn-submit::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
+                pointer-events: none;
+            }
+
+            .btn-submit::after {
+                content: '';
+                position: absolute;
+                bottom: -50%; left: 50%;
+                transform: translateX(-50%);
+                width: 80%;
+                height: 100%;
+                background: rgba(255,255,255,0.1);
+                filter: blur(20px);
+                border-radius: 50%;
+                transition: bottom 0.3s;
+            }
+
+            .btn-submit:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 30px rgba(99,102,241,0.5), 0 0 60px rgba(139,92,246,0.2);
+            }
+            .btn-submit:hover:not(:disabled)::after { bottom: -30%; }
+            .btn-submit:active:not(:disabled) { transform: translateY(0); }
+            .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+            /* ── Divider ─────────────────────────────── */
+            .divider {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin: 1.75rem 0;
+            }
+            .divider-line { flex: 1; height: 1px; background: var(--border); }
+            .divider-text {
+                font-size: 0.75rem;
+                color: var(--text-subtle);
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                white-space: nowrap;
+            }
+
+            /* ── Hints ───────────────────────────────── */
+            .hints { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.625rem; }
+            .hints li {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.625rem;
+                font-size: 0.8125rem;
+                color: var(--text-subtle);
+                line-height: 1.5;
+                padding: 0.625rem 0.75rem;
+                background: rgba(99,102,241,0.04);
+                border: 1px solid rgba(99,102,241,0.08);
+                border-radius: 10px;
+                transition: background 0.2s, border-color 0.2s;
+            }
+            .hints li:hover {
+                background: rgba(99,102,241,0.07);
+                border-color: rgba(99,102,241,0.14);
+                color: var(--text-muted);
+            }
+            .hints li .hint-icon {
+                width: 24px; height: 24px;
+                border-radius: 7px;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 0.6875rem;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+            .hint-icon-shield { background: rgba(99,102,241,0.15); color: #818cf8; }
+            .hint-icon-bell { background: rgba(6,182,212,0.15); color: #38bdf8; }
+
+            /* ── Spinner ─────────────────────────────── */
+            .spinner {
+                display: inline-block;
+                width: 15px; height: 15px;
+                border: 2px solid rgba(255,255,255,0.25);
+                border-top-color: #fff;
+                border-radius: 50%;
+                animation: spin 0.65s linear infinite;
+                flex-shrink: 0;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
+
+            /* ── Footer ──────────────────────────────── */
+            .card-footer {
+                text-align: center;
+                margin-top: 1.5rem;
+                font-size: 0.75rem;
+                color: var(--text-subtle);
+            }
+            .card-footer span {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3rem;
+            }
+            .status-dot {
+                width: 6px; height: 6px;
+                border-radius: 50%;
+                background: #22c55e;
+                animation: pulse-dot 2s ease infinite;
+            }
+            @keyframes pulse-dot {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+                50% { box-shadow: 0 0 0 4px rgba(34,197,94,0); }
             }
         </style>
     </head>
-    <body class="grid-bg">
-        <div class="scan-line"></div>
+    <body>
+        <!-- Animated Background -->
+        <div class="bg-canvas">
+            <div class="bg-gradient"></div>
+            <div class="grid-lines"></div>
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+            <canvas id="particles-canvas"></canvas>
+        </div>
 
-        <div class="login-card">
-            <div class="text-center mb-8">
-                <h1
-                    class="text-3xl font-bold neon-text mb-2"
-                    style="color: #ff006e"
-                >
-                    <i class="fas fa-robot pulse-glow"></i> ChisatoBot
-                </h1>
-                <p class="text-sm" style="color: #00d9ff">
-                    Admin Dashboard Login
-                </p>
-            </div>
-
-            <div id="error-message" class="error-message">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                <span id="error-text">Invalid credentials</span>
-            </div>
-
-            <form id="login-form" class="space-y-6">
-                <div>
-                    <label class="block mb-2 text-sm" style="color: #00d9ff">
-                        <i class="fas fa-user mr-2"></i>Username
-                    </label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        required
-                        class="w-full px-4 py-3 rounded-lg"
-                        placeholder="Enter your username"
-                        autocomplete="username"
-                    />
+        <!-- Card -->
+        <div class="card-wrapper">
+            <div class="card">
+                <!-- Logo & Heading -->
+                <div class="logo-wrap">
+                    <div class="logo-ring">
+                        <div class="logo-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                    <h1>Chisato Dashboard</h1>
+                    <p class="subtitle">Login dengan nomor WhatsApp owner / team</p>
                 </div>
 
-                <div>
-                    <label class="block mb-2 text-sm" style="color: #00d9ff">
-                        <i class="fas fa-lock mr-2"></i>Password
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        required
-                        class="w-full px-4 py-3 rounded-lg"
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                    />
+                <div class="top-divider"></div>
+
+                <!-- Alerts -->
+                <div id="error-message" class="alert alert-error">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span id="error-text">Nomor tidak valid</span>
+                </div>
+                <div id="success-message" class="alert alert-success">
+                    <i class="fas fa-circle-check"></i>
+                    <span id="success-text"></span>
                 </div>
 
-                <button
-                    type="submit"
-                    class="w-full px-6 py-3 rounded-lg glow-button text-white font-semibold"
-                    style="
-                        background: linear-gradient(45deg, #ff006e, #b967ff);
-                    "
-                >
-                    <i class="fas fa-sign-in-alt mr-2"></i>Login
-                </button>
-            </form>
+                <!-- Form -->
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="phoneNumber">
+                            <i class="fas fa-mobile-screen-button"></i>
+                            Nomor HP WhatsApp
+                        </label>
+                        <div class="input-wrap">
+                            <i class="fas fa-phone input-prefix"></i>
+                            <input
+                                type="tel"
+                                id="phoneNumber"
+                                name="phoneNumber"
+                                required
+                                placeholder="Contoh: 62812xxxxxxx"
+                                autocomplete="tel"
+                            />
+                        </div>
+                    </div>
 
-            <div class="mt-6 text-center text-xs" style="color: #b967ff">
-                <i class="fas fa-shield-alt mr-1"></i>
-                Secure Admin Access Only
+                    <button type="submit" class="btn-submit" id="submit-btn">
+                        <i class="fas fa-arrow-right-to-bracket"></i>
+                        Login ke Dashboard
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <span class="divider-text">Informasi Akses</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <!-- Hints -->
+                <ul class="hints">
+                    <li>
+                        <div class="hint-icon hint-icon-shield">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <span>Hanya nomor owner/team di config.json yang bisa login.</span>
+                    </li>
+                    <li>
+                        <div class="hint-icon hint-icon-bell">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <span>Setelah submit, owner akan menerima notifikasi approval via WhatsApp.</span>
+                    </li>
+                </ul>
+
+                <!-- Footer -->
+                <div class="card-footer">
+                    <span>
+                        <div class="status-dot"></div>
+                        Server Online
+                    </span>
+                </div>
             </div>
         </div>
 
         <script>
-            document
-                .getElementById("login-form")
-                .addEventListener("submit", async (e) => {
-                    e.preventDefault();
+            // ── Particles ──────────────────────────────
+            (function() {
+                const canvas = document.getElementById('particles-canvas');
+                const ctx = canvas.getContext('2d');
+                let W, H, particles = [];
 
-                    const username = document.getElementById("username").value;
-                    const password = document.getElementById("password").value;
-                    const errorMessage =
-                        document.getElementById("error-message");
+                function resize() {
+                    W = canvas.width = window.innerWidth;
+                    H = canvas.height = window.innerHeight;
+                }
+                resize();
+                window.addEventListener('resize', resize);
 
-                    try {
-                        const response = await fetch("/api/auth/login", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ username, password }),
-                        });
+                const colors = ['rgba(99,102,241,', 'rgba(139,92,246,', 'rgba(6,182,212,'];
 
-                        const data = await response.json();
+                function createParticle() {
+                    return {
+                        x: Math.random() * W,
+                        y: Math.random() * H,
+                        r: Math.random() * 1.5 + 0.3,
+                        vx: (Math.random() - 0.5) * 0.3,
+                        vy: (Math.random() - 0.5) * 0.3,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        a: Math.random() * 0.5 + 0.1,
+                        life: Math.random() * Math.PI * 2
+                    };
+                }
 
-                        if (response.ok) {
-                            // Store session token
-                            localStorage.setItem("adminToken", data.token);
-                            // Redirect to dashboard
-                            window.location.href = "/";
-                        } else {
-                            // Show error
-                            document.getElementById("error-text").textContent =
-                                data.message || "Invalid credentials";
-                            errorMessage.classList.add("show");
-                            setTimeout(() => {
-                                errorMessage.classList.remove("show");
-                            }, 3000);
+                for (let i = 0; i < 80; i++) particles.push(createParticle());
+
+                function draw() {
+                    ctx.clearRect(0, 0, W, H);
+                    particles.forEach(p => {
+                        p.life += 0.01;
+                        const alpha = p.a * (0.5 + 0.5 * Math.sin(p.life));
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fillStyle = p.color + alpha + ')';
+                        ctx.fill();
+                        p.x += p.vx; p.y += p.vy;
+                        if (p.x < 0) p.x = W;
+                        if (p.x > W) p.x = 0;
+                        if (p.y < 0) p.y = H;
+                        if (p.y > H) p.y = 0;
+                    });
+                    // Draw connections
+                    particles.forEach((p, i) => {
+                        for (let j = i + 1; j < particles.length; j++) {
+                            const q = particles[j];
+                            const dx = p.x - q.x, dy = p.y - q.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            if (dist < 100) {
+                                ctx.beginPath();
+                                ctx.moveTo(p.x, p.y);
+                                ctx.lineTo(q.x, q.y);
+                                ctx.strokeStyle = `rgba(99,102,241,${0.08 * (1 - dist/100)})`;
+                                ctx.lineWidth = 0.5;
+                                ctx.stroke();
+                            }
                         }
-                    } catch (error) {
-                        console.error("Login error:", error);
-                        document.getElementById("error-text").textContent =
-                            "Connection error. Please try again.";
-                        errorMessage.classList.add("show");
-                        setTimeout(() => {
-                            errorMessage.classList.remove("show");
-                        }, 3000);
+                    });
+                    requestAnimationFrame(draw);
+                }
+                draw();
+            })();
+
+            // ── Login Form ─────────────────────────────
+            document.getElementById("login-form").addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const phoneInput = document.getElementById("phoneNumber");
+                const phoneNumber = String(phoneInput.value || "").replace(/[^0-9]/g, "");
+                const errorMessage = document.getElementById("error-message");
+                const successMessage = document.getElementById("success-message");
+                const submitBtn = document.getElementById("submit-btn");
+
+                errorMessage.classList.remove("show");
+                successMessage.classList.remove("show");
+
+                if (!phoneNumber) {
+                    document.getElementById("error-text").textContent = "Nomor HP wajib diisi";
+                    errorMessage.classList.add("show");
+                    return;
+                }
+
+                const waitApproval = async (approvalId) => {
+                    const startedAt = Date.now();
+                    const timeoutMs = 5 * 60 * 1000;
+                    while (Date.now() - startedAt < timeoutMs) {
+                        const pollRes = await fetch(`/api/auth/approval-status/${approvalId}`);
+                        const pollData = await pollRes.json();
+                        if (pollData?.status === "approved" && pollData?.token) return pollData;
+                        if (pollData?.status === "rejected") throw new Error("Login ditolak oleh owner.");
+                        await new Promise((resolve) => setTimeout(resolve, 2500));
                     }
-                });
+                    throw new Error("Approval timeout. Silakan login ulang.");
+                };
+
+                try {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner"></span>Mengirim...';
+
+                    const response = await fetch("/api/auth/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ phoneNumber }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 429 && data?.rateLimited) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-clock"></i>Cooldown aktif';
+
+                        const formatMs = (ms) => {
+                            if (ms >= 3600000) return `${Math.ceil(ms / 3600000)} jam`;
+                            if (ms >= 60000) return `${Math.ceil(ms / 60000)} menit`;
+                            return `${Math.ceil(ms / 1000)} detik`;
+                        };
+
+                        let remaining = data.retryAfterMs;
+                        const updateBtn = () => {
+                            submitBtn.innerHTML = `<i class="fas fa-lock"></i>Cooldown ${formatMs(remaining)}`;
+                        };
+                        updateBtn();
+
+                        const interval = setInterval(() => {
+                            remaining -= 1000;
+                            if (remaining <= 0) {
+                                clearInterval(interval);
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                            } else {
+                                updateBtn();
+                            }
+                        }, 1000);
+
+                        document.getElementById("error-text").textContent = data.message;
+                        errorMessage.classList.add("show");
+                        return;
+                    }
+
+                    if (response.ok) {
+                        document.getElementById("success-text").textContent =
+                            `Permintaan dikirim. Menunggu approval owner untuk +${phoneNumber}...`;
+                        successMessage.classList.add("show");
+                        submitBtn.innerHTML = '<span class="spinner"></span>Menunggu approval...';
+
+                        if (!data?.approvalId) throw new Error("Approval ID tidak ditemukan dari server.");
+
+                        const approvedData = await waitApproval(data.approvalId);
+                        localStorage.setItem("adminToken", approvedData.token);
+                        localStorage.setItem("adminProfile", JSON.stringify(approvedData.admin || {}));
+
+                        const role = (approvedData?.admin?.role || "team").toUpperCase();
+                        document.getElementById("success-text").textContent =
+                            `Login berhasil sebagai ${role}. Mengalihkan...`;
+                        submitBtn.innerHTML = '<i class="fas fa-check"></i>Berhasil!';
+                        setTimeout(() => { window.location.href = "/"; }, 700);
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                        document.getElementById("error-text").textContent =
+                            data.message || "Nomor tidak memiliki akses dashboard";
+                        errorMessage.classList.add("show");
+                        setTimeout(() => { errorMessage.classList.remove("show"); }, 4500);
+                    }
+                } catch (error) {
+                    console.error("Login error:", error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                    document.getElementById("error-text").textContent =
+                        error.message || "Koneksi bermasalah. Coba lagi.";
+                    errorMessage.classList.add("show");
+                    setTimeout(() => { errorMessage.classList.remove("show"); }, 5000);
+                }
+            });
         </script>
     </body>
 </html>
