@@ -7,6 +7,7 @@ import { groupsRoutes } from "./routes/groups";
 import { usersRoutes } from "./routes/users";
 import { logsRoutes, addLog } from "./routes/logs";
 import { authRoutes } from "./routes/auth";
+import { configRoutes } from "./routes/config";
 import { authMiddleware } from "./middleware/auth.middleware";
 import { setDashboardLogHandler } from "../core/logger/logger.service";
 
@@ -61,6 +62,7 @@ export class DashboardServer {
         this.fastify.register(groupsRoutes, { prefix: "/api/groups" });
         this.fastify.register(usersRoutes, { prefix: "/api/users" });
         this.fastify.register(logsRoutes, { prefix: "/api/logs" });
+        this.fastify.register(configRoutes, { prefix: "/api/config" });
     }
 
     public async start() {
