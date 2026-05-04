@@ -34,7 +34,7 @@
             "@shared/*": ["src/shared/*"],
             "@libs/*": ["src/libs/*"],
             "@infrastructure/*": ["src/infrastructure/*"],
-            "@types/*": ["src/types/*"]
+            "@types/*": ["src/types/*"],
         }
     },
     "exclude": ["node_modules", "dist"],

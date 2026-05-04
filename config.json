@@ -1,7 +1,5 @@
 {
-    "ownerNumber": [
-        "6281311850715"
-    ],
+    "ownerNumber": [],
     "teamNumber": [],
     "timeZone": "Asia/Jakarta",
     "prefix": ".",
@@ -41,5 +39,6 @@
         "independentGradient": false,
         "transitionGradient": false,
         "env": "node"
-    }
+    },
+    "commandOverrides": {}
 }
