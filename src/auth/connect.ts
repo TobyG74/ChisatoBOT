@@ -39,9 +39,6 @@ logger.connect("Connecting to database...");
             : 3000;
         const dashboard = new DashboardServer(dashboardPort);
         await dashboard.start();
-        logger.connect(
-            `Dashboard server started on http://localhost:${dashboardPort}`
-        );
 
         // Create handler instances
         const messageHandler = new MessageHandler();
@@ -52,7 +49,7 @@ logger.connect("Connecting to database...");
         const Chisato = new Client({
             session: "multi",
             syncFullHistory: false,
-            browser: ["ChisatoBOT", "Safari", "3.0.0"],
+            browser: ['Mac OS', 'Chrome', 'Chrome 114.0.5735.198'],
             logger: Pino({ level: "silent" }).child({ level: "silent" }),
         });
 

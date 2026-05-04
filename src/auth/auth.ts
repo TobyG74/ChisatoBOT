@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { AuthenticationCreds, SignalDataTypeMap, proto } from "@whiskeysockets/baileys";
+import type { AuthenticationCreds, SignalDataTypeMap, proto } from "baileys";
 import type { AuthState } from "../types/auth/auth";
 
 // Dynamic import cache for baileys
@@ -9,7 +9,8 @@ async function getBaileys() {
     if (!baileysModule) {
         // Use Function constructor to prevent TypeScript from transforming dynamic import
         const dynamicImport = new Function('specifier', 'return import(specifier)');
-        baileysModule = await dynamicImport("@whiskeysockets/baileys");
+        const m = await dynamicImport("baileys");
+        baileysModule = (typeof m.makeWASocket === 'function') ? m : (m.default ?? m);
     }
     return baileysModule;
 }
@@ -201,7 +202,7 @@ export const useSingleAuthState = async (
                 },
                 set: async (data) => {
                     for (const _key in data) {
-                        const key = KEY_MAP[_key as keyof SignalDataTypeMap];
+                        const key = (KEY_MAP as Record<string, string>)[_key];
                         keys[key] = keys[key] || {};
                         Object.assign(keys[key], data[_key]);
                     }
