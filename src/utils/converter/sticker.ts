@@ -248,9 +248,10 @@ export class StickerGenerator {
             pack?: string;
             author?: string;
             quality?: number;
+            isVideo?: boolean;
         } = {}
     ): Promise<Buffer> {
-        const { type = "default", pack = "ChisatoBOT", author = "TobyG74", quality = 80 } = options;
+        const { type = "default", pack = "ChisatoBOT", author = "TobyG74", quality = 80, isVideo: forceVideo } = options;
         const tempDir = path.join(process.cwd(), "temp");
         
         if (!fs.existsSync(tempDir)) {
@@ -258,12 +259,17 @@ export class StickerGenerator {
         }
 
         try {
-            const hex = buffer.toString("hex", 0, 12);
-            const isVideo = 
-                hex.startsWith("66747970") ||  // MP4, MOV (ftyp)
-                hex.startsWith("000000") && hex.includes("667479706d7034") || // MP4 variant
-                hex.startsWith("1a45dfa3") ||  // WEBM, MKV
-                hex.startsWith("52494646") && buffer.toString("hex", 8, 12) === "57415649"; // AVI
+            // Check if forceVideo flag is set, or detect from buffer
+            let isVideo = forceVideo || false;
+            
+            if (!forceVideo) {
+                const hex = buffer.toString("hex", 0, 12);
+                isVideo = 
+                    hex.startsWith("66747970") ||  // MP4, MOV (ftyp)
+                    hex.startsWith("000000") && hex.includes("667479706d7034") || // MP4 variant
+                    hex.startsWith("1a45dfa3") ||  // WEBM, MKV
+                    hex.startsWith("52494646") && buffer.toString("hex", 8, 12) === "57415649"; // AVI
+            }
             
             let stickerBuffer: Buffer;
             if (isVideo) {
