@@ -9,6 +9,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+        <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
         <style>
             *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -166,18 +167,15 @@
                 position: relative;
                 width: 72px; height: 72px;
                 border-radius: 50%;
-                background: linear-gradient(135deg, #0d1630, #1a1f42);
-                display: flex; align-items: center; justify-content: center;
-                font-size: 1.75rem; color: #fff;
+                overflow: hidden;
                 z-index: 1;
                 border: 2px solid rgba(6,11,24,0.9);
             }
 
-            .logo-icon i {
-                background: linear-gradient(135deg, #818cf8, #c4b5fd);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
+            .logo-icon img {
+                width: 100%; height: 100%;
+                object-fit: cover;
+                display: block;
             }
 
             h1 {
@@ -447,7 +445,7 @@
                 <div class="logo-wrap">
                     <div class="logo-ring">
                         <div class="logo-icon">
-                            <i class="fas fa-robot"></i>
+                            <img src="/images/icon.jpg" alt="ChisatoBot" />
                         </div>
                     </div>
                     <h1>Chisato Dashboard</h1>

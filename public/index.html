@@ -12,6 +12,7 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <script>tailwind.config={important:true,corePlugins:{preflight:false}}</script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+        <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
         <style>
             *, *::before, *::after { box-sizing: border-box; }
             :root {
@@ -51,7 +52,7 @@
             .stat-card{padding:1.375rem;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;min-width:0;transition:all .22s ease}
             .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,102,241,.4),transparent);opacity:0;transition:opacity .22s}
             .stat-card:hover{box-shadow:0 8px 32px rgba(0,0,0,.3);transform:translateY(-2px)}.stat-card:hover::before{opacity:1}
-            .section-card{padding:1.625rem;margin-bottom:1.5rem}.section-card:last-child{margin-bottom:0}
+            .section-card{padding:1.625rem;margin-bottom:1.5rem}.section-card:last-child{margin-bottom:0}.charts-grid>.section-card{margin-bottom:0}
             .tm-card{padding:1.25rem}
             .section-title{font-size:.875rem;font-weight:700;color:var(--text);margin:0 0 1.25rem;display:flex;align-items:center;gap:.5rem;letter-spacing:-.01em}
             .section-title::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,#6366f1,#8b5cf6)}
@@ -185,7 +186,7 @@
                 <i class="fas fa-times"></i>
             </button>
             <div class="sidebar-header flex items-center gap-3.5 px-5 py-5 border-b border-[rgba(99,102,241,0.12)]" style="background:linear-gradient(135deg,rgba(99,102,241,0.06),transparent)">
-                <div class="sidebar-logo flex-shrink-0 flex items-center justify-center text-white" style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:1rem;box-shadow:0 4px 16px rgba(99,102,241,0.4)"><i class="fas fa-robot"></i></div>
+                <div class="sidebar-logo flex-shrink-0" style="width:38px;height:38px;border-radius:11px;overflow:hidden;box-shadow:0 4px 16px rgba(99,102,241,0.4)"><img src="/images/icon.jpg" alt="ChisatoBot" style="width:100%;height:100%;object-fit:cover;display:block" /></div>
                 <div>
                     <h1 class="sidebar-title text-[0.9375rem] font-extrabold tracking-tight" style="background:linear-gradient(135deg,#f0f4ff,#c7d2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">ChisatoBot</h1>
                     <p class="sidebar-desc text-[0.6875rem] text-[#4a5678] mt-0.5 tracking-wide">Monitoring Dashboard</p>
