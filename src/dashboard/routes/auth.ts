@@ -432,6 +432,16 @@ export async function authRoutes(fastify: FastifyInstance) {
 
         const requesterIp = getRequesterIp(request);
 
+        // Config readiness check — must have at least one owner before processing
+        const accessConfig = readPhoneAccessConfig();
+        if (accessConfig.ownerNumber.length === 0 && accessConfig.teamNumber.length === 0) {
+            return reply.status(503).send({
+                success: false,
+                configNotReady: true,
+                message: "Fitur login belum bisa digunakan, periksa kembali file config",
+            });
+        }
+
         // IP rate-limit check 
         const rateLimited = checkRateLimit(requesterIp);
         if (rateLimited) {

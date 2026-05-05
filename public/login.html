@@ -634,6 +634,14 @@
 
                     const data = await response.json();
 
+                    if (data?.configNotReady) {
+                        document.getElementById("error-text").textContent = data.message || "Fitur login belum bisa digunakan, periksa kembali file config";
+                        errorMessage.classList.add("show");
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                        return;
+                    }
+
                     if (response.status === 429 && data?.rateLimited) {
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<i class="fas fa-clock"></i>Cooldown aktif';
