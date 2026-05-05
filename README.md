@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="media/chisato.png" width="250" alt="logo">
+    <img src="public/images/icon.jpg" width="160" style="border-radius:50%" alt="ChisatoBOT">
 </p>
 <h1 align="center">ChisatoBOT</h1>
-<h3 align="center">This bot uses a library from Baileys</h3>
+<h3 align="center">WhatsApp Multi-Device Bot powered by Baileys</h3>
 <h3 align="center">Give this repository a ⭐ if you like it</h3>
 
 <div align="center">
@@ -44,162 +44,122 @@
 
 ## Description
 
-<p align="center">
-    <img src="media/terminal.png" width="400" alt="logo">
-</p>
-
--   Chisato is a WhatsApp bot with various functions
--   There are various features available on Chisato BOT
--   ChisatoBOT has a beautiful terminal logger
+-   ChisatoBOT is a WhatsApp Multi-Device bot built with TypeScript and Baileys
+-   Features 13 command categories covering downloaders, converters, group management, anime, search, and more
+-   Real-time web dashboard with SSE streaming, system monitoring, and group management
+-   MongoDB database via Prisma for users, groups, leveling, and premium system
+-   Beautiful terminal logger with colored output and multiple log levels
 
 ## Table of Contents
 
 -   [Getting Started](#getting-started)
--   [Build With](#build_with)
+-   [Built With](#built-with)
 -   [Installation](#installation)
--   [Documentation](#documentation)
+-   [Configuration](#configuration)
+-   [Features](#features)
+-   [Dashboard](#dashboard)
 -   [Community](#community)
 
 ## Getting Started
 
-What is needed to run this project :
+Requirements to run this project:
 
+-   [Node.js v18+](https://nodejs.org/en/)
+-   [pnpm](https://pnpm.io/) — `npm install -g pnpm`
 -   [GIT](https://git-scm.com/downloads)
--   [NodeJS version 16+](https://nodejs.org/en/)
 -   [FFMPEG](https://ffmpeg.org/download.html)
--   [WEBP](https://storage.googleapis.com/downloads.webmproject.org/releases/webp/index.html)
--   You need the [OCR Space API KEY](https://ocr.space) to run the OCR feature
+-   [MongoDB](https://www.mongodb.com/cloud/atlas) — local or Atlas
+-   [OCR Space API Key](https://ocr.space) — for OCR feature (optional)
 
-If you have problems, you can [open an issue](https://github.com/TobyG74/ChisatoBOT/issues) or join the community to ask questions about it
+### Setup MongoDB
 
-### Setup Your Mongodb
+-   Create a MongoDB database (local or [Atlas](https://www.mongodb.com/cloud/atlas))
+-   Get your connection string, e.g.: `mongodb+srv://user:pass@cluster.mongodb.net/chisato`
+-   Paste it into `DATABASE_URL` in your `.env` file
 
--   Create a Mongodb Database. You can use [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or use a local database
--   Get your Mongodb connection string. Example : `mongodb+srv://username:password@cluster0.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`
--   Replace `username`, `password`, and `myFirstDatabase` with your database credentials
--   Copy the connection string, and paste it into the `DATABASE_URL` in your `.env` file
+### Setup `.env`
 
-### Setup Your `.env` File
-
-```
+```env
 DATABASE_URL=
-DASHBOARD_PORT=3000
+DASHBOARD_PORT=3333
 JWT_SECRET=
 PROXY=
 OCR_APIKEY=
 ```
 
--   Edit your [.env](https://github.com/TobyG74/ChisatoBOT/blob/master/.env.example) file
--   Rename `.env.example` to `.env`
+Rename `.env.example` to `.env`, then fill in the values.
 
 ## Built With
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-2F6BA3?style=for-the-badge&logo=typescript&logoColor=FFFFFF)
-![Prisma](https://img.shields.io/badge/prisma-29245c?style=for-the-badge&logo=prisma&logoColor=F7DF1E)
+![NodeJS](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-29245c?style=for-the-badge&logo=prisma&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-FFFFFF?style=for-the-badge&logo=mongodb&logoColor=2FA331)
 
 ## Installation
 
 ### Quick Installation (Recommended)
 
-**For Windows:**
+**Windows:**
 ```powershell
 .\install.ps1
 ```
 
-**For Linux/macOS:**
+**Linux / macOS:**
 ```bash
-chmod +x install.sh
-./install.sh
+chmod +x install.sh && ./install.sh
 ```
 
 The installer will automatically:
-- Check all prerequisites (Git, Node.js, FFmpeg)
-- Install npm dependencies
-- Setup environment variables
-- Configure Prisma and database
+- Check prerequisites (Git, Node.js, FFmpeg)
+- Install pnpm dependencies
+- Set up environment variables
+- Configure Prisma and push the database schema
 - Build the TypeScript project
 
 ### Manual Installation
 
-### Clone this Project
-
-```
+```bash
+# 1. Clone
 git clone https://github.com/TobyG74/ChisatoBOT
 cd ChisatoBOT
-```
 
-### Install Dependencies
+# 2. Install dependencies (uses pnpm workspaces)
+pnpm install
 
-```
-npm install
-```
+# 3. Push database schema
+pnpm prisma:push
 
-### Setup Prisma
+# 4. Build
+pnpm build
 
-```
-npx prisma db push
-```
-
-### Build Project
-
-```
-npm run build
-```
-
-### Run Project
-
--   Run with PM2
-
-```
-npm run pm2:start
-```
-
--   Without PM2
-
-```
-npm start
+# 5. Run
+pnpm start           # plain Node
+pnpm pm2:start       # with PM2 (recommended for production)
 ```
 
 ---
 
-## Documentation
+## Configuration
 
-### Dashboard
-
--   You can access the dashboard at `http://localhost:3000` (if you use another port, adjust accordingly)
--   First you need to register your account by chatting with the bot and using the command `.adminpanel` (make sure your number is in the owner or team number in the config.json)
--   After registering, you can log in to the dashboard
-
-<p align="center">
-    <img src="media/dashboard.png" width="600" alt="logo">
-</p>
-
-### Configuration File [config.json](https://github.com/TobyG74/ChisatoBOT/blob/master/config.json)
-
--   `ownerNotifyOnline` to send a message to the Owner whenever the Bot is Online
--   `useLimit` for limit configuration, if `true` then every time the command will use the limit
--   `useCooldown` for cooldown configuration, if `true` then every time the command will use the cooldown
--   `selfbot` to make the bot only respond to the owner's number
--   `autoReadMessage` to make the bot automatically read messages
--   `autoReadStatus` to make the bot automatically read status updates
--   `autoCorrect` for correcting wrong commands
+### `config.json`
 
 ```json
 {
-    "ownerNumber": ["YOUR_NUMBER_HERE"],
+    "ownerNumber": ["628xxxxxxxxxx"],
     "teamNumber": [],
     "timeZone": "Asia/Jakarta",
     "prefix": ".",
     "maintenance": [],
     "stickers": {
-        "author": "Instagram : ini.tobz",
+        "author": "Your Name",
         "packname": "Made by ChisatoBOT"
     },
     "settings": {
         "ownerNotifyOnline": false,
         "useLimit": false,
-        "useCooldown": false,
+        "useCooldown": true,
         "selfbot": false,
         "autoReadMessage": false,
         "autoReadStatus": false,
@@ -210,30 +170,25 @@ npm start
     },
     "limit": {
         "command": 30
-    },
-    "cfonts": {
-        "font": "block",
-        "align": "center",
-        "colors": [
-            "green",
-            "yellow"
-        ],
-        "background": "transparent",
-        "letterSpacing": 0,
-        "lineHeight": 0,
-        "space": true,
-        "maxLength": "0",
-        "gradient": false,
-        "independentGradient": false,
-        "transitionGradient": false,
-        "env": "node"
     }
 }
 ```
 
-### Config Commands
+| Field | Description |
+|---|---|
+| `ownerNumber` | Bot owner numbers (international format, no `+`) |
+| `teamNumber` | Team/admin numbers with elevated permissions |
+| `prefix` | Command prefix (default `.`) |
+| `maintenance` | List of commands currently in maintenance mode |
+| `ownerNotifyOnline` | Notify owner when bot connects |
+| `useLimit` | Enable per-user command limits |
+| `useCooldown` | Enable per-command cooldowns |
+| `selfbot` | Only respond to owner number |
+| `autoReadMessage` | Automatically mark messages as read |
+| `autoReadStatus` | Automatically view status updates |
+| `autoCorrect` | Suggest correct command on typo |
 
--   Command configuration that you can use
+### Command Config Type
 
 ```ts
 type ConfigCommands = {
@@ -242,7 +197,7 @@ type ConfigCommands = {
     usage?: string;
     category: string;
     description: string;
-    cooldown?: number; // in seconds
+    cooldown?: number;       // seconds
     limit?: number;
     example?: string;
     isOwner?: boolean;
@@ -257,34 +212,152 @@ type ConfigCommands = {
 };
 ```
 
-### Maintenance Command
+---
 
--   To change the command to maintenance status, just type : `.commandname -m`
--   To change it again, type the same command
+## Features
 
-### Log Messages for those affected by Banned or Blocked
+### 📥 Downloader
+| Command | Description |
+|---|---|
+| `tiktok` | Download TikTok video |
+| `tiktokaudio` | Download TikTok audio |
+| `tiktokimage` | Download TikTok slideshow images |
+| `instagram` | Download Instagram Reels / photos |
+| `facebook` | Download Facebook video |
+| `threads` | Download Threads video / photos |
+| `xdl` | Download X (Twitter) video |
 
-<img src="media/banned.png" width="400" alt="logo">
+### 🎨 Converter
+| Command | Description |
+|---|---|
+| `sticker` | Convert image/video to sticker |
+| `toimage` | Convert sticker to image |
+| `stickerwm` | Create sticker with watermark |
+| `textsticker` | Create sticker from text |
+| `animatedtext` | Animated text sticker |
+| `replysticker` | Reply-based text sticker |
+| `meme` | Generate meme from image |
+| `emojimix` | Mix two emojis |
+| `ocr` | Extract text from image (OCR) |
 
-### Log Messages for Groups that are Muted
+### 👥 Group Management
+| Command | Description |
+|---|---|
+| `tagall` | Tag all group members |
+| `hidetag` | Hidden tag all members |
+| `kick` | Remove member from group |
+| `add` | Add member to group |
+| `promote` / `demote` | Manage admin roles |
+| `link` / `revoke` | Get / reset group invite link |
+| `groupinfo` | Show group information |
+| `groupname` | Change group name |
+| `groupdesc` | Change group description |
+| `grouppic` | Change group profile picture |
+| `leave` | Bot leaves the group |
+| `afk` | Set AFK status |
+| `fakereply` | Send a fake quoted reply |
+| `getpp` | Get profile picture |
 
-<img src="media/mute.png" width="400" alt="logo">
+### ⚙️ Group Settings
+| Command | Description |
+|---|---|
+| `antilink` | Toggle anti-link protection |
+| `antibot` | Toggle anti-bot protection |
+| `welcome` | Toggle welcome message |
+| `notify` | Toggle member leave notification |
+| `mute` | Toggle group mute |
+| `announce` / `restrict` | Toggle group lock modes |
+| `groupsetting` | View all group settings |
+| `banned` / `unbanned` | Ban / unban user from commands |
+| `setwelcome` | Set custom welcome message |
+| `setleave` | Set custom leave message |
 
-### Log Messages for Commands in Group Chat
+### 🔍 Search & Lookup
+| Command | Description |
+|---|---|
+| `youtube` | YouTube search |
+| `googleimage` | Google image search |
+| `tiktokstalker` | Lookup TikTok profile |
 
-<img src="media/group.png" width="400" alt="logo">
+### 🎌 Anime
+| Command | Description |
+|---|---|
+| `animeranking` | MyAnimeList anime ranking |
+| `mangaranking` | MyAnimeList manga ranking |
+| `tracemoe` | Reverse image search for anime scenes |
 
-### Log Messages for Commands in Private Chat
+### 📰 News
+| Command | Description |
+|---|---|
+| `earthquake` | Latest earthquake news (BMKG) |
 
-<img src="media/private.png" width="400" alt="logo">
+### 🖼️ Wallpaper
+| Command | Description |
+|---|---|
+| `zerochan` | Search wallpapers on Zerochan |
 
-### Log Messages for Regular Messages
+### ℹ️ General
+| Command | Description |
+|---|---|
+| `menu` | Show command menu |
+| `about` | About the bot |
+| `me` | Your profile info |
+| `level` | Your current XP level |
+| `leaderboard` | Top users leaderboard |
+| `stats` | Bot statistics |
+| `owner` | Contact the bot owner |
 
-<img src="media/chat.png" width="400" alt="logo">
+### 🔧 Misc
+| Command | Description |
+|---|---|
+| `ping` | Bot latency |
+| `runtime` | Bot uptime |
+| `status` | Quick status check |
+| `statistics` | Detailed statistics |
 
-### Log Messages for Eval & Exec Message
+### 👑 Owner
+Full owner commands: add/delete premium/team, broadcast, approve dashboard access, change bot name/status/picture, config, mode, sync-database, block/unblock, and more.
 
-<img src="media/evalexec.png" width="400" alt="logo">
+### Maintenance Toggle
+
+Put any command into maintenance mode without restarting the bot:
+```
+.commandname -m    → enable maintenance
+.commandname -m    → toggle back off
+```
+
+---
+
+## Dashboard
+
+Access the web dashboard at `http://localhost:3333` (or the port set in `DASHBOARD_PORT`).
+
+**Features:**
+- **Overview** — real-time stat cards (users, groups, uptime, banned)
+- **User Distribution** — breakdown by role (owner, team, premium, regular)
+- **Group Settings** — aggregated anti-link / anti-bot / welcome / notify / mute counts
+- **System Monitor** — CPU, RAM, OS memory with live SSE stream (1s refresh)
+- **Groups** — table with settings icons, bot admin indicator, kick/settings actions
+- **Commands** — list all commands with maintenance toggle
+- **Logs** — live log viewer with level filter
+- **Settings** — bot configuration panel
+
+**First login:**
+1. Make sure your number is in `ownerNumber` or `teamNumber` in `config.json`
+2. Chat the bot and send `.adminpanel` to register your dashboard account
+3. Go to `http://localhost:3333` and log in
+
+### Login Page
+
+<p align="center">
+    <img src="media/login.png" width="700" alt="ChisatoBOT Login Page">
+</p>
+
+### Dashboard Overview
+
+<p align="center">
+    <img src="media/dashboard.png" width="700" alt="ChisatoBOT Dashboard">
+</p>
 
 ---
 
