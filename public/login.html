@@ -40,7 +40,7 @@
                 position: relative;
             }
 
-            /* ── Animated Background ─────────────────── */
+            /* Animated Background */
             .bg-canvas {
                 position: fixed;
                 inset: 0;
@@ -97,10 +97,10 @@
                 66% { transform: translate(-10px, 10px) scale(0.95); }
             }
 
-            /* ── Particles ───────────────────────────── */
+            /* Particles */
             #particles-canvas { position: absolute; inset: 0; }
 
-            /* ── Card ────────────────────────────────── */
+            /* Card */
             .card-wrapper { position: relative; z-index: 10; width: 100%; max-width: 460px; }
 
             .card {
@@ -122,7 +122,7 @@
                 to { opacity: 1; transform: translateY(0) scale(1); }
             }
 
-            /* ── Logo ────────────────────────────────── */
+            /* Logo */
             .logo-wrap {
                 display: flex;
                 flex-direction: column;
@@ -199,14 +199,14 @@
                 text-align: center;
             }
 
-            /* ── Divider ─────────────────────────────── */
+            /* Divider */
             .top-divider {
                 height: 1px;
                 background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
                 margin-bottom: 2rem;
             }
 
-            /* ── Alerts ──────────────────────────────── */
+            /* Alerts */
             .alert {
                 display: none;
                 align-items: flex-start;
@@ -239,7 +239,7 @@
                 box-shadow: 0 0 20px rgba(34,197,94,0.05);
             }
 
-            /* ── Form ────────────────────────────────── */
+            /* Form */
             .form-group { margin-bottom: 1.25rem; }
 
             label {
@@ -293,7 +293,7 @@
 
             .input-wrap:focus-within .input-prefix { color: var(--accent); }
 
-            /* ── Submit Button ───────────────────────── */
+            /* Submit Button */
             .btn-submit {
                 width: 100%;
                 position: relative;
@@ -345,7 +345,7 @@
             .btn-submit:active:not(:disabled) { transform: translateY(0); }
             .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
 
-            /* ── Divider ─────────────────────────────── */
+            /* Divider */
             .divider {
                 display: flex;
                 align-items: center;
@@ -362,7 +362,7 @@
                 white-space: nowrap;
             }
 
-            /* ── Hints ───────────────────────────────── */
+            /* Hints */
             .hints { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.625rem; }
             .hints li {
                 display: flex;
@@ -393,7 +393,7 @@
             .hint-icon-shield { background: rgba(99,102,241,0.15); color: #818cf8; }
             .hint-icon-bell { background: rgba(6,182,212,0.15); color: #38bdf8; }
 
-            /* ── Spinner ─────────────────────────────── */
+            /* Spinner */
             .spinner {
                 display: inline-block;
                 width: 15px; height: 15px;
@@ -405,7 +405,7 @@
             }
             @keyframes spin { to { transform: rotate(360deg); } }
 
-            /* ── Footer ──────────────────────────────── */
+            /* Footer */
             .card-footer {
                 text-align: center;
                 margin-top: 1.5rem;
@@ -526,7 +526,7 @@
         </div>
 
         <script>
-            // ── Particles ──────────────────────────────
+            // Particles
             (function() {
                 const canvas = document.getElementById('particles-canvas');
                 const ctx = canvas.getContext('2d');
@@ -592,7 +592,7 @@
                 draw();
             })();
 
-            // ── Login Form ─────────────────────────────
+            // Login Form
             document.getElementById("login-form").addEventListener("submit", async (e) => {
                 e.preventDefault();
 

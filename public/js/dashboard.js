@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadOverview();
     startSystemRT();
 });
-// ── Background Particles (matches login page) ──────────────
+// Background Particles (matches login page) 
 function initParticles() {
     const canvas = document.getElementById('bg-particles');
     if (!canvas) return;
@@ -366,7 +366,7 @@ function flashUpdate(el, newVal) {
     el.classList.add('tm-val-flash');
 }
 
-// ── Real-Time System Monitor ──────────────────────────────
+// Real-Time System Monitor
 function startSystemRT() {
     stopSystemRT();
     startSystemStream();
