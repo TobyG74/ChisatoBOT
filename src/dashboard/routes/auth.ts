@@ -432,7 +432,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
         const requesterIp = getRequesterIp(request);
 
-        // ── IP rate-limit check ───────────────────────────────────────────────
+        // IP rate-limit check 
         const rateLimited = checkRateLimit(requesterIp);
         if (rateLimited) {
             return reply.status(429).send({
