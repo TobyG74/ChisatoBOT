@@ -132,6 +132,7 @@ export const useSingleAuthState = async (
     Database: PrismaClient
 ): Promise<AuthState> => {
     const KEY_MAP: { [T in keyof SignalDataTypeMap]: string } = {
+        "identity-key": "identityKeys",
         "pre-key": "preKeys",
         session: "sessions",
         "sender-key": "senderKeys",

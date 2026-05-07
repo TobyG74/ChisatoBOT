@@ -198,6 +198,14 @@ export class GroupUpdateHandler {
 
                 case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_ADD:
                 case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_INVITE:
+                    await this.handleAntiBotKick(
+                        Chisato,
+                        from,
+                        participant,
+                        parameters,
+                        GroupSetting?.antibot ?? false,
+                        isBotAdmin
+                    );
                     await this.handleParticipantAdd(
                         Chisato,
                         from,
@@ -714,6 +722,68 @@ export class GroupUpdateHandler {
             await Group.delete(from);
         } else {
             await this.updateGroupMetadata(Chisato, from);
+        }
+    }
+
+    /**
+     * Detects whether a JID belongs to a bot account.
+     */
+    private isBotJid(jid: string): boolean {
+        const number = jid.split("@")[0];
+        if (number.includes(":")) return true;
+        if (number.startsWith("0")) return true;
+        if (number.length < 7) return true;
+        return false;
+    }
+
+    /**
+     * Anti-bot handler: kick accounts that look like bots upon joining.
+     */
+    private async handleAntiBotKick(
+        Chisato: Client,
+        from: string,
+        participant: string,
+        parameters: any,
+        isAntibot: boolean,
+        isBotAdmin: boolean
+    ): Promise<void> {
+        if (!isAntibot || !isBotAdmin) return;
+
+        const toBoot: string[] = [];
+
+        for (const entry of parameters) {
+            try {
+                const obj = JSON.parse(entry);
+                const jid: string = obj.id || obj.phoneNumber || "";
+                if (jid && this.isBotJid(jid)) {
+                    toBoot.push(jid);
+                }
+            } catch {
+                // ignore malformed entries
+            }
+        }
+
+        for (const botJid of toBoot) {
+            try {
+                await Chisato.groupParticipantsUpdate(from, [botJid], "remove");
+
+                const caption =
+                    `*「 ANTI-BOT 」*\n\n` +
+                    `🤖 Bot account @${botJid.split("@")[0]} has been automatically kicked.\n\n` +
+                    `_Anti-bot is enabled in this group._`;
+
+                await Chisato.sendText(from, caption, null, {
+                    mentions: [botJid],
+                });
+
+                logger.info(`Anti-bot: kicked ${botJid} from ${from}`);
+            } catch (err) {
+                logger.error(
+                    `Anti-bot: failed to kick ${botJid} — ${
+                        err instanceof Error ? err.message : String(err)
+                    }`
+                );
+            }
         }
     }
 

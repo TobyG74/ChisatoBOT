@@ -86,7 +86,7 @@ export default {
                     );
                 }
 
-                // Carousel — send caption first, then each image
+                // Carousel of photos
                 let text = `*「 THREADS PHOTOS 」*\n\n📸 *${images.length} photos found*\n✨ Powered by SnapSave`;
                 await Chisato.sendText(from, text, message);
 

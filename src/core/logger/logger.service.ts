@@ -72,17 +72,17 @@ class LoggerService {
 
     private getLevelBadge(level: LogLevel): string {
         switch (level) {
-            case LogLevel.ERROR:   return clc.bgRed.white.bold(" ERROR ");
-            case LogLevel.WARN:    return clc.bgYellow.black.bold(" WARN ");
+            case LogLevel.ERROR:   return clc.bgRed.white.bold(" ERROR  ");
+            case LogLevel.WARN:    return clc.bgYellow.black.bold("  WARN  ");
             case LogLevel.EVAL:
-            case LogLevel.EXEC:   return clc.bgMagenta.white.bold(` ${level}  `);
-            case LogLevel.COMMAND: return clc.bgYellow.black.bold(" CMDS ");
-            case LogLevel.CHAT:   return clc.bgCyan.black.bold(" CHAT ");
-            case LogLevel.MUTE:   return clc.bgYellow.black.bold(" MUTE ");
+            case LogLevel.EXEC:   return clc.bgMagenta.white.bold(`  ${level}   `);
+            case LogLevel.COMMAND: return clc.bgYellow.black.bold("  CMDS  ");
+            case LogLevel.CHAT:   return clc.bgCyan.black.bold("  CHAT  ");
+            case LogLevel.MUTE:   return clc.bgYellow.black.bold("  MUTE  ");
             case LogLevel.STATUS: return clc.bgYellow.black.bold(" STATUS ");
-            case LogLevel.CONNECT:return clc.bgGreen.black.bold(" CONN ");
+            case LogLevel.CONNECT:return clc.bgGreen.black.bold("  CONN  ");
             case LogLevel.INFO:
-            default:              return clc.bgBlue.black.bold(" INFO ");
+            default:              return clc.bgBlue.black.bold("  INFO  ");
         }
     }
 
@@ -133,7 +133,7 @@ class LoggerService {
     }
 
     public connect(message: string): void {
-        console.log(this.ts(), clc.bgGreen.black.bold(" CONN "), clc.greenBright(message));
+        console.log(this.ts(), clc.bgGreen.black.bold("  CONN  "), clc.greenBright(message));
         if (addDashboardLog) {
             addDashboardLog(LogLevel.CONNECT, message);
         }
@@ -146,7 +146,7 @@ class LoggerService {
             : clc.magentaBright(pushName || "Unknown");
         console.log(
             this.ts(),
-            clc.bgYellow.black.bold(" CMDS "),
+            clc.bgYellow.black.bold("  CMDS  "),
             `${where} ${clc.blackBright("→")} ${clc.greenBright(commandName || "")}`
         );
         if (addDashboardLog) {
@@ -162,7 +162,7 @@ class LoggerService {
             : clc.magentaBright(pushName || "Unknown");
         console.log(
             this.ts(),
-            clc.bgCyan.black.bold(" CHAT "),
+            clc.bgCyan.black.bold("  CHAT  "),
             `${where} ${clc.blackBright("│")} ${clc.whiteBright(truncatedBody)}`
         );
         if (addDashboardLog) {
@@ -174,7 +174,7 @@ class LoggerService {
         const { pushName, groupName, commandName } = context;
         console.log(
             this.ts(),
-            clc.bgYellow.black.bold(" MUTE "),
+            clc.bgYellow.black.bold("  MUTE  "),
             `${clc.magentaBright(pushName || "Unknown")} in ${clc.yellow(groupName || "")} ${clc.blackBright("→")} ${clc.greenBright(commandName || "")}`
         );
         if (addDashboardLog) {

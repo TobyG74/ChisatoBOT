@@ -1,6 +1,32 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 import { commands } from "../../libs";
 import fs from "fs";
+import moment from "moment-timezone";
+
+const CATEGORY_ICON: Record<string, string> = {
+    general:      "🌐",
+    downloader:   "📥",
+    converter:    "🔄",
+    search:       "🔎",
+    anime:        "🎌",
+    news:         "📰",
+    wallpaper:    "🖼️",
+    group:        "👥",
+    groupsetting: "⚙️",
+    games:        "🎮",
+    misc:         "🎲",
+    lookup:       "🔍",
+    owner:        "👑",
+    debugging:    "🛠️",
+};
+
+const getGreeting = (timezone: string): string => {
+    const hour = parseInt(moment().tz(timezone).format("H"), 10);
+    if (hour >= 4  && hour < 11) return "Good Morning";
+    if (hour >= 11 && hour < 15) return "Good Afternoon";
+    if (hour >= 15 && hour < 18) return "Good Evening";
+    return "Good Night";
+};
 
 export default {
     name: "menu",
@@ -9,66 +35,78 @@ export default {
     description: "See All Menu List",
     async run({ Chisato, from, message, prefix, botName }) {
         const config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+        const tz: string = config.timezone || config.timeZone || "Asia/Jakarta";
         const { pushName } = message;
-        const category = [];
-        const checkMaintenance = (name: string) => {
-            if (config.maintenance.includes(name)) return true;
-            return false;
-        };
-        const command = Array.from(commands.values()).map((res, i) => res);
-        
-        // Build category structure
-        for (const cmd of command) {
-            const value = commands.get(cmd.name);
-            if (Object.keys(category).includes(value.category)) category[value.category].push(value);
-            else {
-                category[value.category] = [];
-                category[value.category].push(value);
+
+        const isMaintenance = (name: string) => config.maintenance?.includes(name);
+
+        const allCmds = Array.from(commands.values());
+        const category: Record<string, ConfigCommands[]> = {};
+
+        for (const cmd of allCmds) {
+            const cat = cmd.category || "misc";
+            if (!category[cat]) category[cat] = [];
+            category[cat].push(cmd);
+        }
+
+        const now      = moment().tz(tz);
+        const greeting = getGreeting(tz);
+        const catKeys  = Object.keys(category).sort((a, b) => a.localeCompare(b));
+
+        // ── Header ──────────────────────────────────────────────
+        let text = "";
+        text += `✦ ──────────────────── ✦\n`;
+        text += `        ✧ *${botName}* ✧\n`;
+        text += `✦ ──────────────────── ✦\n\n`;
+
+        text += `${greeting}, *${pushName || "Stranger"}* 👋\n`;
+        text += `_${now.format("dddd, DD MMMM YYYY • HH:mm")} (WIB)_\n\n`;
+
+        // ── Stats ────────────────────────────────────────────────
+        text += `┌─────「 📊 *BOT STATS* 」\n`;
+        text += `│  🤖 *Bot*    : ${botName}\n`;
+        text += `│  🔑 *Prefix* : ${prefix}\n`;
+        text += `│  📦 *Cmds*   : ${allCmds.length}\n`;
+        text += `│  🗂️ *Cats*   : ${catKeys.length}\n`;
+        text += `└${"─".repeat(24)}\n\n`;
+
+        // ── Legend ───────────────────────────────────────────────
+        text += `📌 *Legend:*\n`;
+        text += `  ⭐ Owner  💎 Team  👑 Admin  ✅ Public\n`;
+        text += `  〰️ = under maintenance\n\n`;
+
+        // ── Categories ───────────────────────────────────────────
+        for (const key of catKeys) {
+            const icon   = CATEGORY_ICON[key] ?? "📂";
+            const sorted = category[key].sort((a, b) => a.name.localeCompare(b.name));
+
+            text += `┌─「 ${icon} *${key.toUpperCase()}* 」\n`;
+
+            for (const v of sorted) {
+                const badge = v.isOwner
+                    ? "⭐"
+                    : v.isTeam
+                    ? "💎"
+                    : v.isGroupAdmin
+                    ? "👑"
+                    : "✅";
+                const usage     = v.usage ? ` _${v.usage}_` : "";
+                const inMaint   = isMaintenance(v.name);
+                const cmdText   = inMaint
+                    ? `~${prefix}${v.name}~`
+                    : `${prefix}${v.name}`;
+
+                text += `│  ${badge} ${cmdText}${usage}\n`;
             }
+
+            text += `└${"─".repeat(24)}\n\n`;
         }
 
-        // Modern WhatsApp Style Menu
-        let caption = `╭━━━━『 *${botName}* 』━━━━╮\n\n`;
-        caption += `👋 *Hello, ${pushName || "User"}!*\n\n`;
-        caption += `╭───『 *INFO* 』\n`;
-        caption += `│ • Total Commands: *${command.length}*\n`;
-        caption += `│ • Prefix: *${prefix}*\n`;
-        caption += `│ • Categories: *${Object.keys(category).length}*\n`;
-        caption += `╰────────────────\n\n`;
-        
-        caption += `📝 *Command Legend:*\n`;
-        caption += `• ⭐ = Owner Only\n`;
-        caption += `• 💎 = Team Only\n`;
-        caption += `• 👑 = Group Admin\n`;
-        caption += `• ✨ = Public\n\n`;
-        
-        caption += `⚠️ *Note:*\n`;
-        caption += `Commands with ~strikethrough~ are under maintenance\n`;
-        caption += `Example: ${prefix}~command~\n\n`;
+        // ── Footer ───────────────────────────────────────────────
+        text += `✦ ──────────────────── ✦\n`;
+        text += `  _${prefix}help <cmd> for details_\n`;
+        text += `✦ ──────────────────── ✦`;
 
-        const keys = Object.keys(category).sort((a, b) => a.localeCompare(b));
-        
-        for (const key of keys) {
-            const categoryCommands = category[key].sort((a: ConfigCommands, b: ConfigCommands) => 
-                a.name.localeCompare(b.name)
-            );
-            
-            caption += `┏━━━『 *${key.toUpperCase()}* 』\n`;
-            
-            categoryCommands.forEach((v: ConfigCommands, i: number) => {
-                const icon = v.isOwner ? "⭐" : v.isTeam ? "💎" : v.isGroupAdmin ? "👑" : "✨";
-                const cmdName = checkMaintenance(v.name) ? `~${v.name}~` : v.name;
-                const usage = v.usage ? ` ${v.usage}` : "";
-                
-                caption += `┃ ${icon} ${prefix}${cmdName}${usage}\n`;
-            });
-            
-            caption += `┗━━━━━━━━━━━━━━━\n\n`;
-        }
-        
-        caption += `╰━━━━━━━━━━━━━━━╯\n`;
-        caption += `_Powered by ${botName}_`;
-        
-        await Chisato.sendText(from, caption, message);
+        await Chisato.sendText(from, text, message);
     },
 } satisfies ConfigCommands;

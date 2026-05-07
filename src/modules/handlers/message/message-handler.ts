@@ -13,7 +13,7 @@ import {
     Group as GroupDatabase,
     User as UserDatabase,
 } from "../../../libs/database";
-import { AntiLinkHandler } from "../settings";
+import { AntiLinkHandler, AntiBotMessageHandler } from "../settings";
 import { StringUtils } from "../../../utils/core/string-utils";
 import { formatExample } from "../../../utils";
 
@@ -23,6 +23,7 @@ export class MessageHandler {
         User: new UserDatabase(),
     };
     private antiLinkHandler = new AntiLinkHandler();
+    private antiBotMessageHandler = new AntiBotMessageHandler();
 
     async handle(Chisato: Client, message: MessageSerialize): Promise<void> {
         try {
@@ -443,6 +444,14 @@ export class MessageHandler {
 
         // Handle anti-link
         await this.antiLinkHandler.handle(
+            Chisato,
+            message,
+            context.isOwner,
+            context.isGroupAdmin
+        );
+
+        // Handle anti-bot (message-based detection)
+        await this.antiBotMessageHandler.handle(
             Chisato,
             message,
             context.isOwner,

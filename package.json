@@ -31,7 +31,7 @@
         "@types/qrcode-terminal": "^0.12.2",
         "awesome-phonenumber": "^7.6.0",
         "axios": "^1.5.2",
-        "baileys": "github:Tobyg74/Baileys",
+        "baileys": "github:TobyG74/Baileys",
         "bcrypt": "^6.0.0",
         "canvas-text-wrapper": "^0.10.2",
         "cfonts": "^3.1.1",

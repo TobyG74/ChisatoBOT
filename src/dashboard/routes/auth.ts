@@ -432,7 +432,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
         const requesterIp = getRequesterIp(request);
 
-        // Config readiness check — must have at least one owner before processing
+        // Config readiness check - if no owner/team numbers are configured, block login attempts and inform about config issue 
         const accessConfig = readPhoneAccessConfig();
         if (accessConfig.ownerNumber.length === 0 && accessConfig.teamNumber.length === 0) {
             return reply.status(503).send({
@@ -486,7 +486,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
             await sendOwnerApprovalButtons(normalizedPhone, role, pending.id, requesterIp);
 
-            // Record this attempt — next request from the same IP will face a cooldown
+            // Record this attempt = next request from the same IP will face a cooldown
             recordLoginAttempt(requesterIp);
 
             return reply.send({
