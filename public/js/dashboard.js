@@ -222,6 +222,7 @@ function switchView(view) {
         system: "System Information",
         settings: "Settings & Config",
         commands: "Command Manager",
+        security: "IP Security",
     };
     document.getElementById("page-title").textContent = titles[view] || view;
 
@@ -247,6 +248,9 @@ function switchView(view) {
             break;
         case "commands":
             loadCommands();
+            break;
+        case "security":
+            loadIPSecurity();
             break;
     }
 }
@@ -1494,4 +1498,108 @@ document.getElementById('refresh-commands')?.addEventListener('click', () => loa
 document.getElementById('search-commands')?.addEventListener('input', debounce(() => renderCommandsTable(), 300));
 document.getElementById('filter-cmd-category')?.addEventListener('change', () => renderCommandsTable());
 document.getElementById('filter-cmd-override')?.addEventListener('change', () => renderCommandsTable());
+
+async function loadIPSecurity() {
+    const profile = JSON.parse(localStorage.getItem('adminProfile') || '{}');
+    const isOwner = profile.role === 'owner';
+    document.getElementById('security-owner-only')?.classList.toggle('hidden', isOwner);
+    document.getElementById('security-content')?.classList.toggle('hidden', !isOwner);
+    if (!isOwner) return;
+
+    try {
+        const res = await authFetch(`${API_BASE}/config/ip`).then(r => r.json());
+        if (!res.success) return showToast(res.message || 'Gagal memuat IP list', 'error');
+        renderIPTable('whitelist', res.whitelist || []);
+        renderIPTable('blacklist', res.blacklist || []);
+    } catch {
+        showToast('Gagal memuat IP Security data', 'error');
+    }
+}
+
+function renderIPTable(list, ips) {
+    const tbody = document.getElementById(`${list}-tbody`);
+    const countEl = document.getElementById(`${list}-count`);
+    if (countEl) countEl.textContent = ips.length;
+
+    if (!ips.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="table-empty">Belum ada IP di ${list}</td></tr>`;
+        return;
+    }
+
+    const color = list === 'whitelist' ? '#4ade80' : '#fb7185';
+    const iconClass = list === 'whitelist' ? 'fa-circle-check' : 'fa-ban';
+
+    tbody.innerHTML = ips.map((ip, i) => `
+        <tr>
+            <td style="color:var(--text-subtle);width:40px">${i + 1}</td>
+            <td>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:var(--text);">
+                    <i class="fas ${iconClass}" style="color:${color};font-size:0.7rem;margin-right:6px;"></i>${ip}
+                </span>
+            </td>
+            <td style="text-align:right;">
+                <button class="btn btn-danger" style="padding:0.25rem 0.625rem;font-size:0.8rem;" onclick="removeIpFromList('${list}','${ip}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function addIpToList(list) {
+    const input = document.getElementById(`${list}-input`);
+    const ip = input?.value?.trim();
+    if (!ip) { showToast('Masukkan IP address terlebih dahulu', 'error'); return; }
+
+    // Basic IP validation (IPv4 and IPv6)
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6 = /^[0-9a-fA-F:]+$/;
+    if (!ipv4.test(ip) && !ipv6.test(ip)) {
+        showToast('Format IP address tidak valid', 'error');
+        return;
+    }
+
+    try {
+        const res = await authFetch(`${API_BASE}/config/ip/${list}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip }),
+        }).then(r => r.json());
+
+        if (res.success) {
+            showToast(`IP ${ip} ditambahkan ke ${list}`);
+            input.value = '';
+            renderIPTable('whitelist', res.ipWhitelist || []);
+            renderIPTable('blacklist', res.ipBlacklist || []);
+        } else {
+            showToast(res.message || 'Gagal menambahkan IP', 'error');
+        }
+    } catch {
+        showToast('Koneksi bermasalah', 'error');
+    }
+}
+
+async function removeIpFromList(list, ip) {
+    if (!confirm(`Hapus ${ip} dari ${list}?`)) return;
+
+    try {
+        const res = await authFetch(`${API_BASE}/config/ip/${list}/${encodeURIComponent(ip)}`, {
+            method: 'DELETE',
+        }).then(r => r.json());
+
+        if (res.success) {
+            showToast(`IP ${ip} dihapus dari ${list}`);
+            renderIPTable('whitelist', res.ipWhitelist || []);
+            renderIPTable('blacklist', res.ipBlacklist || []);
+        } else {
+            showToast(res.message || 'Gagal menghapus IP', 'error');
+        }
+    } catch {
+        showToast('Koneksi bermasalah', 'error');
+    }
+}
+
+// Allow Enter key to submit IP inputs
+document.getElementById('whitelist-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addIpToList('whitelist'); });
+document.getElementById('blacklist-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addIpToList('blacklist'); });
 
