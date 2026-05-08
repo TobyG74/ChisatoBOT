@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Chisato Dashboard — Login</title>
-        <meta name="description" content="Login ke Chisato Dashboard untuk mengelola bot WhatsApp Anda." />
+        <meta name="description" content="Sign in to Chisato Dashboard to manage your WhatsApp bot." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -449,7 +449,7 @@
                         </div>
                     </div>
                     <h1>Chisato Dashboard</h1>
-                    <p class="subtitle">Login dengan nomor WhatsApp owner / team</p>
+                    <p class="subtitle">Sign in with your owner / team WhatsApp number</p>
                 </div>
 
                 <div class="top-divider"></div>
@@ -457,7 +457,7 @@
                 <!-- Alerts -->
                 <div id="error-message" class="alert alert-error">
                     <i class="fas fa-triangle-exclamation"></i>
-                    <span id="error-text">Nomor tidak valid</span>
+                    <span id="error-text">Invalid number</span>
                 </div>
                 <div id="success-message" class="alert alert-success">
                     <i class="fas fa-circle-check"></i>
@@ -469,7 +469,7 @@
                     <div class="form-group">
                         <label for="phoneNumber">
                             <i class="fas fa-mobile-screen-button"></i>
-                            Nomor HP WhatsApp
+                            WhatsApp Number
                         </label>
                         <div class="input-wrap">
                             <i class="fas fa-phone input-prefix"></i>
@@ -478,7 +478,7 @@
                                 id="phoneNumber"
                                 name="phoneNumber"
                                 required
-                                placeholder="Contoh: 62812xxxxxxx"
+                                placeholder="e.g. 62812xxxxxxx"
                                 autocomplete="tel"
                             />
                         </div>
@@ -486,14 +486,14 @@
 
                     <button type="submit" class="btn-submit" id="submit-btn">
                         <i class="fas fa-arrow-right-to-bracket"></i>
-                        Login ke Dashboard
+                        Sign In to Dashboard
                     </button>
                 </form>
 
                 <!-- Divider -->
                 <div class="divider">
                     <div class="divider-line"></div>
-                    <span class="divider-text">Informasi Akses</span>
+                    <span class="divider-text">Access Information</span>
                     <div class="divider-line"></div>
                 </div>
 
@@ -503,13 +503,13 @@
                         <div class="hint-icon hint-icon-shield">
                             <i class="fas fa-shield-halved"></i>
                         </div>
-                        <span>Hanya nomor owner/team di config.json yang bisa login.</span>
+                        <span>Only owner/team numbers registered in config.json can sign in.</span>
                     </li>
                     <li>
                         <div class="hint-icon hint-icon-bell">
                             <i class="fas fa-bell"></i>
                         </div>
-                        <span>Setelah submit, owner akan menerima notifikasi approval via WhatsApp.</span>
+                        <span>After submitting, the owner will receive an approval notification via WhatsApp.</span>
                     </li>
                 </ul>
 
@@ -604,7 +604,7 @@
                 successMessage.classList.remove("show");
 
                 if (!phoneNumber) {
-                    document.getElementById("error-text").textContent = "Nomor HP wajib diisi";
+                    document.getElementById("error-text").textContent = "Phone number is required";
                     errorMessage.classList.add("show");
                     return;
                 }
@@ -616,15 +616,15 @@
                         const pollRes = await fetch(`/api/auth/approval-status/${approvalId}`);
                         const pollData = await pollRes.json();
                         if (pollData?.status === "approved" && pollData?.token) return pollData;
-                        if (pollData?.status === "rejected") throw new Error("Login ditolak oleh owner.");
+                        if (pollData?.status === "rejected") throw new Error("Login was rejected by the owner.");
                         await new Promise((resolve) => setTimeout(resolve, 2500));
                     }
-                    throw new Error("Approval timeout. Silakan login ulang.");
+                    throw new Error("Approval timed out. Please try signing in again.");
                 };
 
                 try {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner"></span>Mengirim...';
+                    submitBtn.innerHTML = '<span class="spinner"></span>Sending...';
 
                     const response = await fetch("/api/auth/login", {
                         method: "POST",
@@ -635,26 +635,26 @@
                     const data = await response.json();
 
                     if (data?.configNotReady) {
-                        document.getElementById("error-text").textContent = data.message || "Fitur login belum bisa digunakan, periksa kembali file config";
+                        document.getElementById("error-text").textContent = data.message || "Login is not available yet, please check your config file";
                         errorMessage.classList.add("show");
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                        submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Sign In to Dashboard';
                         return;
                     }
 
                     if (response.status === 429 && data?.rateLimited) {
                         submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-clock"></i>Cooldown aktif';
+                        submitBtn.innerHTML = '<i class="fas fa-clock"></i>Cooldown active';
 
                         const formatMs = (ms) => {
-                            if (ms >= 3600000) return `${Math.ceil(ms / 3600000)} jam`;
-                            if (ms >= 60000) return `${Math.ceil(ms / 60000)} menit`;
-                            return `${Math.ceil(ms / 1000)} detik`;
+                            if (ms >= 3600000) return `${Math.ceil(ms / 3600000)}h`;
+                            if (ms >= 60000) return `${Math.ceil(ms / 60000)}m`;
+                            return `${Math.ceil(ms / 1000)}s`;
                         };
 
                         let remaining = data.retryAfterMs;
                         const updateBtn = () => {
-                            submitBtn.innerHTML = `<i class="fas fa-lock"></i>Cooldown ${formatMs(remaining)}`;
+                            submitBtn.innerHTML = `<i class="fas fa-lock"></i>Try again in ${formatMs(remaining)}`;
                         };
                         updateBtn();
 
@@ -663,7 +663,7 @@
                             if (remaining <= 0) {
                                 clearInterval(interval);
                                 submitBtn.disabled = false;
-                                submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                                submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Sign In to Dashboard';
                             } else {
                                 updateBtn();
                             }
@@ -675,12 +675,25 @@
                     }
 
                     if (response.ok) {
-                        document.getElementById("success-text").textContent =
-                            `Permintaan dikirim. Menunggu approval owner untuk +${phoneNumber}...`;
-                        successMessage.classList.add("show");
-                        submitBtn.innerHTML = '<span class="spinner"></span>Menunggu approval...';
+                        // Whitelisted IP — token returned immediately, no approval needed
+                        if (data?.approvalRequired === false && data?.token) {
+                            localStorage.setItem("adminToken", data.token);
+                            localStorage.setItem("adminProfile", JSON.stringify(data.admin || {}));
+                            const role = (data?.admin?.role || "team").toUpperCase();
+                            document.getElementById("success-text").textContent =
+                                `Welcome back! Signed in automatically as ${role}. Redirecting...`;
+                            successMessage.classList.add("show");
+                            submitBtn.innerHTML = '<i class="fas fa-check"></i>Success!';
+                            setTimeout(() => { window.location.href = "/"; }, 700);
+                            return;
+                        }
 
-                        if (!data?.approvalId) throw new Error("Approval ID tidak ditemukan dari server.");
+                        document.getElementById("success-text").textContent =
+                            `Request sent. Waiting for owner approval for +${phoneNumber}...`;
+                        successMessage.classList.add("show");
+                        submitBtn.innerHTML = '<span class="spinner"></span>Waiting for approval...';
+
+                        if (!data?.approvalId) throw new Error("Approval ID not found from server.");
 
                         const approvedData = await waitApproval(data.approvalId);
                         localStorage.setItem("adminToken", approvedData.token);
@@ -688,23 +701,23 @@
 
                         const role = (approvedData?.admin?.role || "team").toUpperCase();
                         document.getElementById("success-text").textContent =
-                            `Login berhasil sebagai ${role}. Mengalihkan...`;
-                        submitBtn.innerHTML = '<i class="fas fa-check"></i>Berhasil!';
+                            `Signed in as ${role}. Redirecting...`;
+                        submitBtn.innerHTML = '<i class="fas fa-check"></i>Success!';
                         setTimeout(() => { window.location.href = "/"; }, 700);
                     } else {
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                        submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Sign In to Dashboard';
                         document.getElementById("error-text").textContent =
-                            data.message || "Nomor tidak memiliki akses dashboard";
+                            data.message || "This number does not have dashboard access";
                         errorMessage.classList.add("show");
                         setTimeout(() => { errorMessage.classList.remove("show"); }, 4500);
                     }
                 } catch (error) {
                     console.error("Login error:", error);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Login ke Dashboard';
+                    submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Sign In to Dashboard';
                     document.getElementById("error-text").textContent =
-                        error.message || "Koneksi bermasalah. Coba lagi.";
+                        error.message || "Connection error. Please try again.";
                     errorMessage.classList.add("show");
                     setTimeout(() => { errorMessage.classList.remove("show"); }, 5000);
                 }

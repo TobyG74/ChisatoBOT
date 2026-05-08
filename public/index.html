@@ -513,7 +513,7 @@
                     <div id="settings-owner-only" class="hidden">
                         <div class="section-card" style="text-align:center;padding:3rem;">
                             <i class="fas fa-lock" style="font-size:2rem;color:var(--text-subtle);margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted);font-size:0.9rem;">Fitur ini hanya bisa diakses oleh <strong>Owner</strong>.</p>
+                            <p style="color:var(--text-muted);font-size:0.9rem;">This feature is only accessible by the <strong>Owner</strong>.</p>
                         </div>
                     </div>
                     <div id="settings-content">
@@ -560,7 +560,7 @@
                         </div>
                         <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
                             <button id="settings-reset" class="btn btn-ghost"><i class="fas fa-rotate-left"></i> Reset</button>
-                            <button id="settings-save" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Perubahan</button>
+                            <button id="settings-save" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                         </div>
                     </div>
                 </div>
@@ -570,7 +570,7 @@
                     <div id="security-owner-only" class="hidden">
                         <div class="section-card" style="text-align:center;padding:3rem;">
                             <i class="fas fa-lock" style="font-size:2rem;color:var(--text-subtle);margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted);font-size:0.9rem;">Fitur ini hanya bisa diakses oleh <strong>Owner</strong>.</p>
+                            <p style="color:var(--text-muted);font-size:0.9rem;">This feature is only accessible by the <strong>Owner</strong>.</p>
                         </div>
                     </div>
                     <div id="security-content">
@@ -578,9 +578,9 @@
                         <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:0.75rem;">
                             <i class="fas fa-circle-info" style="color:#818cf8;margin-top:2px;flex-shrink:0;"></i>
                             <p style="margin:0;font-size:0.8125rem;color:var(--text-muted);line-height:1.6;">
-                                <strong style="color:var(--text);">Whitelist</strong> — IP yang langsung diizinkan masuk tanpa approval WA.<br>
-                                <strong style="color:var(--text);">Blacklist</strong> — IP yang diblokir total dari semua request ke dashboard.<br>
-                                Menambahkan IP ke salah satu list akan otomatis menghapusnya dari list lainnya.
+                                <strong style="color:var(--text);">Whitelist</strong> — IPs that are allowed to access without WhatsApp approval.<br>
+                                <strong style="color:var(--text);">Blacklist</strong> — IPs that are completely blocked from all dashboard requests.<br>
+                                Adding an IP to one list will automatically remove it from the other list.
                             </p>
                         </div>
 
@@ -593,9 +593,9 @@
                                     <span id="whitelist-count" style="font-size:0.75rem;font-weight:700;color:#4ade80;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);padding:2px 9px;border-radius:20px;margin-left:8px;">0</span>
                                 </h3>
                                 <div style="display:flex;gap:0.5rem;align-items:center;">
-                                    <input type="text" id="whitelist-input" class="form-input" style="width:220px;padding:0.375rem 0.75rem;" placeholder="Masukkan IP address..." />
+                                    <input type="text" id="whitelist-input" class="form-input" style="width:220px;padding:0.375rem 0.75rem;" placeholder="Enter IP address..." />
                                     <button class="btn btn-success" onclick="addIpToList('whitelist')" style="gap:0.375rem;">
-                                        <i class="fas fa-plus"></i> Tambah
+                                        <i class="fas fa-plus"></i> Add
                                     </button>
                                 </div>
                             </div>
@@ -605,7 +605,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th>IP Address</th>
-                                            <th style="text-align:right;">Aksi</th>
+                                            <th style="text-align:right;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="whitelist-tbody">
@@ -624,9 +624,9 @@
                                     <span id="blacklist-count" style="font-size:0.75rem;font-weight:700;color:#fb7185;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);padding:2px 9px;border-radius:20px;margin-left:8px;">0</span>
                                 </h3>
                                 <div style="display:flex;gap:0.5rem;align-items:center;">
-                                    <input type="text" id="blacklist-input" class="form-input" style="width:220px;padding:0.375rem 0.75rem;" placeholder="Masukkan IP address..." />
+                                    <input type="text" id="blacklist-input" class="form-input" style="width:220px;padding:0.375rem 0.75rem;" placeholder="Enter IP address..." />
                                     <button class="btn btn-danger" onclick="addIpToList('blacklist')" style="gap:0.375rem;">
-                                        <i class="fas fa-plus"></i> Tambah
+                                        <i class="fas fa-plus"></i> Add
                                     </button>
                                 </div>
                             </div>
@@ -636,7 +636,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th>IP Address</th>
-                                            <th style="text-align:right;">Aksi</th>
+                                            <th style="text-align:right;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="blacklist-tbody">
