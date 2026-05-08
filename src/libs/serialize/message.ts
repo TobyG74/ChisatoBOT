@@ -47,6 +47,9 @@ export const message = async (
             }
             m.type = Object.keys(m.message)[0];
         }
+        if (!m.message[m.type]) {
+            return m;
+        }
         m.expiration = m.message[m.type].expiration || 0;
         m.messageTimestamp = message.messageTimestamp;
         m.pushName = message.pushName;
