@@ -53,7 +53,7 @@ export default {
         const greeting = getGreeting(tz);
         const catKeys  = Object.keys(category).sort((a, b) => a.localeCompare(b));
 
-        // ── Header ──────────────────────────────────────────────
+        // Header
         let text = "";
         text += `✦ ──────────────────── ✦\n`;
         text += `        ✧ *${botName}* ✧\n`;
@@ -62,7 +62,7 @@ export default {
         text += `${greeting}, *${pushName || "Stranger"}* 👋\n`;
         text += `_${now.format("dddd, DD MMMM YYYY • HH:mm")} (WIB)_\n\n`;
 
-        // ── Stats ────────────────────────────────────────────────
+        // Stats 
         text += `┌─────「 📊 *BOT STATS* 」\n`;
         text += `│  🤖 *Bot*    : ${botName}\n`;
         text += `│  🔑 *Prefix* : ${prefix}\n`;
@@ -70,12 +70,12 @@ export default {
         text += `│  🗂️ *Cats*   : ${catKeys.length}\n`;
         text += `└${"─".repeat(24)}\n\n`;
 
-        // ── Legend ───────────────────────────────────────────────
+        // Legend
         text += `📌 *Legend:*\n`;
         text += `  ⭐ Owner  💎 Team  👑 Admin  ✅ Public\n`;
         text += `  〰️ = under maintenance\n\n`;
 
-        // ── Categories ───────────────────────────────────────────
+        // Categories
         for (const key of catKeys) {
             const icon   = CATEGORY_ICON[key] ?? "📂";
             const sorted = category[key].sort((a, b) => a.name.localeCompare(b.name));
@@ -102,7 +102,7 @@ export default {
             text += `└${"─".repeat(24)}\n\n`;
         }
 
-        // ── Footer ───────────────────────────────────────────────
+        // Footer
         text += `✦ ──────────────────── ✦\n`;
         text += `  _${prefix}help <cmd> for details_\n`;
         text += `✦ ──────────────────── ✦`;
