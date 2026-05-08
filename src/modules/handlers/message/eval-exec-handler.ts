@@ -32,6 +32,8 @@ export class EvalExecHandler {
         const code = context.arg;
 
         try {
+            // Expose common context variables for convenience inside eval
+            const { from, sender, args, arg, query, body, isGroup, isOwner, isTeam, botNumber, botName, prefix } = context;
             const result = await eval("(async() => {" + code + "})()");
             await Chisato.sendText(
                 context.from,
@@ -64,8 +66,7 @@ export class EvalExecHandler {
             const result = await new Promise<string>((resolve, reject) => {
                 exec(command, { windowsHide: true }, (err, stdout, stderr) => {
                     if (err) return reject(err);
-                    if (stderr) return reject(stderr);
-                    resolve(stdout);
+                    resolve(stdout || stderr);
                 });
             });
 

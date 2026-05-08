@@ -67,9 +67,10 @@ export class MessageHandler {
                   )
                 : null;
 
-            // Skip own messages in selfbot mode
+            // Skip own messages in selfbot mode (team/owner always bypasses)
             if (
                 !message.fromMe &&
+                !context.isTeam &&
                 config.settings.selfbot &&
                 message.body &&
                 !message.body.startsWith(config.prefix + "mode")
