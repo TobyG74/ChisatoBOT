@@ -1509,8 +1509,8 @@ async function loadIPSecurity() {
     try {
         const res = await authFetch(`${API_BASE}/config/ip`).then(r => r.json());
         if (!res.success) return showToast(res.message || 'Gagal memuat IP list', 'error');
-        renderIPTable('whitelist', res.whitelist || []);
-        renderIPTable('blacklist', res.blacklist || []);
+        renderIPTable('whitelist', res.ipWhitelist || []);
+        renderIPTable('blacklist', res.ipBlacklist || []);
     } catch {
         showToast('Gagal memuat IP Security data', 'error');
     }
