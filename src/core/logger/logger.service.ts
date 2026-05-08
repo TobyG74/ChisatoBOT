@@ -75,7 +75,7 @@ class LoggerService {
             case LogLevel.ERROR:   return clc.bgRed.white.bold(" ERROR  ");
             case LogLevel.WARN:    return clc.bgYellow.black.bold("  WARN  ");
             case LogLevel.EVAL:
-            case LogLevel.EXEC:   return clc.bgMagenta.white.bold(`  ${level}   `);
+            case LogLevel.EXEC:   return clc.bgMagenta.white.bold(`  ${level}  `);
             case LogLevel.COMMAND: return clc.bgYellow.black.bold("  CMDS  ");
             case LogLevel.CHAT:   return clc.bgCyan.black.bold("  CHAT  ");
             case LogLevel.MUTE:   return clc.bgYellow.black.bold("  MUTE  ");
