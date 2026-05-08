@@ -219,6 +219,30 @@ function getAccessRole(phoneNumber: string): AccessRole | null {
     return null;
 }
 
+function readIpLists(): { whitelist: string[]; blacklist: string[] } {
+    try {
+        const raw = fs.readFileSync("./config.json", "utf-8");
+        const parsed = JSON.parse(raw);
+        const dashboard = parsed?.dashboard || {};
+        return {
+            whitelist: Array.isArray(dashboard.ipWhitelist) ? dashboard.ipWhitelist : [],
+            blacklist: Array.isArray(dashboard.ipBlacklist) ? dashboard.ipBlacklist : [],
+        };
+    } catch {
+        return { whitelist: [], blacklist: [] };
+    }
+}
+
+export function isIpBlocked(ip: string): boolean {
+    const { blacklist } = readIpLists();
+    return blacklist.includes(ip);
+}
+
+export function isIpWhitelisted(ip: string): boolean {
+    const { whitelist } = readIpLists();
+    return whitelist.includes(ip);
+}
+
 function buildLoginButtons(role: AccessRole): LoginActionButton[] {
     if (role === "owner") {
         return [
@@ -318,15 +342,27 @@ async function sendOwnerApprovalButtons(
         return;
     }
 
-    const roleLabel = role === "owner" ? "OWNER" : "TEAM";
+    const roleLabel = role === "owner" ? "Owner" : "Team";
     const prefix = configService.getConfig().prefix || ".";
+    const time = new Date().toLocaleString("id-ID", {
+        timeZone: configService.getConfig().timeZone || "Asia/Jakarta",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    });
 
     const body =
-        `Notifikasi Login Dashboard\n\n` +
-        `Nomor: +${loginPhone}\n` +
-        `Role: ${roleLabel}\n` +
-        `IP: ${requesterIp}\n\n` +
-        `Apakah kamu sedang melakukan login?`;
+        `🔐 *Did You Login From a New Device or Location?*\n\n` +
+        `I noticed a new login attempt to your ChisatoBOT Dashboard.\n\n` +
+        `📱 *Account:* +${loginPhone}\n` +
+        `👤 *Role:* ${roleLabel}\n` +
+        `🌐 *IP Address:* ${requesterIp}\n` +
+        `🕐 *Time:* ${time}\n\n` +
+        `If this was *you*, tap *Allow* to grant access.\n` +
+        `If you *don't recognize* this, tap *Deny* to block it immediately.`;
 
     for (const ownerNumber of config.ownerNumber) {
         const ownerJid = `${ownerNumber}@s.whatsapp.net`;
@@ -334,14 +370,14 @@ async function sendOwnerApprovalButtons(
             const builder = new TemplateBuilder.Native(client as any);
             const msg = await builder
                 .mainBody(body)
-                .mainFooter("Dashboard Approval Required")
+                .mainFooter("ChisatoBOT Dashboard Security")
                 .buttons(
                     builder.button.reply({
-                        display: "Accept",
+                        display: "✅ Allow",
                         id: `${prefix}dashboardapprove ${approvalId}`,
                     }),
                     builder.button.reply({
-                        display: "Reject",
+                        display: "🚫 Deny",
                         id: `${prefix}dashboardreject ${approvalId}`,
                     })
                 )
@@ -355,7 +391,7 @@ async function sendOwnerApprovalButtons(
             try {
                 await (client as any).sendText(
                     ownerJid,
-                    `${body}\n\nAccept: ${prefix}dashboardapprove ${approvalId}\nReject: ${prefix}dashboardreject ${approvalId}`
+                    `${body}\n\n✅ Allow: ${prefix}dashboardapprove ${approvalId}\n🚫 Deny: ${prefix}dashboardreject ${approvalId}`
                 );
             } catch (fallbackErr) {
                 console.error(`Failed to send approval to ${ownerJid}:`, fallbackErr);
@@ -432,6 +468,14 @@ export async function authRoutes(fastify: FastifyInstance) {
 
         const requesterIp = getRequesterIp(request);
 
+        // IP blacklist check — block before anything else
+        if (isIpBlocked(requesterIp)) {
+            return reply.status(403).send({
+                success: false,
+                message: "Akses dari IP ini diblokir.",
+            });
+        }
+
         // Config readiness check - if no owner/team numbers are configured, block login attempts and inform about config issue 
         const accessConfig = readPhoneAccessConfig();
         if (accessConfig.ownerNumber.length === 0 && accessConfig.teamNumber.length === 0) {
@@ -475,6 +519,19 @@ export async function authRoutes(fastify: FastifyInstance) {
                 JWT_SECRET,
                 { expiresIn: JWT_EXPIRES_IN }
             );
+
+            // IP whitelist — skip approval flow, activate session immediately
+            if (isIpWhitelisted(requesterIp)) {
+                setSessionActivity(sessionId);
+                return reply.send({
+                    success: true,
+                    approvalRequired: false,
+                    whitelisted: true,
+                    token,
+                    message: "Login disetujui otomatis (IP whitelisted).",
+                    admin: { phoneNumber: normalizedPhone, role },
+                });
+            }
 
             const pending = createPendingLoginRequest(
                 normalizedPhone,

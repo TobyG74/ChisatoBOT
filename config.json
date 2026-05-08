@@ -40,5 +40,9 @@
         "transitionGradient": false,
         "env": "node"
     },
-    "commandOverrides": {}
+    "commandOverrides": {},
+    "dashboard": {
+        "ipWhitelist": [],
+        "ipBlacklist": []
+    }
 }

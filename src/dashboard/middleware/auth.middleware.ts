@@ -1,7 +1,20 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { verifyToken, isSessionActive, touchSession } from "../routes/auth";
+import { verifyToken, isSessionActive, touchSession, isIpBlocked } from "../routes/auth";
 
 export async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
+    // Block blacklisted IPs on every request
+    const fwd = request.headers["x-forwarded-for"];
+    const realIp = request.headers["x-real-ip"];
+    const requesterIp =
+        (typeof fwd === "string" ? fwd.split(",")[0]?.trim() : null) ||
+        (typeof realIp === "string" ? realIp : null) ||
+        request.ip ||
+        "unknown";
+
+    if (isIpBlocked(requesterIp)) {
+        return reply.status(403).send({ success: false, message: "Akses dari IP ini diblokir." });
+    }
+
     const publicPaths = [
         "/login.html", 
         "/api/auth/login", 
