@@ -47,7 +47,6 @@ export default {
             const hasVideo = videos.length > 0;
             const hasImages = images.length > 0;
 
-            // ── Video post ────────────────────────────────────────────────────
             if (hasVideo) {
                 let text = `*「 THREADS VIDEO DOWNLOADER 」*\n\n`;
                 text += `🎥 *Found ${videos.length} video(s)*\n`;
@@ -75,7 +74,6 @@ export default {
                 return;
             }
 
-            // ── Photo post (single or carousel) ──────────────────────────────
             if (hasImages) {
                 if (images.length === 1) {
                     return Chisato.sendImage(

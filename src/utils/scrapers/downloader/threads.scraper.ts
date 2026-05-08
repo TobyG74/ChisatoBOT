@@ -6,8 +6,7 @@ const USER_AGENT =
     "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36";
 
 export class ThreadsScraper {
-    // ── Fetch ─────────────────────────────────────────────────────────────────
-
+    // Fetch 
     private async fetchFromSnapsave(url: string): Promise<string> {
         const response = await axios.get(
             `${API_BASE}/api/action?url=${encodeURIComponent(url)}`,
@@ -34,8 +33,7 @@ export class ThreadsScraper {
         return response.data as string;
     }
 
-    // ── Decryption (same algorithm as SnapSave Facebook/Instagram) ────────────
-
+    // Decryption (same algorithm as SnapSave Facebook/Instagram)
     private getEncodedParams(data: string): string[] {
         const parts = data.split("decodeURIComponent(escape(r))}(");
         if (parts.length < 2) return [];
@@ -104,7 +102,7 @@ export class ThreadsScraper {
         return this.extractDownloadSection(decoded);
     }
 
-    // ── Response format handlers ──────────────────────────────────────────────
+    // Response format handlers
 
     /**
      * New JSON format: { "items": [...], "status_code": 200 }
@@ -154,7 +152,7 @@ export class ThreadsScraper {
         }
     }
 
-    // ── HTML layout parsers ───────────────────────────────────────────────────
+    // HTML layout parsers
 
     /**
      * #download-block layout (threads.snapsave.app primary layout)
@@ -295,20 +293,16 @@ export class ThreadsScraper {
         throw new Error("Could not parse Threads download page — no known layout matched");
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
+    // Public API
     async download(url: string): Promise<ThreadsResult> {
         const raw = await this.fetchFromSnapsave(url);
 
-        // 1. New JSON format
         const jsonResult = this.tryParseJsonFormat(raw);
         if (jsonResult) return jsonResult;
 
-        // 2. Old JSON wrapper with "data" HTML
         const dataHtml = this.tryExtractDataField(raw);
         if (dataHtml) return this.parseThreadsHtml(dataHtml);
 
-        // 3. Encrypted response (same obfuscation as Facebook)
         const html = this.decryptResponse(raw);
         if (!html) throw new Error("Failed to parse Threads response — all strategies exhausted");
 
