@@ -2,6 +2,15 @@ import type { WAMessage } from "baileys";
 import { MessageSerialize } from "../../types/structure/serialize";
 import { Client } from "..";
 
+// Cache decoded bot JID — never changes after connect
+let cachedBotJid: string | null = null;
+
+async function getBotJid(Chisato: Client): Promise<string> {
+    if (cachedBotJid) return cachedBotJid;
+    cachedBotJid = await Chisato.decodeJid(Chisato.user.id);
+    return cachedBotJid;
+}
+
 export const message = async (
     Chisato: Client,
     message: WAMessage
@@ -42,10 +51,11 @@ export const message = async (
         m.messageTimestamp = message.messageTimestamp;
         m.pushName = message.pushName;
         m.mentions = m.message[m.type]?.contextInfo?.mentionedJid || [];
+        const botJid = await getBotJid(Chisato);
         m.sender = m.isGroup
             ? await Chisato.decodeJid(m.key.participantAlt)
             : m.fromMe
-            ? await Chisato.decodeJid(Chisato.user.id)
+            ? botJid
             : await Chisato.decodeJid(m.key.remoteJidAlt);
         m.body =
             m.type === "conversation"
@@ -120,7 +130,6 @@ export const message = async (
             m.quoted.sender = await Chisato.decodeJid(
                 m.message[m.type].contextInfo.participant
             );
-            const botJid = await Chisato.decodeJid(Chisato.user.id);
             m.quoted.key = {
                 id: m.message[m.type].contextInfo.stanzaId,
                 fromMe: m.quoted.sender === botJid,

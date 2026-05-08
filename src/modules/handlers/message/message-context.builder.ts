@@ -3,7 +3,77 @@ import type { MessageSerialize } from "../../../types/structure/serialize";
 import type { Database } from "../../../types/structure/commands";
 import { BotConfig } from "@core/config";
 
+interface TTLCache<T> {
+    value: T;
+    expiresAt: number;
+}
+
+const BLOCKLIST_TTL = 5 * 60 * 1000; // 5 minutes
+const USER_TTL = 15 * 1000;           // 15 seconds
+const GROUP_META_TTL = 15 * 1000;     // 15 seconds
+
+/**
+ * MessageContextBuilder is responsible for constructing a comprehensive context object for each incoming message.
+ */
+
 export class MessageContextBuilder {
+    private static blockListCache: TTLCache<string[]> | null = null;
+    private static botNumberCache: string | null = null;
+    private static userCache = new Map<string, TTLCache<any>>();
+    private static groupMetaCache = new Map<string, TTLCache<any>>();
+
+    static invalidateUser(sender: string): void {
+        MessageContextBuilder.userCache.delete(sender);
+    }
+    static invalidateGroup(jid: string): void {
+        MessageContextBuilder.groupMetaCache.delete(jid);
+    }
+    static invalidateBlockList(): void {
+        MessageContextBuilder.blockListCache = null;
+    }
+
+    private static async getBlockList(Chisato: Client): Promise<string[]> {
+        const now = Date.now();
+        const cache = MessageContextBuilder.blockListCache;
+        if (cache && now < cache.expiresAt) return cache.value;
+        try {
+            const list = await Chisato.fetchBlocklist();
+            MessageContextBuilder.blockListCache = { value: list, expiresAt: now + BLOCKLIST_TTL };
+            return list;
+        } catch {
+            return cache?.value ?? [];
+        }
+    }
+
+    private static async getBotNumber(Chisato: Client): Promise<string> {
+        if (MessageContextBuilder.botNumberCache) return MessageContextBuilder.botNumberCache;
+        const num = await Chisato.decodeJid(Chisato.user.id);
+        MessageContextBuilder.botNumberCache = num;
+        return num;
+    }
+
+    private static async getUserMetadata(User: any, Chisato: Client, sender: string, pushName: string): Promise<any> {
+        const now = Date.now();
+        const cached = MessageContextBuilder.userCache.get(sender);
+        if (cached && now < cached.expiresAt) return cached.value;
+        const data = (await User.get(sender)) ?? (await User.upsert(Chisato, sender, pushName));
+        MessageContextBuilder.userCache.set(sender, { value: data, expiresAt: now + USER_TTL });
+        return data;
+    }
+
+    private static async getGroupMetadata(Chisato: Client, from: string): Promise<any> {
+        const now = Date.now();
+        const cached = MessageContextBuilder.groupMetaCache.get(from);
+        if (cached && now < cached.expiresAt) return cached.value;
+        try {
+            const meta = await Chisato.groupMetadata(from);
+            if (meta) MessageContextBuilder.groupMetaCache.set(from, { value: meta, expiresAt: now + GROUP_META_TTL });
+            return meta;
+        } catch {
+            return null;
+        }
+    }
+
     static async build(
         Chisato: Client,
         message: MessageSerialize,
@@ -33,36 +103,26 @@ export class MessageContextBuilder {
             const isGroup = message.isGroup;
             const fromMe = message.fromMe;
 
-            // Bot data
-            const botNumber = await Chisato.decodeJid(Chisato.user.id);
-            const botLid = Chisato.user.lid
+            const botLid = Chisato.user.lid;
             const botName = Chisato.user.name;
+
             const prefix =
                 body && /^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?@#$%^&.©^]/gi.test(body)
                     ? body.match(/^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?@#$%^&.©^]/gi)![0]
                     : config.prefix;
 
-            // Check command
             const isCmd = body ? body.startsWith(prefix) : false;
             const cmd =
                 isCmd && body
-                    ? body
-                          .replace(prefix, "")
-                          .split(/ +/)
-                          .shift()
-                          ?.toLowerCase()
+                    ? body.replace(prefix, "").split(/ +/).shift()?.toLowerCase()
                     : undefined;
 
-            // User data
-            let blockList: string[] = [];
-            try {
-                blockList = await Chisato.fetchBlocklist();
-            } catch (e) {
-                // Ignore blocklist errors
-            }
-
-            const userMetadata = (await User.get(sender)) ??
-                (await User.upsert(Chisato, sender, pushName));
+            // Run botNumber + blockList + userMetadata in parallel
+            const [botNumber, blockList, userMetadata] = await Promise.all([
+                MessageContextBuilder.getBotNumber(Chisato),
+                MessageContextBuilder.getBlockList(Chisato),
+                MessageContextBuilder.getUserMetadata(User, Chisato, sender, pushName),
+            ]);
 
             // Group data
             let groupMetadata: MessageContext["groupMetadata"] = undefined;
@@ -73,52 +133,42 @@ export class MessageContextBuilder {
             let groupAdmins: MessageContext["groupAdmins"] = undefined;
 
             if (isGroup) {
-                groupMetadata = (await Chisato.groupMetadata(from).catch(() => null) || (await Group.get(from))) ?? (await Group.upsert(Chisato, from));
-                
+                // Fetch WA group metadata (cached) and DB group record in parallel
+                const [waMeta, dbGroup] = await Promise.all([
+                    MessageContextBuilder.getGroupMetadata(Chisato, from),
+                    Group.get(from),
+                ]);
+
+                groupMetadata = waMeta || dbGroup || (await Group.upsert(Chisato, from));
+
                 if (groupMetadata) {
-                    groupSettingData = (await Group.get(from)) ?? (await Group.upsert(Chisato, from))?.settings;
+                    groupSettingData = dbGroup ?? (await Group.upsert(Chisato, from))?.settings;
                     groupName = groupMetadata.subject;
                     groupDescription = groupMetadata.desc;
                     groupParticipants = groupMetadata.participants;
                     groupAdmins = groupMetadata.participants.filter(
-                        (v) => v.admin !== null
+                        (v: any) => v.admin !== null
                     );
                 }
             }
 
             // Permissions
-            const botNumberClean = botNumber
+            const botNumberClean = botNumber;
             const isOwner =
                 fromMe ||
                 sender === botNumber ||
-                [...config.ownerNumber, botNumberClean].includes(
-                    sender.split("@")[0]
-                );
+                [...config.ownerNumber, botNumberClean].includes(sender.split("@")[0]);
 
             const isTeam =
                 fromMe ||
                 sender === botNumber ||
-                [
-                    ...config.teamNumber,
-                    ...config.ownerNumber,
-                    botNumberClean,
-                ].includes(sender.split("@")[0]);
+                [...config.teamNumber, ...config.ownerNumber, botNumberClean].includes(sender.split("@")[0]);
 
-            const isGroupAdmin =
-                isGroup &&
-                !!groupAdmins?.find((v) => v.phoneNumber === sender);
-            const isGroupOwner =
-                isGroup &&
-                !!groupAdmins?.find(
-                    (v) =>
-                        v.phoneNumber === sender && v.admin === "superadmin"
-                );
-            const isBotAdmin =
-                isGroup &&
-                !!groupAdmins?.find((v) => v.phoneNumber === botNumber);
+            const isGroupAdmin = isGroup && !!groupAdmins?.find((v: any) => v.phoneNumber === sender);
+            const isGroupOwner = isGroup && !!groupAdmins?.find((v: any) => v.phoneNumber === sender && v.admin === "superadmin");
+            const isBotAdmin = isGroup && !!groupAdmins?.find((v: any) => v.phoneNumber === botNumber);
             const isBlock = blockList.includes(sender);
-            const isBanned =
-                isGroup && groupSettingData?.banned?.includes(sender);
+            const isBanned = isGroup && groupSettingData?.banned?.includes(sender);
             const isMute = isGroup && (groupSettingData?.mute ?? false);
             const isLimit = userMetadata?.limit === 0;
             const isPremium = userMetadata?.role === "premium";
