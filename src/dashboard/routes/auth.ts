@@ -523,6 +523,9 @@ export async function authRoutes(fastify: FastifyInstance) {
             // IP whitelist — skip approval flow, activate session immediately
             if (isIpWhitelisted(requesterIp)) {
                 setSessionActivity(sessionId);
+                // Clear any previous rate limit record for this IP
+                ipRateLimits.delete(requesterIp);
+                saveRateLimitsToFile(ipRateLimits);
                 return reply.send({
                     success: true,
                     approvalRequired: false,
@@ -599,6 +602,11 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             pendingLoginRequests.delete(approvalId);
+            // Clear rate limit on successful login so the user isn't locked out
+            if (pending.requesterIp) {
+                ipRateLimits.delete(pending.requesterIp);
+                saveRateLimitsToFile(ipRateLimits);
+            }
             return reply.send({
                 success: true,
                 status: "approved",
