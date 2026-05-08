@@ -18,6 +18,14 @@ export default {
         await Chisato.sendReaction(from, "⏳", message.key);
         const type = (args[0] || "tv") as AnimeType;
 
+        if (!args[0]) {
+            return await Chisato.sendText(
+                from,
+                `*「 MAL ANIME RANKING 」*\n\nNo type provided, defaulting to "tv".\n\nValid types are:\n${VALID_ANIME_TYPES.join(", ")}`,
+                message
+            );
+        }
+
         if (!VALID_ANIME_TYPES.includes(type)) {
             await Chisato.sendReaction(from, "❌", message.key);
             return await Chisato.sendText(

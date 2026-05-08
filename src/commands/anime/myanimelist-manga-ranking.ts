@@ -18,6 +18,14 @@ export default {
         await Chisato.sendReaction(from, "⏳", message.key);
         const type = (args[0] || "manga") as MangaType;
 
+        if (!args[0]) {
+            return await Chisato.sendText(
+                from,
+                `*「 MAL MANGA RANKING 」*\n\nNo type provided, defaulting to "manga".\n\nValid types are:\n${VALID_MANGA_TYPES.join(", ")}`,
+                message
+            );
+        }
+
         if (!VALID_MANGA_TYPES.includes(type)) {
             await Chisato.sendReaction(from, "❌", message.key);
             return await Chisato.sendText(
