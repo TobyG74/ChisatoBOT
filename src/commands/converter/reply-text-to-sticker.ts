@@ -11,7 +11,7 @@ export default {
     category: "converter",
     description: "Convert reply text message to WhatsApp bubble chat sticker",
     cooldown: 3,
-    async run({ Chisato, from, message, isGroup }) {
+    async run({ Chisato, from, message, isGroup, groupParticipants }) {
         await Chisato.sendReaction(from, "⏳", message.key);
 
         try {
@@ -33,31 +33,31 @@ export default {
                 );
             }
 
-            let quotedSender;
-            if (isGroup) {
-                quotedSender = parsePhoneNumber("+" + (await Chisato.groupMetadata(from).then((meta) => {
-                    const participant = meta.participants.find(
-                        (p: any) => p.id === message.quoted!.sender
-                    );
-                    return participant ? participant.phoneNumber : message.quoted!.sender;
-                })).split("@")[0]).number.international;
+            let quotedSender: string;
+            if (isGroup && groupParticipants) {
+                const participant = groupParticipants.find(
+                    (p: any) => p.id === message.quoted!.sender
+                );
+                const rawNumber = (participant?.phoneNumber ?? message.quoted!.sender).split("@")[0];
+                quotedSender = parsePhoneNumber("+" + rawNumber).number?.international ?? ("+" + rawNumber);
             } else {
-                quotedSender = parsePhoneNumber("+" + message.quoted!.sender.split("@")[0]).number.international;
+                const rawNumber = message.quoted!.sender.split("@")[0];
+                quotedSender = parsePhoneNumber("+" + rawNumber).number?.international ?? ("+" + rawNumber);
             }
 
             const quotedMessage = message.quoted.body || "Media Message";
 
-            let profilePicUrl = "https://i.imgur.com/7k12EPD.png"; 
+            const blankPicPath = path.join(process.cwd(), "media", "blank_profile.png");
+            let profilePicData: string | Buffer = fs.readFileSync(blankPicPath);
             try {
                 const ppUrl = await Chisato.profilePictureUrl(message.quoted.sender, "image");
-                if (ppUrl) profilePicUrl = ppUrl;
-            } catch (error) {
-                const ppUrl = path.join(process.cwd(), "media", "noprofile.png");
-                profilePicUrl = ppUrl;
+                if (ppUrl) profilePicData = ppUrl;
+            } catch {
+                // keep blank_profile.png fallback
             }
 
             const imageBuffer = await StickerGenerator.generateBubbleChatSticker(
-                profilePicUrl,
+                profilePicData,
                 quotedSender,
                 quotedMessage
             );

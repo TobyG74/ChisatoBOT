@@ -492,14 +492,26 @@ export class StickerGenerator {
     }
 
     /**
+     * Truncates text with ellipsis to fit within maxPixelWidth on the given canvas context.
+     */
+    private static truncateToFit(ctx: SKRSContext2D, text: string, maxPixelWidth: number): string {
+        if (ctx.measureText(text).width <= maxPixelWidth) return text;
+        let truncated = text;
+        while (truncated.length > 0 && ctx.measureText(truncated + "…").width > maxPixelWidth) {
+            truncated = truncated.slice(0, -1);
+        }
+        return truncated + "…";
+    }
+
+    /**
      * Generate WhatsApp-style bubble chat sticker from quote
-     * @param profilePicUrl - URL or path to profile picture
+     * @param profilePicUrl - URL, file path, or Buffer for the profile picture
      * @param senderName - Name of the sender
      * @param message - Message text
      * @returns Buffer of PNG image
      */
     static async generateBubbleChatSticker(
-        profilePicUrl: string,
+        profilePicUrl: string | Buffer,
         senderName: string,
         message: string
     ): Promise<Buffer> {
@@ -593,12 +605,14 @@ export class StickerGenerator {
         ctx.strokeStyle = "#B5E3A0";
         ctx.stroke();
 
-        // Draw sender name (bold)
+        // Draw sender name (bold) — truncate to fit inside bubble
         ctx.fillStyle = "#075E54";
         ctx.font = `bold ${nameFontSize}px Arial, sans-serif`;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        await this.drawTextWithEmoji(ctx, senderName, bubbleX + padding, bubbleY + Math.floor(15 * scaleFactor));
+        const nameMaxWidth = bubbleWidth - (padding * 2);
+        const displayName = this.truncateToFit(ctx, senderName, nameMaxWidth);
+        await this.drawTextWithEmoji(ctx, displayName, bubbleX + padding, bubbleY + Math.floor(15 * scaleFactor));
 
         // Draw message text
         ctx.fillStyle = "#000000";
@@ -613,8 +627,14 @@ export class StickerGenerator {
 
         // Draw profile picture (circular)
         try {
-            const response = await Axios.get(profilePicUrl, { responseType: "arraybuffer" });
-            const avatarImage = await loadImage(Buffer.from(response.data));
+            let avatarBuffer: Buffer;
+            if (Buffer.isBuffer(profilePicUrl)) {
+                avatarBuffer = profilePicUrl;
+            } else {
+                const response = await Axios.get(profilePicUrl, { responseType: "arraybuffer", timeout: 5000 });
+                avatarBuffer = Buffer.from(response.data);
+            }
+            const avatarImage = await loadImage(avatarBuffer);
 
             ctx.save();
             ctx.beginPath();
