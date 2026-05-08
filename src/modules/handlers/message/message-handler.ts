@@ -180,13 +180,13 @@ export class MessageHandler {
         }
 
         // Handle helper flag
-        if (/-[Hh](elp)?/.test(context.args[0])) {
+        if (/^-[Hh](elp)?$/.test(context.args[0])) {
             await this.sendCommandHelp(Chisato, context, command, message);
             return;
         }
 
         // Handle maintenance flag (owner only)
-        if (/-[Mm](aintenance)?/.test(context.args[0]) && context.isOwner) {
+        if (/^-[Mm](aintenance)?$/.test(context.args[0]) && context.isOwner) {
             await this.toggleMaintenance(Chisato, context, command, message);
             return;
         }
