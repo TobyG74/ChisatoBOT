@@ -298,6 +298,11 @@ function setupEventListeners() {
         .getElementById("filter-log-level")
         ?.addEventListener("change", () => loadLogs());
     document.getElementById("clear-logs")?.addEventListener("click", clearLogs);
+
+    // Commands
+    document
+        .getElementById("refresh-commands")
+        ?.addEventListener("click", () => loadCommands());
 }
 
 // Load overview data
