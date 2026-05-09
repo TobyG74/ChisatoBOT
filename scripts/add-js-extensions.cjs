@@ -55,6 +55,11 @@ function processFile(filePath) {
         (m, p, i, s) => fixImportPath(fileDir, m, p, i, s)
     );
 
+    content = content.replace(
+        /(import\s*\(\s*['"])(\.\.?[^'"]*?)(['"]\s*\))/g,
+        (m, p, i, s) => fixImportPath(fileDir, m, p, i, s)
+    );
+
     if (content !== original) {
         fs.writeFileSync(filePath, content, "utf8");
         fixedCount++;
