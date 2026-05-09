@@ -168,6 +168,8 @@
                 .cmd-card-table .cmd-maint::before{content:'Maint:';font-size:.68rem;color:var(--text-subtle);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
                 .cmd-card-table .cmd-actions{order:2;flex:0 0 auto}
             }
+            .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+            @keyframes spin{to{transform:rotate(360deg)}}
 </style>
     </head>
     <script>
@@ -842,7 +844,7 @@
             </div>
         </div>
 
-        <script src="/js/dashboard.js?v=8"></script>
+        <script src="/js/dashboard.js?v=9"></script>
     </body>
 </html>
 

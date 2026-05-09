@@ -575,6 +575,9 @@ async function loadGroups(page = 1) {
     const search = document.getElementById("search-groups").value;
     const params = new URLSearchParams({ page, limit: 10, search });
 
+    const refreshBtn = document.getElementById("refresh-groups");
+    if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.innerHTML = '<span class="spinner"></span>'; }
+
     try {
         const data = await authFetch(`${API_BASE}/groups?${params}`).then((r) =>
             r.json()
@@ -648,6 +651,10 @@ async function loadGroups(page = 1) {
         updatePagination("groups", data.pagination);
     } catch (error) {
         console.error("Failed to load groups:", error);
+        showToast("Failed to load groups", "error");
+    } finally {
+        const refreshBtn = document.getElementById("refresh-groups");
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
     }
 }
 
@@ -663,6 +670,9 @@ async function loadUsers(page = 1) {
         role,
         banned,
     });
+
+    const refreshBtn = document.getElementById("refresh-users");
+    if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.innerHTML = '<span class="spinner"></span>'; }
 
     try {
         const data = await authFetch(`${API_BASE}/users?${params}`).then((r) =>
@@ -700,7 +710,7 @@ async function loadUsers(page = 1) {
                             : ""
                     }
                     ${
-                        user.afk.status
+                        user.afk?.status
                             ? '<span style="font-size:0.75rem;padding:2px 8px;border-radius:5px;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">AFK</span>'
                             : ""
                     }
@@ -737,6 +747,10 @@ async function loadUsers(page = 1) {
         updatePagination("users", data.pagination);
     } catch (error) {
         console.error("Failed to load users:", error);
+        showToast("Failed to load users", "error");
+    } finally {
+        const refreshBtn = document.getElementById("refresh-users");
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
     }
 }
 
@@ -744,6 +758,9 @@ async function loadUsers(page = 1) {
 async function loadLogs(page = 1) {
     const level = document.getElementById("filter-log-level").value;
     const params = new URLSearchParams({ page, limit: 100, level });
+
+    const refreshBtn = document.getElementById("refresh-logs");
+    if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.innerHTML = '<span class="spinner"></span>'; }
 
     try {
         const data = await authFetch(`${API_BASE}/logs?${params}`).then((r) =>
@@ -772,6 +789,10 @@ async function loadLogs(page = 1) {
         container.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;">${lines}</div>`;
     } catch (error) {
         console.error("Failed to load logs:", error);
+        showToast("Failed to load logs", "error");
+    } finally {
+        const refreshBtn = document.getElementById("refresh-logs");
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
     }
 }
 
