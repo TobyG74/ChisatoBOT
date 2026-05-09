@@ -201,7 +201,7 @@ export async function configRoutes(fastify: FastifyInstance) {
                 }
             }
 
-            scanDist(distDir);
+            await scanDist(distDir);
             commandsData.sort((a, b) => a.name.localeCompare(b.name));
             return reply.send({ success: true, commands: commandsData });
         } catch (e: any) {
