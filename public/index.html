@@ -154,6 +154,20 @@
                 .page-header{margin-bottom:1rem!important;padding-bottom:.875rem}
                 .tm-val{font-size:1.25rem}
             }
+            @media(max-width:639px){
+                .cmd-card-table{display:block}
+                .cmd-card-table thead{display:none}
+                .cmd-card-table tbody{display:flex;flex-direction:column;gap:.5rem}
+                .cmd-card-table tr{display:flex;flex-wrap:wrap;align-items:flex-start;border:1px solid rgba(99,102,241,.12);border-radius:10px;padding:.625rem .875rem;background:rgba(99,102,241,.025)}
+                .cmd-card-table td{display:block;padding:0;border:none!important;background:none!important}
+                .cmd-card-table .hide-sm{display:none!important}
+                .cmd-card-table .cmd-name{order:1;flex:1 1 0;min-width:0;padding-right:.5rem}
+                .cmd-card-table .cmd-cat{order:3;flex:0 0 100%;padding-top:.3rem}
+                .cmd-card-table .cmd-override{order:4;flex:1;padding-top:.4rem;display:flex;align-items:center}
+                .cmd-card-table .cmd-maint{order:5;flex:0 0 auto;padding-top:.4rem;display:flex;align-items:center;gap:.375rem}
+                .cmd-card-table .cmd-maint::before{content:'Maint:';font-size:.68rem;color:var(--text-subtle);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+                .cmd-card-table .cmd-actions{order:2;flex:0 0 auto}
+            }
 </style>
     </head>
     <script>
@@ -349,6 +363,9 @@
                         <div class="toolbar flex flex-wrap gap-2 justify-between items-center mb-5">
                             <input type="text" id="search-groups" placeholder="Search groups..." class="toolbar-input" />
                             <div class="flex gap-2">
+                                <button id="join-group-btn" class="btn btn-success">
+                                    <i class="fas fa-right-to-bracket"></i> <span class="hidden sm:inline">Join Group</span>
+                                </button>
                                 <button id="refresh-groups" class="btn btn-primary">
                                     <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                                 </button>
@@ -481,7 +498,7 @@
                                 </div>
                             </div>
                             <div class="table-wrap overflow-x-auto rounded-[10px]">
-                                <table class="data-table">
+                                <table class="data-table cmd-card-table">
                                     <thead>
                                         <tr>
                                             <th>Command</th>
@@ -556,6 +573,39 @@
                             <div class="config-input-row flex flex-col sm:flex-row items-start sm:items-center px-3 py-2.5 rounded-[10px] gap-1.5 sm:gap-4 hover:bg-[rgba(99,102,241,0.04)]">
                                 <label class="text-[0.8125rem] font-semibold text-[#94a3b8] flex-shrink-0 min-w-[140px]">Author</label>
                                 <input type="text" id="cfg-sticker-author" class="form-input w-full sm:w-full sm:max-w-[220px] py-1.5 px-2.5" placeholder="@username" />
+                            </div>
+                        </div>
+                        <!-- Phone Numbers (Owner only) -->
+                        <div class="section-card" style="margin-bottom:1rem;">
+                            <h3 class="section-title">Phone Numbers</h3>
+                            <!-- Owner Numbers -->
+                            <div style="margin-bottom:1.25rem;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+                                    <span style="font-size:0.8125rem;font-weight:700;color:var(--text-muted);display:flex;align-items:center;gap:0.4rem;">
+                                        <i class="fas fa-crown" style="color:#fbbf24;font-size:0.75rem;"></i> Owner Numbers
+                                        <span id="owner-number-count" style="font-size:0.7rem;font-weight:700;color:#fbbf24;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);padding:1px 8px;border-radius:20px;">0</span>
+                                    </span>
+                                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                                        <input type="text" id="owner-number-input" class="form-input" style="width:200px;padding:0.375rem 0.75rem;" placeholder="628xxxxxxxxxx" />
+                                        <button class="btn btn-primary" onclick="addPhoneNumber('owner')" style="padding:0.375rem 0.75rem;"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div id="owner-number-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;min-height:32px;"></div>
+                            </div>
+                            <hr style="border:none;border-top:1px solid var(--border);margin:0.5rem 0 1rem;" />
+                            <!-- Team Numbers -->
+                            <div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+                                    <span style="font-size:0.8125rem;font-weight:700;color:var(--text-muted);display:flex;align-items:center;gap:0.4rem;">
+                                        <i class="fas fa-users" style="color:#818cf8;font-size:0.75rem;"></i> Team Numbers
+                                        <span id="team-number-count" style="font-size:0.7rem;font-weight:700;color:#818cf8;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);padding:1px 8px;border-radius:20px;">0</span>
+                                    </span>
+                                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                                        <input type="text" id="team-number-input" class="form-input" style="width:200px;padding:0.375rem 0.75rem;" placeholder="628xxxxxxxxxx" />
+                                        <button class="btn btn-primary" onclick="addPhoneNumber('team')" style="padding:0.375rem 0.75rem;"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div id="team-number-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;min-height:32px;"></div>
                             </div>
                         </div>
                         <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
@@ -650,6 +700,34 @@
 
         <!-- Toast Container -->
         <div class="toast-container" id="toast-container"></div>
+
+        <!-- Join Group Modal -->
+        <div id="join-group-modal" class="modal">
+            <div class="modal-box" style="max-width:420px;">
+                <div class="modal-header flex justify-between items-center mb-5">
+                    <h2 class="modal-title text-base font-bold text-[#f0f4ff] m-0 tracking-tight"><i class="fas fa-right-to-bracket" style="color:#34d399;margin-right:8px;"></i>Join Group</h2>
+                    <button class="modal-close-btn bg-[rgba(99,102,241,0.08)] border border-[rgba(99,102,241,0.12)] text-[#4a5678] cursor-pointer px-2 py-1.5 rounded-lg text-sm transition-all hover:text-[#f0f4ff] hover:border-[#6366f1]" onclick="closeJoinGroupModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="margin-bottom:1.25rem;">
+                    <p style="font-size:0.8125rem;color:var(--text-muted);margin:0 0 1rem;line-height:1.6;">
+                        Enter a WhatsApp group invite link to make the bot join that group.
+                    </p>
+                    <label class="form-label text-[0.75rem] font-bold text-[#94a3b8] uppercase tracking-wider" style="display:block;margin-bottom:6px;">Invite Link</label>
+                    <input type="text" id="join-group-url" class="form-input w-full" placeholder="https://chat.whatsapp.com/..." />
+                    <p id="join-group-error" style="display:none;font-size:0.775rem;color:#f87171;margin:6px 0 0;"></p>
+                </div>
+                <div style="margin-bottom:1rem;padding:.75rem;background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.12);border-radius:8px;">
+                    <p style="font-size:0.775rem;color:var(--text-subtle);margin:0;line-height:1.5;">
+                        <i class="fas fa-circle-info" style="color:#818cf8;margin-right:5px;"></i>
+                        The bot will join and send a greeting message. The group will appear in the list after the bot syncs.
+                    </p>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeJoinGroupModal()" class="btn btn-ghost">Cancel</button>
+                    <button type="button" id="join-group-submit" onclick="joinGroup()" class="btn btn-success"><i class="fas fa-right-to-bracket"></i> Join</button>
+                </div>
+            </div>
+        </div>
 
         <!-- User Modal -->
         <div id="user-modal" class="modal">
@@ -764,7 +842,7 @@
             </div>
         </div>
 
-        <script src="/js/dashboard.js?v=5"></script>
+        <script src="/js/dashboard.js?v=8"></script>
     </body>
 </html>
 

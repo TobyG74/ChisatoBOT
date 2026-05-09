@@ -261,6 +261,60 @@ export async function groupsRoutes(fastify: FastifyInstance) {
         }
     });
 
+    // Join group via invite link
+    fastify.post("/join", async (request, reply) => {
+        try {
+            const { inviteLink } = request.body as { inviteLink: string };
+            if (!inviteLink?.trim()) {
+                return reply.status(400).send({ success: false, error: "Invite link is required" });
+            }
+
+            const match = inviteLink.match(/chat\.whatsapp\.com\/([0-9A-Za-z]{20,24})/i);
+            if (!match) {
+                return reply.status(400).send({ success: false, error: "Invalid WhatsApp group invite link" });
+            }
+
+            const inviteCode = match[1];
+            const client = getClientInstance();
+            if (!client) {
+                return reply.status(503).send({ success: false, error: "Bot client is not connected" });
+            }
+
+            const groupInfo = await client.groupGetInviteInfo(inviteCode);
+
+            // Check if bot is already in the group
+            if (groupInfo?.id) {
+                try {
+                    await client.groupMetadata(groupInfo.id);
+                    return reply.status(409).send({
+                        success: false,
+                        error: `Bot is already in this group: ${groupInfo.subject || groupInfo.id}`,
+                    });
+                } catch {}
+            }
+
+            const resultId = await client.groupAcceptInvite(inviteCode);
+
+            return reply.send({
+                success: true,
+                message: "Successfully joined group",
+                group: {
+                    id: resultId || groupInfo?.id,
+                    subject: groupInfo?.subject || "Unknown",
+                    size: groupInfo?.size || 0,
+                },
+            });
+        } catch (error: any) {
+            logger.error("Join group error:", error);
+            const msg = error?.message || "Failed to join group";
+            const isNotFound = msg.toLowerCase().includes("not-found") || msg.toLowerCase().includes("not found");
+            return reply.status(isNotFound ? 404 : 500).send({
+                success: false,
+                error: isNotFound ? "Invite link is expired or invalid" : msg,
+            });
+        }
+    });
+
     // Delete group
     fastify.delete("/:groupId", async (request, reply) => {
         try {

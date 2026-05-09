@@ -335,4 +335,87 @@ export async function configRoutes(fastify: FastifyInstance) {
             return reply.status(500).send({ success: false, message: e.message });
         }
     });
+
+    // GET /api/config/numbers — return ownerNumber and teamNumber
+    fastify.get("/numbers", async (request, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const config = configService.getConfig();
+            return reply.send({ success: true, ownerNumber: config.ownerNumber ?? [], teamNumber: config.teamNumber ?? [] });
+        } catch (e: any) {
+            return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
+
+    // POST /api/config/numbers/owner — add a number to ownerNumber
+    fastify.post("/numbers/owner", async (request: FastifyRequest<{ Body: { number: string } }>, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const { number } = request.body;
+            if (!number?.trim()) return reply.status(400).send({ success: false, message: "Number required" });
+            const clean = number.trim().replace(/\D/g, "");
+            if (!clean || clean.length < 8) return reply.status(400).send({ success: false, message: "Invalid phone number" });
+            const config = configService.getConfig();
+            const ownerNumber = [...(config.ownerNumber ?? [])];
+            if (!ownerNumber.includes(clean)) {
+                ownerNumber.push(clean);
+                configService.updateConfig({ ownerNumber });
+            }
+            const updated = configService.getConfig();
+            return reply.send({ success: true, ownerNumber: updated.ownerNumber, teamNumber: updated.teamNumber });
+        } catch (e: any) {
+            return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
+
+    // DELETE /api/config/numbers/owner/:number — remove from ownerNumber
+    fastify.delete("/numbers/owner/:number", async (request: FastifyRequest<{ Params: { number: string } }>, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const num = decodeURIComponent(request.params.number);
+            const config = configService.getConfig();
+            const ownerNumber = (config.ownerNumber ?? []).filter(n => n !== num);
+            configService.updateConfig({ ownerNumber });
+            const updated = configService.getConfig();
+            return reply.send({ success: true, ownerNumber: updated.ownerNumber, teamNumber: updated.teamNumber });
+        } catch (e: any) {
+            return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
+
+    // POST /api/config/numbers/team — add a number to teamNumber
+    fastify.post("/numbers/team", async (request: FastifyRequest<{ Body: { number: string } }>, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const { number } = request.body;
+            if (!number?.trim()) return reply.status(400).send({ success: false, message: "Number required" });
+            const clean = number.trim().replace(/\D/g, "");
+            if (!clean || clean.length < 8) return reply.status(400).send({ success: false, message: "Invalid phone number" });
+            const config = configService.getConfig();
+            const teamNumber = [...(config.teamNumber ?? [])];
+            if (!teamNumber.includes(clean)) {
+                teamNumber.push(clean);
+                configService.updateConfig({ teamNumber });
+            }
+            const updated = configService.getConfig();
+            return reply.send({ success: true, ownerNumber: updated.ownerNumber, teamNumber: updated.teamNumber });
+        } catch (e: any) {
+            return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
+
+    // DELETE /api/config/numbers/team/:number — remove from teamNumber
+    fastify.delete("/numbers/team/:number", async (request: FastifyRequest<{ Params: { number: string } }>, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const num = decodeURIComponent(request.params.number);
+            const config = configService.getConfig();
+            const teamNumber = (config.teamNumber ?? []).filter(n => n !== num);
+            configService.updateConfig({ teamNumber });
+            const updated = configService.getConfig();
+            return reply.send({ success: true, ownerNumber: updated.ownerNumber, teamNumber: updated.teamNumber });
+        } catch (e: any) {
+            return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
 }

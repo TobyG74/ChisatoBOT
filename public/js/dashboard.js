@@ -265,6 +265,15 @@ function setupEventListeners() {
         "input",
         debounce(() => loadGroups(), 500)
     );
+    document.getElementById("join-group-btn")?.addEventListener("click", () => {
+        document.getElementById("join-group-url").value = "";
+        document.getElementById("join-group-error").style.display = "none";
+        document.getElementById("join-group-modal").classList.add("show");
+        setTimeout(() => document.getElementById("join-group-url").focus(), 80);
+    });
+    document.getElementById("join-group-url")?.addEventListener("keydown", e => {
+        if (e.key === "Enter") joinGroup();
+    });
 
     // Users
     document
@@ -1121,6 +1130,57 @@ async function deleteGroup(groupId, groupName) {
     }
 }
 
+function closeJoinGroupModal() {
+    document.getElementById("join-group-modal").classList.remove("show");
+}
+
+async function joinGroup() {
+    const input = document.getElementById("join-group-url");
+    const errorEl = document.getElementById("join-group-error");
+    const submitBtn = document.getElementById("join-group-submit");
+    const url = input.value.trim();
+
+    errorEl.style.display = "none";
+
+    if (!url) {
+        errorEl.textContent = "Please enter an invite link.";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    if (!/chat\.whatsapp\.com\/[0-9A-Za-z]{20,24}/i.test(url)) {
+        errorEl.textContent = "Invalid WhatsApp invite link format.";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span>Joining...';
+
+    try {
+        const res = await authFetch(`${API_BASE}/groups/join`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ inviteLink: url }),
+        }).then(r => r.json());
+
+        if (res.success) {
+            closeJoinGroupModal();
+            showToast(`Joined "${res.group?.subject || 'group'}" successfully!`, "success");
+            setTimeout(() => loadGroups(), 3000);
+        } else {
+            errorEl.textContent = res.error || "Failed to join group.";
+            errorEl.style.display = "block";
+        }
+    } catch {
+        errorEl.textContent = "Connection error. Please try again.";
+        errorEl.style.display = "block";
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Join';
+    }
+}
+
 // Form Event Listeners
 document.getElementById("user-form")?.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1211,6 +1271,12 @@ async function loadSettings() {
         document.getElementById('cfg-call').value = data.config.call?.status || 'reject';
         document.getElementById('cfg-sticker-pack').value = data.config.stickers?.packname || '';
         document.getElementById('cfg-sticker-author').value = data.config.stickers?.author || '';
+        // Load phone numbers
+        const numRes = await authFetch(`${API_BASE}/config/numbers`).then(r => r.json());
+        if (numRes.success) {
+            renderNumberList('owner', numRes.ownerNumber || []);
+            renderNumberList('team', numRes.teamNumber || []);
+        }
     } catch { showToast('Gagal memuat settings', 'error'); }
 }
 
@@ -1371,7 +1437,7 @@ function renderCommandsTable() {
     }
 
     if (!page.length) {
-        tbody.innerHTML = `<tr><td colspan="12" class="table-empty">Tidak ada command ditemukan</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="table-empty">No commands found</td></tr>`;
     } else {
         tbody.innerHTML = page.map(cmd => {
             const ov = cmd.override || {};
@@ -1382,10 +1448,10 @@ function renderCommandsTable() {
                 <span class="toggle-slider"></span>
             </label>`;
             return `<tr>
-                <td><strong style="color:var(--text)">${cmd.name}</strong>
+                <td class="cmd-name"><strong style="color:var(--text)">${cmd.name}</strong>
                     ${cmd.alias?.length ? `<br><span style="font-size:0.7rem;color:var(--text-subtle)">${cmd.alias.join(', ')}</span>` : ''}
                 </td>
-                <td><span style="font-size:0.75rem;background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:6px;color:#a5b4fc">${cmd.category}</span></td>
+                <td class="cmd-cat"><span style="font-size:0.75rem;background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:6px;color:#a5b4fc">${cmd.category}</span></td>
                 <td class="hide-sm" style="text-align:center">${badge(ov.isOwner !== undefined ? ov.isOwner : null, cmd.isOwner)}</td>
                 <td class="hide-sm" style="text-align:center">${badge(ov.isTeam !== undefined ? ov.isTeam : null, cmd.isTeam)}</td>
                 <td class="hide-sm" style="text-align:center">${badge(ov.isPremium !== undefined ? ov.isPremium : null, cmd.isPremium)}</td>
@@ -1393,9 +1459,9 @@ function renderCommandsTable() {
                 <td class="hide-sm" style="text-align:center">${badge(ov.isGroup !== undefined ? ov.isGroup : null, cmd.isGroup)}</td>
                 <td class="hide-sm">${numBadge(ov.cooldown !== undefined ? ov.cooldown : null, cmd.cooldown)}s</td>
                 <td class="hide-sm">${numBadge(ov.limit !== undefined ? ov.limit : null, cmd.limit)}</td>
-                <td>${hasOverride ? '<span style="font-size:0.75rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;padding:2px 8px;border-radius:6px;">Modified</span>' : '<span style="color:var(--text-subtle);font-size:0.75rem;">Default</span>'}</td>
-                <td style="text-align:center">${maintBtn}</td>
-                <td><button onclick="openCommandModal('${cmd.name}')" class="btn btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.8rem;"><i class="fas fa-pen"></i></button></td>
+                <td class="cmd-override">${hasOverride ? '<span style="font-size:0.75rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;padding:2px 8px;border-radius:6px;">Modified</span>' : '<span style="color:var(--text-subtle);font-size:0.75rem;">Default</span>'}</td>
+                <td class="cmd-maint" style="text-align:center">${maintBtn}</td>
+                <td class="cmd-actions"><button onclick="openCommandModal('${cmd.name}')" class="btn btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.8rem;"><i class="fas fa-pen"></i></button></td>
             </tr>`;
         }).join('');
     }
@@ -1602,4 +1668,66 @@ async function removeIpFromList(list, ip) {
 // Allow Enter key to submit IP inputs
 document.getElementById('whitelist-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addIpToList('whitelist'); });
 document.getElementById('blacklist-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addIpToList('blacklist'); });
+
+// Phone number management
+function renderNumberList(type, numbers) {
+    const listEl = document.getElementById(`${type}-number-list`);
+    const countEl = document.getElementById(`${type}-number-count`);
+    if (countEl) countEl.textContent = numbers.length;
+    if (!listEl) return;
+    if (!numbers.length) {
+        listEl.innerHTML = `<span style="color:var(--text-subtle);font-size:0.8125rem;">No numbers added</span>`;
+        return;
+    }
+    const color = type === 'owner' ? '#fbbf24' : '#818cf8';
+    const bg = type === 'owner' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)';
+    const border = type === 'owner' ? 'rgba(245,158,11,0.25)' : 'rgba(99,102,241,0.25)';
+    listEl.innerHTML = numbers.map(num => `
+        <span style="display:inline-flex;align-items:center;gap:0.375rem;background:${bg};border:1px solid ${border};color:${color};padding:3px 10px;border-radius:20px;font-size:0.8125rem;font-family:'JetBrains Mono',monospace;">
+            +${num}
+            <button onclick="removePhoneNumber('${type}','${num}')" style="background:none;border:none;cursor:pointer;color:${color};opacity:0.6;padding:0;font-size:0.7rem;line-height:1;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                <i class="fas fa-times"></i>
+            </button>
+        </span>
+    `).join('');
+}
+
+async function addPhoneNumber(type) {
+    const input = document.getElementById(`${type}-number-input`);
+    const number = input?.value?.trim().replace(/\D/g, '');
+    if (!number || number.length < 8) { showToast('Enter a valid phone number (min 8 digits)', 'error'); return; }
+    try {
+        const res = await authFetch(`${API_BASE}/config/numbers/${type}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number }),
+        }).then(r => r.json());
+        if (res.success) {
+            input.value = '';
+            renderNumberList('owner', res.ownerNumber || []);
+            renderNumberList('team', res.teamNumber || []);
+            showToast(`Number added to ${type}`, 'success');
+        } else {
+            showToast(res.message || 'Failed to add number', 'error');
+        }
+    } catch { showToast('Connection error', 'error'); }
+}
+
+async function removePhoneNumber(type, number) {
+    try {
+        const res = await authFetch(`${API_BASE}/config/numbers/${type}/${encodeURIComponent(number)}`, {
+            method: 'DELETE',
+        }).then(r => r.json());
+        if (res.success) {
+            renderNumberList('owner', res.ownerNumber || []);
+            renderNumberList('team', res.teamNumber || []);
+            showToast(`Number removed from ${type}`, 'success');
+        } else {
+            showToast(res.message || 'Failed to remove number', 'error');
+        }
+    } catch { showToast('Connection error', 'error'); }
+}
+
+document.getElementById('owner-number-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addPhoneNumber('owner'); });
+document.getElementById('team-number-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addPhoneNumber('team'); });
 
