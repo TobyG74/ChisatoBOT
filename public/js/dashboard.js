@@ -654,7 +654,7 @@ async function loadGroups(page = 1) {
         showToast("Failed to load groups", "error");
     } finally {
         const refreshBtn = document.getElementById("refresh-groups");
-        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>'; }
     }
 }
 
@@ -750,7 +750,7 @@ async function loadUsers(page = 1) {
         showToast("Failed to load users", "error");
     } finally {
         const refreshBtn = document.getElementById("refresh-users");
-        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>'; }
     }
 }
 
@@ -792,7 +792,7 @@ async function loadLogs(page = 1) {
         showToast("Failed to load logs", "error");
     } finally {
         const refreshBtn = document.getElementById("refresh-logs");
-        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>'; }
     }
 }
 
