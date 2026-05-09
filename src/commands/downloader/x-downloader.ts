@@ -1,4 +1,5 @@
-import { TwitterDL } from "twitter-downloader";
+import twitterDownloader from "twitter-downloader";
+const { TwitterDL } = twitterDownloader;
 import type { ConfigCommands } from "../../types/structure/commands";
 import { isURL } from "../../libs";
 

@@ -3,6 +3,7 @@ import { configService } from "../../core/config/config.service";
 import type { CommandOverride } from "../../core/config/config.service";
 import { verifyToken } from "./auth";
 import path from "path";
+import { pathToFileURL } from "url";
 import fs from "fs";
 
 function requireOwner(request: FastifyRequest, reply: FastifyReply): boolean {
@@ -164,18 +165,16 @@ export async function configRoutes(fastify: FastifyInstance) {
             const distDir = path.join(process.cwd(), "dist", "commands");
             const commandsData: any[] = [];
 
-            function scanDist(dir: string, category: string = "") {
+            async function scanDist(dir: string, category: string = "") {
                 if (!fs.existsSync(dir)) return;
                 const entries = fs.readdirSync(dir, { withFileTypes: true });
                 for (const entry of entries) {
                     const fullPath = path.join(dir, entry.name);
                     if (entry.isDirectory()) {
-                        scanDist(fullPath, entry.name);
+                        await scanDist(fullPath, entry.name);
                     } else if (entry.name.endsWith(".js")) {
                         try {
-                            delete require.cache[require.resolve(fullPath)];
-                            // eslint-disable-next-line @typescript-eslint/no-var-requires
-                            const mod = require(fullPath);
+                            const mod = await import(pathToFileURL(fullPath).href);
                             const cmd = mod.default;
                             if (cmd && cmd.name) {
                                 const name = cmd.name;

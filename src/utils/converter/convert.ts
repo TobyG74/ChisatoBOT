@@ -1,5 +1,6 @@
 import fs from "fs";
-import { fromBuffer } from "file-type";
+import fileType from "file-type";
+const { fromBuffer } = fileType;
 import { spawn } from "child_process";
 import { BaseHTTPClient } from "../core/base-http-client";
 

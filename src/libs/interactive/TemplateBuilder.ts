@@ -1,4 +1,5 @@
-import { fromBuffer } from "file-type";
+import fileType from "file-type";
+const { fromBuffer } = fileType;
 import type { Chisato } from "../../types/auth/chisato";
 
 let baileysModule: any = null;

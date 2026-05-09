@@ -1,7 +1,8 @@
 import { createCanvas, loadImage, SKRSContext2D } from "@napi-rs/canvas";
 import path from "path";
 import axios from "axios";
-import { parse as parseEmoji } from "twemoji-parser";
+import twemojiParser from "twemoji-parser";
+const { parse: parseEmoji } = twemojiParser;
 import { parsePhoneNumber } from "awesome-phonenumber";
 
 /**

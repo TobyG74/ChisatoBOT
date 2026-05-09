@@ -1,10 +1,11 @@
 {
     "name": "chisato-bot",
     "version": "1.1.0",
+    "type": "module",
     "description": "WhatsApp Bot Multi-Device using Baileys",
     "main": "start.js",
     "scripts": {
-        "build": "tsc --build",
+        "build": "tsc --build && node scripts/add-js-extensions.cjs",
         "start": "node ./dist/auth/connect.js",
         "dev": "npm run build && npm start",
         "prisma:generate": "prisma generate",

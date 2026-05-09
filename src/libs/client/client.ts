@@ -12,7 +12,8 @@ import {
     type WAMessage,
     delay,
 } from "baileys";
-import { Boom } from "@hapi/boom";
+import boomPkg from "@hapi/boom";
+const { Boom } = boomPkg;
 import { Cron } from "croner";
 import fs from "fs";
 import clc from "cli-color";
@@ -24,6 +25,7 @@ import path from "path";
 import PhoneNumber, { parsePhoneNumber } from "awesome-phonenumber";
 import qrcode from "qrcode-terminal";
 import util from "util";
+import { fileURLToPath, pathToFileURL } from "url";
 
 /** Config */
 import { commands } from "./commands";
@@ -38,7 +40,8 @@ import type { MessageSerialize } from "../../types/structure/serialize";
 /** Utils */
 import { Database, Validators, FileUtils } from "..";
 import { useMultiAuthState, useSingleAuthState } from "../../auth";
-import { fromBuffer } from "file-type";
+import fileType from "file-type";
+const { fromBuffer } = fileType;
 import { StickerGenerator, StickerType } from "../../utils/converter/sticker";
 
 /** Extensions */
@@ -478,7 +481,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             if (!["ev", "ws"].includes(key)) delete (Chisato as any)[key];
         }
 
-        const { TemplateBuilder } = require("../interactive/TemplateBuilder");
+        const { TemplateBuilder } = await import(pathToFileURL(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../interactive/TemplateBuilder.js")).href);
         (this as any).TemplateBuilder = TemplateBuilder;
 
         const originalRelayMessage = (this as any).relayMessage.bind(this);
@@ -518,28 +521,21 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
 
     /** Read All Commands  */
     private readcommands() {
-        const dir = path.join(__dirname, "../..", "commands");
+        const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..", "commands");
         const readdir = fs.readdirSync(dir);
         readdir.forEach((dirName) => {
             const files = fs
                 .readdirSync(`${dir}/${dirName}`)
                 .filter((file) => file.endsWith(".js"));
             files.forEach(async (file) => {
-                let cmd = await (
-                    await import(`${dir}/${dirName}/${file}`)
-                ).default;
+                const filePath = `${dir}/${dirName}/${file}`;
+                const fileUrl = pathToFileURL(filePath).href;
+                let cmd = (await import(fileUrl)).default;
                 commands.set(cmd.name, cmd);
-                /** Detect File Changes */
-                fs.watchFile(`${dir}/${dirName}/${file}`, async () => {
+                fs.watchFile(filePath, async () => {
                     this.logger.info(`Hot-reload: ${file} updated, reloading...`);
-                    delete require.cache[
-                        require.resolve(`${dir}/${dirName}/${file}`)
-                    ];
                     commands.delete(cmd.name);
-                    cmd = await (
-                        await import(`${dir}/${dirName}/${file}`)
-                    ).default;
-
+                    cmd = (await import(`${fileUrl}?update=${Date.now()}`)).default;
                     commands.set(cmd.name, cmd);
                 });
             });

@@ -12,7 +12,8 @@ import { promisify } from "util";
 import sharp from "sharp";
 import webpmux from "node-webpmux";
 import Axios from "axios";
-import { parse as parseEmoji } from "twemoji-parser";
+import twemojiParser from "twemoji-parser";
+const { parse: parseEmoji } = twemojiParser;
 
 const { CanvasTextWrapper } = Wrap;
 const execAsync = promisify(exec);

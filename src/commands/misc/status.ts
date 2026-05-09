@@ -13,7 +13,7 @@ export default {
     isOwner: true,
     async run({ Chisato, from, message, botName }) {
         const memory = process.memoryUsage();
-        const totalmemory = Math.round(require("os").totalmem / 1024 / 1024);
+        const totalmemory = Math.round(os.totalmem() / 1024 / 1024);
         let caption =
             "┏━━「 𓆩 𝚮ɪᴅᴅᴇɴ 𝐅ɪɴᴅᴇʀ ⁣𓆪 」\n┃\n" +
             `┣━━━「 *MEMORY USAGE* 」━━━\n┃\n` +

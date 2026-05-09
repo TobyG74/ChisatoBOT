@@ -1,6 +1,7 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 import { GoogleImagesScraper } from "../../utils/scrapers/search";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
+import axios from "axios";
 
 // Store search results for pagination
 const searchCache = new Map<string, { results: any[], timestamp: number }>();
@@ -98,8 +99,7 @@ export default {
                 });
 
                 try {
-                    const Axios = require("axios");
-                    const response = await Axios.get(image.url, {
+                    const response = await axios.get(image.url, {
                         responseType: "arraybuffer",
                         timeout: 15000,
                         headers: {
@@ -119,9 +119,8 @@ export default {
                     Chisato.logger.error(command.name, "Failed to send image");
                     for (let i = 1; i < Math.min(results.length, 5); i++) {
                         try {
-                            const Axios = require("axios");
                             const altImage = results[i];
-                            const response = await Axios.get(altImage.url, {
+                            const response = await axios.get(altImage.url, {
                                 responseType: "arraybuffer",
                                 timeout: 15000,
                                 headers: {
@@ -146,7 +145,6 @@ export default {
 
             } else {
                 const builder = new (Chisato as any).TemplateBuilder.Carousel(Chisato);
-                const Axios = require("axios");
                 
                 const validCards = [];
                 let imageIndex = 0;
@@ -157,7 +155,7 @@ export default {
                     resultIndex++;
                     
                     try {
-                        const response = await Axios.get(image.url, {
+                        const response = await axios.get(image.url, {
                             responseType: "arraybuffer",
                             timeout: 15000,
                             headers: {

@@ -1,8 +1,10 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { writeFile, readFile } from "fs/promises";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { exec } from "child_process";
 import { promisify } from "util";
+import fs from "fs";
 
 const execAsync = promisify(exec);
 
@@ -50,7 +52,7 @@ export default {
                 );
             }
 
-            const tempDir = join(__dirname, "../../../temp");
+            const tempDir = join(dirname(fileURLToPath(import.meta.url)), "../../../temp");
             const tempInput = join(tempDir, `sticker_${Date.now()}.webp`);
             const tempOutput = join(tempDir, `output_${Date.now()}.${isAnimated ? "mp4" : "png"}`);
 
@@ -62,7 +64,7 @@ export default {
                         `ffmpeg -i "${tempInput}" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "${tempOutput}"`
                     );
                     
-                    const videoBuffer = await require("fs/promises").readFile(tempOutput);
+                    const videoBuffer = await readFile(tempOutput);
                     await Chisato.sendMessage(from, {
                         video: videoBuffer,
                         caption: "✅ Sticker converted to video!",
@@ -71,7 +73,7 @@ export default {
                 } else {
                     await execAsync(`ffmpeg -i "${tempInput}" "${tempOutput}"`);
                     
-                    const imageBuffer = await require("fs/promises").readFile(tempOutput);
+                    const imageBuffer = await readFile(tempOutput);
                     await Chisato.sendMessage(from, {
                         image: imageBuffer,
                         caption: "✅ Sticker converted to image!"
@@ -80,14 +82,12 @@ export default {
 
                 await Chisato.sendReaction(from, "✅", message.key);
 
-                const fs = require("fs");
                 if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
                 if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
                 
             } catch (conversionError) {
                 await Chisato.sendReaction(from, "❌", message.key);
                 
-                const fs = require("fs");
                 if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
                 if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
                 

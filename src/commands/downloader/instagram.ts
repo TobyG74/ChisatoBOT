@@ -2,6 +2,7 @@
 import { InstagramScraper } from "../../utils/scrapers/downloader/instagram.scraper";
 import { Validators } from "../../utils/core";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
+import axios from "axios";
 
 export default {
     name: "instagram",
@@ -140,7 +141,6 @@ export default {
                 } else {
                     const builder = new (Chisato as any).TemplateBuilder.Carousel(Chisato);
 
-                    const Axios = require("axios");
                     const cards = await Promise.all(
                         result.images.map(async (imageItem, index) => {
                             const bestQuality = scraper.getBestImageQuality(imageItem);
@@ -148,7 +148,7 @@ export default {
 
                             if (bestQuality && bestQuality.url) {
                                 try {
-                                    const response = await Axios.get(bestQuality.url, {
+                                    const response = await axios.get(bestQuality.url, {
                                         responseType: "arraybuffer",
                                         timeout: 20000,
                                         headers: bestQuality.headers ?? {},

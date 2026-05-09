@@ -542,7 +542,7 @@ export class GroupUpdateHandler {
 
                 for (const user of parameters) {
                     const obj = JSON.parse(user);
-                    const userNumber = obj.phoneNumber;
+                    const userNumber = obj.id;
 
                     let profilePicUrl: string;
                     try {
@@ -606,7 +606,7 @@ export class GroupUpdateHandler {
                 let caption = `「 *GROUP WELCOME* 」\n\nHello`;
                 for (const user of parameters) {
                     const obj = JSON.parse(user);
-                    caption += ` @${obj.phoneNumber.split("@")[0]}`;
+                    caption += ` @${obj.id.split("@")[0]}`;
                 }
                 caption += ` Welcome to the ${groupName}`;
 
@@ -643,7 +643,7 @@ export class GroupUpdateHandler {
 
                 for (const user of parameters) {
                     const obj = JSON.parse(user);
-                    const userNumber = obj.phoneNumber;
+                    const userNumber = obj.id;
 
                     let profilePicUrl: string;
                     try {
@@ -754,7 +754,7 @@ export class GroupUpdateHandler {
         for (const entry of parameters) {
             try {
                 const obj = JSON.parse(entry);
-                const jid: string = obj.id || obj.phoneNumber || "";
+                const jid: string = obj.id || obj.id || "";
                 if (jid && this.isBotJid(jid)) {
                     toBoot.push(jid);
                 }

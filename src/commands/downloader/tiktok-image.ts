@@ -1,5 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-const Tiktok = require("@tobyg74/tiktok-api-dl");
+import Tiktok from "@tobyg74/tiktok-api-dl";
+import Axios from "axios";
 import { Validators } from "../../utils/core";
 
 export default {
@@ -36,7 +37,7 @@ Download All Images :
         Tiktok.Downloader(url, {
             version: "v1",
         })
-            .then(async (res) => {
+            .then(async (res: any) => {
                 if (res.status === "error") {
                     Chisato.logger.error(command.name, res.message);
                     return Chisato.sendText(from, res.message, message);
@@ -60,7 +61,7 @@ Download All Images :
                             `• Description: ${res.result.desc}\n` +
                             `• Total Images: ${res.result.images.length}\n` +
                             `• Author: ${res.result.author.nickname}\n` +
-                            `• Likes: ${res.result.statistics.diggCount}\n` +
+                            `• Likes: ${res.result.statistics.likeCount}\n` +
                             `• Comments: ${res.result.statistics.commentCount}\n`;
 
                         await Chisato.sendImage(
@@ -74,7 +75,6 @@ Download All Images :
                             Chisato as any
                         ).TemplateBuilder.Carousel(Chisato);
 
-                        const Axios = require("axios");
                         const cards = await Promise.all(
                             res.result.images.map(
                                 async (imageUrl: string, index: number) => {
@@ -111,7 +111,7 @@ Download All Images :
                                         buttons: [
                                             builder.button.url({
                                                 display: "🔗 View on TikTok",
-                                                url: `https://www.tiktok.com/@${res.result.author.username}/video/${res.result.id}`,
+                                                url: `https://www.tiktok.com/@${res.result.author.nickname}/video/${res.result.id}`,
                                             }),
                                             builder.button.url({
                                                 display: "🖼️ Full Image",
@@ -134,7 +134,7 @@ Download All Images :
                                     `• Description: ${res.result.desc}\n` +
                                     `• Total Images: ${res.result.images.length}\n` +
                                     `• Author: ${res.result.author.nickname}\n` +
-                                    `• Likes: ${res.result.statistics.diggCount}\n` +
+                                    `• Likes: ${res.result.statistics.likeCount}\n` +
                                     `• Comments: ${res.result.statistics.commentCount}\n\n` +
                                     `Swipe to see all images! 👉`
                             )
@@ -151,7 +151,7 @@ Download All Images :
                             `• Description: ${res.result.desc}\n` +
                             `• Total Images: ${res.result.images.length}\n` +
                             `• Author: ${res.result.author.nickname}\n` +
-                            `• Likes: ${res.result.statistics.diggCount}\n` +
+                            `• Likes: ${res.result.statistics.likeCount}\n` +
                             `• Comments: ${res.result.statistics.commentCount}\n\n`;
 
                         await Chisato.sendImage(

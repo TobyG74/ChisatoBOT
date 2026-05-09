@@ -1,5 +1,6 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { StalkUser } from "@tobyg74/tiktok-api-dl";
+import tiktokApi from "@tobyg74/tiktok-api-dl";
+const { StalkUser } = tiktokApi;
 
 export default {
     name: "tiktokstalk",

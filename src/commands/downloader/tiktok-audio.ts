@@ -1,5 +1,5 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-const Tiktok = require("@tobyg74/tiktok-api-dl");
+import Tiktok from "@tobyg74/tiktok-api-dl";
 import { Validators } from "../../utils/core";
 
 export default {
