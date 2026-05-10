@@ -320,29 +320,29 @@ type ConfigCommands = {
 
 Multiplayer games playable directly in WhatsApp groups.
 
-#### 🐺 Werewolf (`!ww`)
+#### 🐺 Werewolf (`/ww`)
 
 A full Werewolf / Mafia game for groups (4–12+ players) with role card images, EN/ID language voting, and automatic day/night phase management.
 
 | Subcommand | Description |
 |---|---|
-| `!ww start` | Create a lobby in the group |
-| `!ww join` | Join the lobby |
-| `!ww leave` | Leave the lobby |
-| `!ww lang en\|id` | Vote for game language (EN or ID) |
-| `!ww players` | Show current player list |
-| `!ww begin` | Host starts the game (min. 4 players) |
-| `!ww kill [no]` | 🐺 Werewolf: choose a kill target |
-| `!ww check [no]` | 🔮 Seer: investigate a player |
-| `!ww save [no]` | 🩺 Doctor: protect a player |
-| `!ww heal [no]` | 🧪 Witch: use healing potion |
-| `!ww poison [no]` | 🧪 Witch: use poison potion |
-| `!ww protect [no]` | 🛡️ Bodyguard: shield a player (1×) |
-| `!ww shoot [no]` | 🏹 Hunter: shoot on death |
-| `!ww vote [no]` | Vote to execute a player (day phase) |
-| `!ww status` | Show current game status |
-| `!ww end` | Force-end the game (host / owner) |
-| `!ww help` | Show help and role list |
+| `/ww start` | Create a lobby in the group |
+| `/ww join` | Join the lobby |
+| `/ww leave` | Leave the lobby |
+| `/ww lang en\|id` | Vote for game language (EN or ID) |
+| `/ww players` | Show current player list |
+| `/ww begin` | Host starts the game (min. 4 players) |
+| `/ww kill [no]` | 🐺 Werewolf: choose a kill target |
+| `/ww check [no]` | 🔮 Seer: investigate a player |
+| `/ww save [no]` | 🩺 Doctor: protect a player |
+| `/ww heal [no]` | 🧪 Witch: use healing potion |
+| `/ww poison [no]` | 🧪 Witch: use poison potion |
+| `/ww protect [no]` | 🛡️ Bodyguard: shield a player (1×) |
+| `/ww shoot [no]` | 🏹 Hunter: shoot on death |
+| `/ww vote [no]` | Vote to execute a player (day phase) |
+| `/ww status` | Show current game status |
+| `/ww end` | Force-end the game (host / owner) |
+| `/ww help` | Show help and role list |
 
 **Roles:** Villager, Werewolf, Alpha Werewolf, Seer, Doctor, Witch, Hunter, Bodyguard, Mayor, Minion, Cursed, Kid
 

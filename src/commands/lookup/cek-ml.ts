@@ -41,7 +41,7 @@ export default {
 
                 const caption =
                     `*「 MOBILE LEGENDS ACCOUNT 」*\n\n` +
-                    `✅ *Data Ditemukan!*\n\n` +
+                    `✅ *Account Found!*\n\n` +
                     `• *User ID:* ${userID}\n` +
                     `• *Server ID:* ${serverID}\n` +
                     `• *Username:* ${data.username}\n` +
@@ -56,11 +56,11 @@ export default {
                 return Chisato.sendText(
                     from,
                     `*「 MOBILE LEGENDS ACCOUNT 」*\n\n` +
-                        `❌ *Data Tidak Ditemukan!*\n\n` +
+                        `❌ *Account Not Found!*\n\n` +
                         `• *User ID:* ${userID}\n` +
                         `• *Server ID:* ${serverID}\n` +
-                        `• *Pesan:* ${errMsg}\n\n` +
-                        `_Pastikan User ID dan Server ID sudah benar._`,
+                        `• *Message:* ${errMsg}\n\n` +
+                        `_Make sure the User ID and Server ID are correct._`,
                     message
                 );
             }
@@ -72,7 +72,7 @@ export default {
             );
             return Chisato.sendText(
                 from,
-                `*「 MOBILE LEGENDS ACCOUNT 」*\n\n❌ Terjadi kesalahan saat mengambil data.\nCoba lagi beberapa saat kemudian.`,
+                `*「 MOBILE LEGENDS ACCOUNT 」*\n\n❌ An error occurred while fetching data.\nPlease try again later.`,
                 message
             );
         }

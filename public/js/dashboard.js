@@ -1288,7 +1288,7 @@ async function loadSettings() {
     if (!isOwner) return;
     try {
         const data = await authFetch(`${API_BASE}/config`).then(r => r.json());
-        if (!data.success) return showToast('Gagal memuat config', 'error');
+        if (!data.success) return showToast('Failed to load config', 'error');
         _cachedConfig = data.config;
         renderSettingsToggles(data.config.settings);
         document.getElementById('cfg-prefix').value = data.config.prefix || '.';
@@ -1303,7 +1303,7 @@ async function loadSettings() {
             renderNumberList('owner', numRes.ownerNumber || []);
             renderNumberList('team', numRes.teamNumber || []);
         }
-    } catch { showToast('Gagal memuat settings', 'error'); }
+    } catch { showToast('Failed to load settings', 'error'); }
 }
 
 function renderSettingsToggles(settings) {
@@ -1332,9 +1332,9 @@ function renderSettingsToggles(settings) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ [chk.dataset.key]: chk.checked }),
                 }).then(r => r.json());
-                showToast(res.success ? 'Setting diperbarui' : (res.message || 'Gagal'), res.success ? 'success' : 'error');
+                showToast(res.success ? 'Setting updated' : (res.message || 'Failed'), res.success ? 'success' : 'error');
                 if (!res.success) chk.checked = !chk.checked;
-            } catch { chk.checked = !chk.checked; showToast('Koneksi bermasalah', 'error'); }
+            } catch { chk.checked = !chk.checked; showToast('Connection error', 'error'); }
         });
     });
 }
@@ -1355,8 +1355,8 @@ document.getElementById('settings-save')?.addEventListener('click', async () => 
                 },
             }),
         }).then(r => r.json());
-        showToast(res.success ? 'Config disimpan!' : (res.message || 'Gagal'), res.success ? 'success' : 'error');
-    } catch { showToast('Gagal menyimpan config', 'error'); }
+        showToast(res.success ? 'Config saved!' : (res.message || 'Failed'), res.success ? 'success' : 'error');
+    } catch { showToast('Failed to save config', 'error'); }
 });
 
 document.getElementById('settings-reset')?.addEventListener('click', () => {
@@ -1368,7 +1368,7 @@ document.getElementById('settings-reset')?.addEventListener('click', () => {
         document.getElementById('cfg-call').value = _cachedConfig.call?.status || 'reject';
         document.getElementById('cfg-sticker-pack').value = _cachedConfig.stickers?.packname || '';
         document.getElementById('cfg-sticker-author').value = _cachedConfig.stickers?.author || '';
-        showToast('Form direset ke nilai tersimpan');
+        showToast('Form reset to saved values');
     }
 });
 
@@ -1391,11 +1391,11 @@ async function toggleMaintenance(name) {
         if (res.success) {
             _maintenance = res.maintenance;
             renderCommandsTable();
-            showToast(inMaint ? `${name} dihapus dari maintenance` : `${name} ditambah ke maintenance`);
+            showToast(inMaint ? `${name} removed from maintenance` : `${name} added to maintenance`);
         } else {
-            showToast(res.message || 'Gagal', 'error');
+            showToast(res.message || 'Failed', 'error');
         }
-    } catch { showToast('Koneksi bermasalah', 'error'); }
+    } catch { showToast('Connection error', 'error'); }
 }
 
 let _allCommands = [];
@@ -1415,7 +1415,7 @@ async function loadCommands() {
             authFetch(`${API_BASE}/config/commands`).then(r => r.json()),
             authFetch(`${API_BASE}/config/maintenance`).then(r => r.json()),
         ]);
-        if (!cmdRes.success) return showToast(cmdRes.message || 'Gagal memuat commands', 'error');
+        if (!cmdRes.success) return showToast(cmdRes.message || 'Failed to load commands', 'error');
         _allCommands = cmdRes.commands;
         _maintenance = maintRes.maintenance || [];
 
@@ -1426,7 +1426,7 @@ async function loadCommands() {
 
         _commandsPage = 1;
         renderCommandsTable();
-    } catch { showToast('Gagal memuat commands', 'error'); }
+    } catch { showToast('Failed to load commands', 'error'); }
 }
 
 function renderCommandsTable() {
@@ -1469,7 +1469,7 @@ function renderCommandsTable() {
             const ov = cmd.override || {};
             const hasOverride = !!cmd.override && Object.keys(cmd.override).length > 0;
             const inMaint = _maintenance.includes(cmd.name);
-            const maintBtn = `<label class="toggle-switch toggle-green" title="${inMaint ? 'Nonaktifkan maintenance' : 'Aktifkan maintenance'}" onclick="event.preventDefault();toggleMaintenance('${cmd.name}')">
+            const maintBtn = `<label class="toggle-switch toggle-green" title="${inMaint ? 'Disable maintenance' : 'Enable maintenance'}" onclick="event.preventDefault();toggleMaintenance('${cmd.name}')">
                 <input type="checkbox" ${inMaint ? 'checked' : ''} readonly />
                 <span class="toggle-slider"></span>
             </label>`;
@@ -1565,15 +1565,15 @@ document.getElementById('command-form')?.addEventListener('submit', async (e) =>
             closeCommandModal();
             loadCommands();
         } else {
-            showToast(res.message || 'Gagal menyimpan', 'error');
+            showToast(res.message || 'Failed to save override', 'error');
         }
-    } catch { showToast('Koneksi bermasalah', 'error'); }
+    } catch { showToast('Connection error', 'error'); }
 });
 
 document.getElementById('cmd-reset-btn')?.addEventListener('click', async () => {
     const name = document.getElementById('cmd-modal-cmdname').value;
     if (!name) return;
-    if (!confirm(`Reset semua override untuk command "${name}"?`)) return;
+    if (!confirm(`Reset all overrides for command "${name}"?`)) return;
     try {
         const res = await authFetch(`${API_BASE}/config/commands/${encodeURIComponent(name)}/override`, { method: 'DELETE' }).then(r => r.json());
         if (res.success) {
@@ -1581,9 +1581,9 @@ document.getElementById('cmd-reset-btn')?.addEventListener('click', async () => 
             closeCommandModal();
             loadCommands();
         } else {
-            showToast(res.message || 'Gagal reset', 'error');
+            showToast(res.message || 'Failed to reset', 'error');
         }
-    } catch { showToast('Koneksi bermasalah', 'error'); }
+    } catch { showToast('Connection error', 'error'); }
 });
 
 document.getElementById('refresh-commands')?.addEventListener('click', () => loadCommands());
@@ -1600,11 +1600,11 @@ async function loadIPSecurity() {
 
     try {
         const res = await authFetch(`${API_BASE}/config/ip`).then(r => r.json());
-        if (!res.success) return showToast(res.message || 'Gagal memuat IP list', 'error');
+        if (!res.success) return showToast(res.message || 'Failed to load IP list', 'error');
         renderIPTable('whitelist', res.ipWhitelist || []);
         renderIPTable('blacklist', res.ipBlacklist || []);
     } catch {
-        showToast('Gagal memuat IP Security data', 'error');
+        showToast('Failed to load IP Security data', 'error');
     }
 }
 
@@ -1614,7 +1614,7 @@ function renderIPTable(list, ips) {
     if (countEl) countEl.textContent = ips.length;
 
     if (!ips.length) {
-        tbody.innerHTML = `<tr><td colspan="3" class="table-empty">Belum ada IP di ${list}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" class="table-empty">No IPs in ${list}</td></tr>`;
         return;
     }
 
@@ -1641,13 +1641,13 @@ function renderIPTable(list, ips) {
 async function addIpToList(list) {
     const input = document.getElementById(`${list}-input`);
     const ip = input?.value?.trim();
-    if (!ip) { showToast('Masukkan IP address terlebih dahulu', 'error'); return; }
+    if (!ip) { showToast('Please enter an IP address first', 'error'); return; }
 
     // Basic IP validation (IPv4 and IPv6)
     const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
     const ipv6 = /^[0-9a-fA-F:]+$/;
     if (!ipv4.test(ip) && !ipv6.test(ip)) {
-        showToast('Format IP address tidak valid', 'error');
+        showToast('Invalid IP address format', 'error');
         return;
     }
 
@@ -1659,20 +1659,20 @@ async function addIpToList(list) {
         }).then(r => r.json());
 
         if (res.success) {
-            showToast(`IP ${ip} ditambahkan ke ${list}`);
+            showToast(`IP ${ip} added to ${list}`);
             input.value = '';
             renderIPTable('whitelist', res.ipWhitelist || []);
             renderIPTable('blacklist', res.ipBlacklist || []);
         } else {
-            showToast(res.message || 'Gagal menambahkan IP', 'error');
+            showToast(res.message || 'Failed to add IP', 'error');
         }
     } catch {
-        showToast('Koneksi bermasalah', 'error');
+        showToast('Connection error', 'error');
     }
 }
 
 async function removeIpFromList(list, ip) {
-    if (!confirm(`Hapus ${ip} dari ${list}?`)) return;
+    if (!confirm(`Remove ${ip} from ${list}?`)) return;
 
     try {
         const res = await authFetch(`${API_BASE}/config/ip/${list}/${encodeURIComponent(ip)}`, {
@@ -1680,14 +1680,14 @@ async function removeIpFromList(list, ip) {
         }).then(r => r.json());
 
         if (res.success) {
-            showToast(`IP ${ip} dihapus dari ${list}`);
+            showToast(`IP ${ip} removed from ${list}`);
             renderIPTable('whitelist', res.ipWhitelist || []);
             renderIPTable('blacklist', res.ipBlacklist || []);
         } else {
-            showToast(res.message || 'Gagal menghapus IP', 'error');
+            showToast(res.message || 'Failed to remove IP', 'error');
         }
     } catch {
-        showToast('Koneksi bermasalah', 'error');
+        showToast('Connection error', 'error');
     }
 }
 

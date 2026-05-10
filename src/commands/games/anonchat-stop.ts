@@ -10,7 +10,7 @@ export default {
     name: "acstop",
     alias: ["stopanonc", "stopanon"],
     category: "games",
-    description: "Akhiri sesi anonymous chat",
+    description: "End an anonymous chat session",
     isPrivate: true,
     async run({ Chisato, from, sender, message }) {
         if (isInSession(sender)) {
@@ -18,14 +18,14 @@ export default {
 
             await Chisato.sendText(
                 from,
-                "👋 *Sesi diakhiri.*\n\nKamu telah meninggalkan chat.\nKetik *!achat* untuk mencari stranger baru.",
+                "👋 *Session ended.*\n\nYou have left the chat.\nType */achat* to find a new stranger.",
                 message
             );
 
             if (partner) {
                 await Chisato.sendText(
                     partner,
-                    "👋 *Stranger meninggalkan chat.*\n\nSesi telah diakhiri.\nKetik *!achat* untuk mencari stranger baru."
+                    "👋 *Stranger has left the chat.*\n\nThe session has ended.\nType */achat* to find a new stranger."
                 );
             }
             return;
@@ -35,14 +35,14 @@ export default {
             leaveQueue(sender);
             return Chisato.sendText(
                 from,
-                "✅ Kamu keluar dari antrian pencarian.",
+                "✅ You have left the search queue.",
                 message
             );
         }
 
         return Chisato.sendText(
             from,
-            "ℹ️ Kamu tidak sedang dalam sesi anonymous chat.\nKetik *!achat* untuk memulai.",
+            "ℹ️ You are not currently in an anonymous chat session.\nType */achat* to start.",
             message
         );
     },

@@ -11,25 +11,25 @@ export default {
 ✍️ Set custom leave message for members who left
 
 📝 *Available Variables:*
-• @user - Tag member yang keluar
-• @group - Nama grup
-• @ownergroup - Tag owner grup
-• @mention - Tag member tertentu (contoh: @628131473923)
+• @user - Tag member who left
+• @group - Group name
+• @ownergroup - Tag group owner
+• @mention - Tag specific member (example: @628131473923)
 
 💡 *Usage:*
 {prefix}{command.name} [message]
-{prefix}{command.name} reset - Reset ke default
+{prefix}{command.name} reset - Reset to default
 
 📋 *Example:*
-{prefix}{command.name} Selamat tinggal @user 👋, Semoga sukses selalu!
+{prefix}{command.name} Goodbye @user 👋, Wish you all the best!
 
-{prefix}{command.name} @user telah keluar dari @group
+{prefix}{command.name} @user has left @group
 
 {prefix}{command.name} reset
 
 📝 *Note:* 
-• Leave message harus sudah diaktifkan
-• Gunakan "reset" untuk kembali ke default message`,
+• Leave message must be enabled
+• Use "reset" to return to the default message`,
     isGroup: true,
     isGroupAdmin: true,
     async run({ Chisato, args, from, message, Database, prefix, command }) {

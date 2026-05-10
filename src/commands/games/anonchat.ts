@@ -10,15 +10,15 @@ export default {
     name: "achat",
     alias: ["anonc", "anonymouschat", "caristanger"],
     category: "games",
-    description: "Mulai anonymous chat dengan stranger secara acak",
+    description: "Start an anonymous chat session and find a stranger to talk to",
     isPrivate: true,
     async run({ Chisato, from, sender, message }) {
         if (isInSession(sender)) {
             return Chisato.sendText(
                 from,
-                "🔒 *Kamu sudah terhubung dengan stranger!*\n\n" +
-                    "• */acstop* = akhiri sesi\n" +
-                    "• *!acnext* = cari stranger baru",
+                "🔒 *You are already connected with a stranger!*\n\n" +
+                    "• */acstop* = end session\n" +
+                    "• */acnext* = find a new stranger",
                 message
             );
         }
@@ -26,8 +26,8 @@ export default {
         if (isInQueue(sender)) {
             return Chisato.sendText(
                 from,
-                "⏳ *Kamu sedang dalam antrian pencarian...*\n\n" +
-                    "• */acstop* = batal",
+                "⏳ *You are currently in the search queue...*\n\n" +
+                    "• */acstop* = cancel",
                 message
             );
         }
@@ -38,20 +38,20 @@ export default {
         if (matched) {
             const [jidA, jidB] = matched;
             const connectedMsg =
-                "✅ *Stranger ditemukan!*\n\n" +
-                "Kamu sekarang terhubung secara anonim dengan seseorang.\n" +
-                "Teks, gambar, video, audio, dan stiker akan diteruskan.\n\n" +
-                "• */acstop* = akhiri sesi\n" +
-                "• *!acnext* = cari stranger baru\n\n" +
+                "✅ *Stranger found!*\n\n" +
+                "You are now connected with a new person anonymously.\n" +
+                "Text, images, videos, audio, and stickers will be forwarded.\n\n" +
+                "• */acstop* = end session\n" +
+                "• */acnext* = find a new stranger\n\n" +
                 "💬 Say hi! 👋";
             await Chisato.sendText(jidA, connectedMsg);
             await Chisato.sendText(jidB, connectedMsg);
         } else {
             await Chisato.sendText(
                 from,
-                "🔍 *Mencari stranger...*\n\n" +
-                    "Mohon tunggu, sedang mencarikan teman ngobrol untukmu.\n\n" +
-                    "• */acstop* = batal",
+                "🔍 *Searching for a stranger...*\n\n" +
+                    "Please wait, we are finding a chat partner for you.\n\n" +
+                    "• */acstop* = cancel",
                 message
             );
         }

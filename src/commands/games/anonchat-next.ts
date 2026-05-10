@@ -12,7 +12,7 @@ export default {
     name: "acnext",
     alias: ["nextstanger", "anonext"],
     category: "games",
-    description: "Cari stranger baru dalam anonymous chat",
+    description: "Find a new stranger to chat with while keeping your anonymity",
     isPrivate: true,
     async run({ Chisato, from, sender, message }) {
         // End current session and notify partner
@@ -21,7 +21,7 @@ export default {
             if (partner) {
                 await Chisato.sendText(
                     partner,
-                    "👋 *Stranger meninggalkan chat.*\n\nSesi telah diakhiri.\nKetik *!achat* untuk mencari stranger baru."
+                    "👋 *Stranger has left the chat.*\n\nThe session has ended.\nType */achat* to find a new stranger."
                 );
             }
         } else if (isInQueue(sender)) {
@@ -35,19 +35,19 @@ export default {
         if (matched) {
             const [jidA, jidB] = matched;
             const connectedMsg =
-                "✅ *Stranger baru ditemukan!*\n\n" +
-                "Kamu sekarang terhubung dengan orang baru secara anonim.\n\n" +
-                "• */acstop* = akhiri sesi\n" +
-                "• *!acnext* = cari stranger baru\n\n" +
+                "✅ *New stranger found!*\n\n" +
+                "You are now connected with a new person anonymously.\n\n" +
+                "• */acstop* = end session\n" +
+                "• */acnext* = find a new stranger\n\n" +
                 "💬 Say hi! 👋";
             await Chisato.sendText(jidA, connectedMsg);
             await Chisato.sendText(jidB, connectedMsg);
         } else {
             await Chisato.sendText(
                 from,
-                "🔍 *Mencari stranger baru...*\n\n" +
-                    "Mohon tunggu, sedang mencarikan teman ngobrol untukmu.\n\n" +
-                    "• */acstop* = batal",
+                "🔍 *Searching for a new stranger...*\n\n" +
+                    "Please wait, we are finding a chat partner for you.\n\n" +
+                    "• */acstop* = cancel search\n",
                 message
             );
         }

@@ -248,13 +248,13 @@ function buildLoginButtons(role: AccessRole): LoginActionButton[] {
         return [
             {
                 id: "open-dashboard",
-                label: "Masuk Dashboard",
-                description: "Akses penuh owner untuk monitoring & kontrol",
+                label: "Open Dashboard",
+                description: "Full access for owner to monitor & control",
             },
             {
                 id: "owner-controls",
                 label: "Owner Controls",
-                description: "Kelola user, group, dan settings sistem",
+                description: "Manage users, groups, and system settings",
             },
         ];
     }
@@ -262,13 +262,13 @@ function buildLoginButtons(role: AccessRole): LoginActionButton[] {
     return [
         {
             id: "open-dashboard",
-            label: "Masuk Dashboard",
-            description: "Akses tim untuk monitoring operasional",
+            label: "Open Dashboard",
+            description: "Access the dashboard with team member privileges",
         },
         {
             id: "team-monitoring",
             label: "Team Monitoring",
-            description: "Pantau statistik, log, dan status bot",
+            description: "Monitor statistics, logs, and bot status",
         },
     ];
 }
@@ -416,7 +416,7 @@ export function handleLoginApproval(
     if (req.status !== "pending") {
         return {
             ok: false,
-            message: `Request ini sudah ${req.status === "approved" ? "di-approve" : "ditolak"}.`,
+            message: `This request has already been ${req.status === "approved" ? "approved" : "rejected"}.`,
             loginPhone: req.phoneNumber,
             ip: req.requesterIp,
         };
@@ -427,7 +427,7 @@ export function handleLoginApproval(
         pendingLoginRequests.delete(approvalId);
         return {
             ok: false,
-            message: `Sesi approval sudah expired. Tombol hanya berlaku 1 menit sejak permintaan dikirim.`,
+            message: `Approval session has expired. The button is only valid for 1 minute after the request is sent.`,
             loginPhone: req.phoneNumber,
             ip: req.requesterIp,
         };
@@ -445,8 +445,8 @@ export function handleLoginApproval(
         ok: true,
         message:
             decision === "approved"
-                ? `Login +${req.phoneNumber} dari IP ${req.requesterIp} berhasil di-approve.`
-                : `Login +${req.phoneNumber} dari IP ${req.requesterIp} ditolak.`,
+                ? `Login +${req.phoneNumber} from IP ${req.requesterIp} has been approved.`
+                : `Login +${req.phoneNumber} from IP ${req.requesterIp} has been rejected.`,
         loginPhone: req.phoneNumber,
         ip: req.requesterIp,
     };
@@ -462,7 +462,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         if (!normalizedPhone) {
             return reply.status(400).send({
                 success: false,
-                message: "Nomor HP wajib diisi",
+                message: "Phone number is required and must contain only digits, optionally starting with 0 or country code.",
             });
         }
 
@@ -472,7 +472,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         if (isIpBlocked(requesterIp)) {
             return reply.status(403).send({
                 success: false,
-                message: "Akses dari IP ini diblokir.",
+                message: "Access from this IP is blocked.",
             });
         }
 
@@ -482,7 +482,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             return reply.status(503).send({
                 success: false,
                 configNotReady: true,
-                message: "Fitur login belum bisa digunakan, periksa kembali file config",
+                message: "Login feature is not available yet, please check the config file. No owner or team numbers are configured.",
             });
         }
 
@@ -493,7 +493,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 success: false,
                 rateLimited: true,
                 retryAfterMs: rateLimited.retryAfterMs,
-                message: `Terlalu banyak percobaan login dari IP ini. Coba lagi dalam ${formatDuration(rateLimited.retryAfterMs)}.`,
+                message: `Too many login attempts from this IP. Try again in ${formatDuration(rateLimited.retryAfterMs)}.`,
             });
         }
 
@@ -505,7 +505,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 recordLoginAttempt(requesterIp);
                 return reply.status(403).send({
                     success: false,
-                    message: "Nomor ini bukan owner/team dan tidak memiliki akses dashboard",
+                    message: "This number is not an owner/team member and does not have dashboard access.",
                 });
             }
 
@@ -531,7 +531,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     approvalRequired: false,
                     whitelisted: true,
                     token,
-                    message: "Login disetujui otomatis (IP whitelisted).",
+                    message: "Login automatically approved (IP whitelisted).",
                     admin: { phoneNumber: normalizedPhone, role },
                 });
             }
@@ -553,7 +553,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 success: true,
                 approvalRequired: true,
                 approvalId: pending.id,
-                message: "Permintaan login dikirim ke owner untuk approval.",
+                message: "Login request sent to owner for approval.",
                 admin: { phoneNumber: normalizedPhone, role },
                 buttons: buildLoginButtons(role),
             });
@@ -580,7 +580,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 return reply.status(404).send({
                     success: false,
                     status: "expired",
-                    message: "Request approval tidak ditemukan atau sudah expired.",
+                    message: "Approval request not found or has expired.",
                 });
             }
 
@@ -588,7 +588,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 return reply.send({
                     success: true,
                     status: "pending",
-                    message: "Menunggu approval owner...",
+                    message: "Waiting for owner approval...",
                 });
             }
 
@@ -597,7 +597,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 return reply.status(403).send({
                     success: false,
                     status: "rejected",
-                    message: "Login ditolak oleh owner.",
+                    message: "Login rejected by owner.",
                 });
             }
 
@@ -610,7 +610,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             return reply.send({
                 success: true,
                 status: "approved",
-                message: "Login disetujui owner.",
+                message: "Login approved by owner.",
                 token: pending.token,
                 admin: {
                     phoneNumber: pending.phoneNumber,
