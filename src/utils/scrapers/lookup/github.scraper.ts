@@ -1,0 +1,33 @@
+import axios from "axios";
+
+export interface GithubUser {
+    login: string;
+    name: string | null;
+    avatar_url: string;
+    html_url: string;
+    bio: string | null;
+    location: string | null;
+    company: string | null;
+    blog: string | null;
+    public_repos: number;
+    followers: number;
+    following: number;
+    created_at: string;
+}
+
+const cache = new Map<string, { data: GithubUser; expiresAt: number }>();
+const CACHE_TTL = 10 * 60 * 1000;
+
+export const fetchGithubUser = async (username: string): Promise<GithubUser> => {
+    const key = username.toLowerCase();
+    const cached = cache.get(key);
+    if (cached && Date.now() < cached.expiresAt) return cached.data;
+
+    const { data } = await axios.get<GithubUser>(
+        `https://api.github.com/users/${encodeURIComponent(username)}`,
+        { timeout: 10000, headers: { "User-Agent": "ChisatoBOT" } }
+    );
+
+    cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL });
+    return data;
+};

@@ -272,13 +272,19 @@ type ConfigCommands = {
 | `setwelcome` | Set custom welcome message |
 | `setleave` | Set custom leave message |
 
-### 🔍 Search & Lookup
+### 🔍 Search
 | Command | Description |
 |---|---|
 | `youtube` | YouTube search |
 | `bingimage` | Bing image search |
 | `ddgimage` | DuckDuckGo image search |
 | `pexels` | Search high-quality photos on Pexels |
+
+### ℹ️ Lookup
+| Command | Description |
+|---|---|
+| `mlcheck` | Check Mobile Legends Account |
+| `githubprofile` | Get GitHub profile info |
 
 ### 🎌 Anime
 | Command | Description |
