@@ -19,26 +19,88 @@ async function getProto() {
 type ParticipantsUpdate = {
     id: string;
     author?: string;
-    participants: string[];
+    authorPn?: string;
+    authorUsername?: string;
+    participants: Array<
+        string | { id?: string; phoneNumber?: string; admin?: string | null }
+    >;
     action: "add" | "remove" | "promote" | "demote" | "modify";
 };
+
+/**
+ * Prefers phoneNumber (@s.whatsapp.net) over lid.
+ */
+function extractJid(entry: ParticipantsUpdate["participants"][number]): string | null {
+    if (typeof entry === "string") return entry;
+    if (!entry) return null;
+    return entry.phoneNumber || entry.id || null;
+}
+
+/**
+ * Race a promise against a timeout. Returns null if it doesn't finish in time.
+ */
+async function withTimeout<T>(
+    promise: Promise<T>,
+    ms: number
+): Promise<T | null> {
+    return Promise.race<T | null>([
+        promise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+    ]).catch(() => null);
+}
+
+const PROFILE_PIC_TIMEOUT_MS = 2000;
+const DEFAULT_PROFILE_PIC = path.join(process.cwd(), "media", "noprofile.png");
+
+/**
+ * Resolve a profile picture URL for a group participant.
+ */
+async function resolveProfilePic(
+    Chisato: Client,
+    userJid: string,
+    groupMetadata: any
+): Promise<string> {
+    const participant = groupMetadata?.participants?.find(
+        (p: any) =>
+            p.id === userJid ||
+            p.phoneNumber === userJid ||
+            p.lid === userJid
+    );
+    const imgUrl = participant?.imgUrl;
+    if (imgUrl && imgUrl !== "changed") {
+        return imgUrl;
+    }
+
+    const url = await withTimeout(
+        Chisato.profilePictureUrl(userJid, "image"),
+        PROFILE_PIC_TIMEOUT_MS
+    );
+    if (url) return url;
+
+    return DEFAULT_PROFILE_PIC;
+}
 
 export class GroupUpdateHandler {
     private Database = {
         Group: new GroupDatabase(),
     };
 
-    /**
-     * Real-time handler for participant add/remove/promote/demote.
-     * Fires immediately from Baileys, much faster than messageStubType via messages.upsert.
-     */
     async handleParticipantsUpdate(
         Chisato: Client,
         update: ParticipantsUpdate
     ): Promise<void> {
         try {
-            const { id: from, participants, action, author } = update;
-            if (!from || !participants?.length) return;
+            const { id: from, action, author } = update;
+            if (!from || !update.participants?.length) return;
+            const participantJids = update.participants
+                .map(extractJid)
+                .filter((j): j is string => !!j);
+
+            if (!participantJids.length) return;
+
+            logger.info(
+                `[participants.update] ${action} in ${from}: ${participantJids.join(", ")}`
+            );
 
             const { Group } = this.Database;
             const botNumber = await Chisato.decodeJid(Chisato.user.id);
@@ -76,7 +138,7 @@ export class GroupUpdateHandler {
             const isNotify = groupSettings?.notify;
             const isWelcome = groupSettings?.welcome;
             const isLeave = groupSettings?.leave;
-            const isBanned = participants.some((jid) =>
+            const isBanned = participantJids.some((jid) =>
                 groupSettings?.banned?.includes(jid)
             );
 
@@ -85,14 +147,14 @@ export class GroupUpdateHandler {
                     await this.handleAntiBotKick(
                         Chisato,
                         from,
-                        participants,
+                        participantJids,
                         groupSettings?.antibot ?? false,
                         isBotAdmin
                     );
                     await this.handleParticipantAdd(
                         Chisato,
                         from,
-                        participants,
+                        participantJids,
                         groupMetadata,
                         groupSettings,
                         isBanned,
@@ -105,7 +167,7 @@ export class GroupUpdateHandler {
                     await this.handleParticipantLeave(
                         Chisato,
                         from,
-                        participants,
+                        participantJids,
                         botNumber,
                         groupMetadata,
                         groupSettings,
@@ -118,7 +180,7 @@ export class GroupUpdateHandler {
                         Chisato,
                         from,
                         actor,
-                        participants,
+                        participantJids,
                         isNotify
                     );
                     await this.updateGroupMetadata(Chisato, from);
@@ -129,7 +191,7 @@ export class GroupUpdateHandler {
                         Chisato,
                         from,
                         actor,
-                        participants,
+                        participantJids,
                         isNotify
                     );
                     await this.updateGroupMetadata(Chisato, from);
@@ -604,20 +666,11 @@ export class GroupUpdateHandler {
 
         for (const userNumber of participants) {
             try {
-                let profilePicUrl: string = path.join(
-                    process.cwd(),
-                    "media",
-                    "noprofile.png"
+                const profilePicUrl = await resolveProfilePic(
+                    Chisato,
+                    userNumber,
+                    groupMetadata
                 );
-                try {
-                    const url = await Chisato.profilePictureUrl(
-                        userNumber,
-                        "image"
-                    );
-                    if (url) profilePicUrl = url;
-                } catch {
-                    // fallback to default
-                }
 
                 const username = userNumber.split("@")[0];
 
@@ -698,20 +751,11 @@ export class GroupUpdateHandler {
 
             for (const userNumber of participants) {
                 try {
-                    let profilePicUrl: string = path.join(
-                        process.cwd(),
-                        "media",
-                        "noprofile.png"
+                    const profilePicUrl = await resolveProfilePic(
+                        Chisato,
+                        userNumber,
+                        groupMetadata
                     );
-                    try {
-                        const url = await Chisato.profilePictureUrl(
-                            userNumber,
-                            "image"
-                        );
-                        if (url) profilePicUrl = url;
-                    } catch {
-                        // fallback to default
-                    }
 
                     const username = userNumber.split("@")[0];
 

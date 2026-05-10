@@ -457,6 +457,9 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
 
         /** Group Participants Update (real-time welcome/leave/promote/demote) */
         Chisato.ev?.on("group-participants.update", (update: any) => {
+            this.logger.info(
+                `[group-participants.update] received: ${update?.action} ${update?.id}`
+            );
             this.emit("group-participants.update", update);
         });
 
