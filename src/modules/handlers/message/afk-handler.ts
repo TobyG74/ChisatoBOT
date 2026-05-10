@@ -9,6 +9,8 @@ export class AfkHandler {
         message: MessageSerialize,
         Database: any
     ): Promise<void> {
+        if (message.fromMe) return;
+
         // Check if user is AFK and returning
         if (context.userMetadata?.afk?.status && context.isGroup) {
             await this.handleUserReturn(Chisato, context, message, Database);
@@ -62,6 +64,9 @@ export class AfkHandler {
         Database: any
     ): Promise<void> {
         for (const mention of message.mentions) {
+            // Skip if the mention is the bot itself
+            if (mention === context.botNumber) continue;
+
             const afkUser = await Database.User.get(mention);
             const afkData = afkUser?.afk;
 
