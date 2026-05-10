@@ -21,6 +21,11 @@ export const useMultiAuthState = async (
     const fixFileName = (fileName: string): string =>
         fileName.replace(/\//g, "__")?.replace(/:/g, "-");
 
+    // In-memory cache: prevents repeated DB reads for the same key within a
+    // session and ensures freshly-written keys are immediately visible, which
+    // avoids Signal treating them as missing and requesting new prekey bundles.
+    const keyCache = new Map<string, unknown>();
+
     const writeData = async (data: unknown, fileName: string) => {
         try {
             const baileys = await getBaileys();
@@ -28,45 +33,39 @@ export const useMultiAuthState = async (
             const sessionId = fixFileName(fileName);
             const session = JSON.stringify(data, BufferJSON.replacer);
             await Database.session.upsert({
-                where: {
-                    sessionId,
-                },
-                update: {
-                    sessionId,
-                    session,
-                },
-                create: {
-                    sessionId,
-                    session,
-                },
+                where: { sessionId },
+                update: { sessionId, session },
+                create: { sessionId, session },
             });
         } catch {}
     };
 
-    const readData = async (fileName: string) => {
+    const readData = async (fileName: string): Promise<unknown> => {
+        const cacheKey = fixFileName(fileName);
+        // Serve from in-memory cache when available
+        if (keyCache.has(cacheKey)) {
+            return keyCache.get(cacheKey);
+        }
         try {
             const baileys = await getBaileys();
             const { BufferJSON } = baileys;
-            const sessionId = fixFileName(fileName);
             const data = await Database.session.findFirst({
-                where: {
-                    sessionId,
-                },
+                where: { sessionId: cacheKey },
             });
-            return JSON.parse(data?.session, BufferJSON.reviver);
+            if (!data?.session) return null;
+            const parsed = JSON.parse(data.session, BufferJSON.reviver);
+            keyCache.set(cacheKey, parsed);
+            return parsed;
         } catch {
             return null;
         }
     };
 
     const removeData = async (fileName: string): Promise<void> => {
+        keyCache.delete(fixFileName(fileName));
         try {
             const sessionId = fixFileName(fileName);
-            await Database.session.delete({
-                where: {
-                    sessionId,
-                },
-            });
+            await Database.session.delete({ where: { sessionId } });
         } catch {}
     };
 
@@ -91,7 +90,8 @@ export const useMultiAuthState = async (
                                     proto.Message.AppStateSyncKeyData.fromObject(
                                         value
                                     );
-                            data[id] = value;
+                            if (value !== undefined && value !== null)
+                                data[id] = value as SignalDataTypeMap[typeof type];
                         })
                     );
                     return data;
@@ -102,26 +102,33 @@ export const useMultiAuthState = async (
                         for (const id in data[category]) {
                             const value: unknown = data[category][id];
                             const file = `${category}-${id}`;
+                            const cacheKey = fixFileName(file);
+                            // Update in-memory cache immediately so the next
+                            // keys.get sees the value without waiting for DB.
+                            if (value) {
+                                keyCache.set(cacheKey, value);
+                            } else {
+                                keyCache.delete(cacheKey);
+                            }
                             tasks.push(
-                                value
-                                    ? writeData(value, file)
-                                    : removeData(file)
+                                value ? writeData(value, file) : removeData(file)
                             );
                         }
                     }
-                    try {
-                        await Promise.all(tasks);
-                    } catch {}
+                    // allSettled: a single DB failure won't discard other writes
+                    await Promise.allSettled(tasks);
                 },
             },
         },
         saveCreds: async (): Promise<void> => {
             try {
+                keyCache.set(fixFileName("creds"), creds);
                 await writeData(creds, "creds");
             } catch {}
         },
         clearState: async (): Promise<void> => {
             try {
+                keyCache.clear();
                 await Database.session.deleteMany({});
             } catch {}
         },

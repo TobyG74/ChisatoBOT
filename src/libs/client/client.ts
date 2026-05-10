@@ -154,10 +154,25 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         }
 
         /** Chisato as Client */
+        // A simple CacheStore implementation backed by a Map, used to track
+        // how many times Baileys has retried decrypting a given message.
+        // Without this, failed decryptions loop forever and each retry
+        // triggers a new prekey bundle exchange ("Closing session" spam).
+        const _retryMap = new Map<string, number>();
+        const msgRetryCounterCache = {
+            get: (key: string) => _retryMap.get(key),
+            set: (key: string, value: number) => { _retryMap.set(key, value); return true; },
+            del: (key: string) => { _retryMap.delete(key); return true; },
+            flushAll: () => _retryMap.clear(),
+        };
+
         const Chisato: Chisato = makeWASocket({
             ...this.socketConfig,
             version,
             printQRInTerminal: false,
+            markOnlineOnConnect: false,
+            msgRetryCounterCache,
+            getMessage: async (_key: any) => undefined,
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(
