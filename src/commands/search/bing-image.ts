@@ -186,9 +186,16 @@ export default {
                             buttons: cardButtons,
                         });
                     } catch (err: any) {
-                        console.error(
-                            `Skipping image ${resultIndex} (${err?.response?.status || err?.message})`
-                        );
+                        if (err.response?.status === 403 || err.response?.status === 404) {
+                            Chisato.logger.info(
+                                `Image ${resultIndex} returned ${err.response.status}, skipping.`
+                            );
+                        } else {
+                            Chisato.logger.error(
+                                `Failed to download image ${resultIndex}:`,
+                                err instanceof Error ? err.message : String(err)
+                            );
+                        }
                     }
                 }
 
