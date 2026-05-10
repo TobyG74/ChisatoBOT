@@ -81,7 +81,6 @@ logger.connect("Connecting to database...");
         // Handle group updates
         Chisato.on("group.update", async (update) => {
             try {
-                console.log(update)
                 const serialized = await serialize.group(update as any);
                 await groupUpdateHandler.handle(Chisato, serialized);
             } catch (error) {
