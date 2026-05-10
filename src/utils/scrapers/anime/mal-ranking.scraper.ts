@@ -1,5 +1,42 @@
 import axios from "axios";
 
+// Cache with 30-minute TTL
+const rankingCache = new Map<string, { data: any; expiresAt: number }>();
+const CACHE_TTL = 30 * 60 * 1000;
+
+const getCached = <T>(key: string): T | null => {
+    const entry = rankingCache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+        rankingCache.delete(key);
+        return null;
+    }
+    return entry.data as T;
+};
+
+const setCache = (key: string, data: any): void => {
+    rankingCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL });
+};
+
+const withRetry = async <T>(
+    fn: () => Promise<T>,
+    retries = 3,
+    delayMs = 1500
+): Promise<T> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            return await fn();
+        } catch (error: any) {
+            const status = error.response?.status;
+            // Don't retry on client errors except 429
+            if (status && status !== 429 && status < 500) throw error;
+            if (attempt === retries) throw error;
+            await new Promise((r) => setTimeout(r, delayMs * attempt));
+        }
+    }
+    throw new Error("Unreachable");
+};
+
 export const VALID_ANIME_TYPES: AnimeType[] = [
     "tv",
     "movie",
@@ -99,24 +136,22 @@ export const fetchAnimeRanking = async (
         );
     }
 
-    try {
-        const { data: response } = await axios.get<MalApiResponse>(
+    const cacheKey = `anime:${type}:${limit}`;
+    const cached = getCached<MalApiResponse>(cacheKey);
+    if (cached) return cached;
+
+    const response = await withRetry(async () => {
+        const { data: res } = await axios.get<MalApiResponse>(
             `https://api.jikan.moe/v4/top/anime?type=${type}&limit=${limit}`
         );
-
-        if (!response || !response.data || response.data.length === 0) {
+        if (!res || !res.data || res.data.length === 0) {
             throw new Error("No anime data found");
         }
+        return res;
+    });
 
-        return response;
-    } catch (error: any) {
-        if (error.response?.status === 429) {
-            throw new Error("Too many requests! Please wait and try again.");
-        } else if (error.response?.status === 404) {
-            throw new Error("Anime ranking not found!");
-        }
-        throw error;
-    }
+    setCache(cacheKey, response);
+    return response;
 };
 
 /**
@@ -195,24 +230,22 @@ export const fetchMangaRanking = async (
         );
     }
 
-    try {
-        const { data: response } = await axios.get<MalMangaApiResponse>(
+    const cacheKey = `manga:${type}:${limit}`;
+    const cached = getCached<MalMangaApiResponse>(cacheKey);
+    if (cached) return cached;
+
+    const response = await withRetry(async () => {
+        const { data: res } = await axios.get<MalMangaApiResponse>(
             `https://api.jikan.moe/v4/top/manga?type=${type}&limit=${limit}`
         );
-
-        if (!response || !response.data || response.data.length === 0) {
+        if (!res || !res.data || res.data.length === 0) {
             throw new Error("No manga data found");
         }
+        return res;
+    });
 
-        return response;
-    } catch (error: any) {
-        if (error.response?.status === 429) {
-            throw new Error("Too many requests! Please wait and try again.");
-        } else if (error.response?.status === 404) {
-            throw new Error("Manga ranking not found!");
-        }
-        throw error;
-    }
+    setCache(cacheKey, response);
+    return response;
 };
 
 /**
