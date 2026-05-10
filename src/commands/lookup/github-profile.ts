@@ -7,7 +7,7 @@ export default {
     name: "githubprofile",
     alias: ["github", "ghprofile", "ghuser"],
     usage: "[username]",
-    category: "search",
+    category: "lookup",
     description: "Lookup a GitHub user profile",
     cooldown: 5,
     limit: 2,
@@ -40,8 +40,7 @@ export default {
                 year: "numeric", month: "long", day: "numeric",
             });
 
-            let text = `*「 GITHUB PROFILE 」*\n\n`;
-            text += `👤 *Name:* ${user.name || user.login}\n`;
+            let text = `👤 *Name:* ${user.name || user.login}\n`;
             text += `🔖 *Username:* @${user.login}\n`;
             if (user.bio) text += `📝 *Bio:* ${user.bio}\n`;
             if (user.location) text += `📍 *Location:* ${user.location}\n`;
@@ -53,23 +52,19 @@ export default {
             text += `📅 *Joined:* ${joinedAt}\n`;
             text += `\n✨ Powered by GitHub API`;
 
+            let res = await axios.get(user.avatar_url, { responseType: "arraybuffer", timeout: 10000 })
+
             const builder = new TemplateBuilder.Native(Chisato);
             builder
                 .mainBody(text)
                 .mainFooter("GitHub Profile")
+                .mainHeader(`*「 GITHUB PROFILE 」*`, Buffer.from(res.data))
                 .buttons(
                     builder.button.url({ display: "🐙 Open GitHub Profile", url: user.html_url })
                 );
 
             const msg = await builder.render();
             await Chisato.relayMessage(from, msg.message, { messageId: msg.key.id });
-
-            try {
-                const res = await axios.get(user.avatar_url, { responseType: "arraybuffer", timeout: 10000 });
-                await Chisato.sendImage(from, Buffer.from(res.data), `*${user.name || user.login}*`, message);
-            } catch {
-                // avatar optional
-            }
 
             await Chisato.sendReaction(from, "✅", message.key);
         } catch (error: any) {
