@@ -45,7 +45,7 @@
 ## Description
 
 -   ChisatoBOT is a WhatsApp Multi-Device bot built with TypeScript and Baileys
--   Features 13 command categories covering downloaders, converters, group management, anime, search, and more
+-   Features 14 command categories covering downloaders, converters, group management, games, anime, search, and more
 -   Real-time web dashboard with SSE streaming, system monitoring, and group management
 -   MongoDB database via Prisma for users, groups, leveling, and premium system
 -   Beautiful terminal logger with colored output and multiple log levels
@@ -314,6 +314,46 @@ type ConfigCommands = {
 | `runtime` | Bot uptime |
 | `status` | Quick status check |
 | `statistics` | Detailed statistics |
+
+### 🎮 Games
+
+Multiplayer games playable directly in WhatsApp groups.
+
+#### 🐺 Werewolf (`!ww`)
+
+A full Werewolf / Mafia game for groups (4–12+ players) with role card images, EN/ID language voting, and automatic day/night phase management.
+
+| Subcommand | Description |
+|---|---|
+| `!ww start` | Create a lobby in the group |
+| `!ww join` | Join the lobby |
+| `!ww leave` | Leave the lobby |
+| `!ww lang en\|id` | Vote for game language (EN or ID) |
+| `!ww players` | Show current player list |
+| `!ww begin` | Host starts the game (min. 4 players) |
+| `!ww kill [no]` | 🐺 Werewolf: choose a kill target |
+| `!ww check [no]` | 🔮 Seer: investigate a player |
+| `!ww save [no]` | 🩺 Doctor: protect a player |
+| `!ww heal [no]` | 🧪 Witch: use healing potion |
+| `!ww poison [no]` | 🧪 Witch: use poison potion |
+| `!ww protect [no]` | 🛡️ Bodyguard: shield a player (1×) |
+| `!ww shoot [no]` | 🏹 Hunter: shoot on death |
+| `!ww vote [no]` | Vote to execute a player (day phase) |
+| `!ww status` | Show current game status |
+| `!ww end` | Force-end the game (host / owner) |
+| `!ww help` | Show help and role list |
+
+**Roles:** Villager, Werewolf, Alpha Werewolf, Seer, Doctor, Witch, Hunter, Bodyguard, Mayor, Minion, Cursed, Kid
+
+#### 💬 Anonymous Chat (`anonchat`)
+
+Anonymous 1-on-1 chat between random group members.
+
+| Command | Description |
+|---|---|
+| `anonchat` | Start anonymous chat |
+| `anonchat next` | Find a new partner |
+| `anonchat stop` | End the session |
 
 ### 👑 Owner
 Full owner commands: add/delete premium/team, broadcast, approve dashboard access, change bot name/status/picture, config, mode, sync-database, block/unblock, and more.
