@@ -9,7 +9,14 @@ export default {
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
-    example: `Usage: /groupname [text]\n\nExample: /groupname Chisato Bot Official`,
+    example: `*「 CHANGE GROUP NAME 」*
+
+📝 *How to use:*
+{prefix}{command.name} [text]
+
+📌 *Example:*
+{prefix}{command.name} Chisato Bot Official
+`,
     async run({ Chisato, query, from, message }) {
         await Chisato.groupUpdateSubject(from, query)
             .then(() => Chisato.sendText(from, `Successfully changed the group name to ${query}`, message))

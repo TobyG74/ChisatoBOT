@@ -9,7 +9,14 @@ export default {
     isGroup: true,
     isGroupAdmin: true,
     isBotAdmin: true,
-    example: `• {prefix}{command.name} Halo This is Group Description`,
+    example: `*「 CHANGE GROUP DESCRIPTION 」*
+
+📝 *How to use:*
+{prefix}{command.name} [text]
+
+📌 *Example:*
+{prefix}{command.name} This is Group Description
+`,
     async run({ Chisato, query, from, message }) {
         await Chisato.groupUpdateDescription(from, query)
             .then(() => Chisato.sendText(from, `Successfully changed the group description to ${query}`, message))
