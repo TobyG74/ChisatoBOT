@@ -278,7 +278,7 @@ type ConfigCommands = {
 | `youtube` | YouTube search |
 | `bingimage` | Bing image search |
 | `ddgimage` | DuckDuckGo image search |
-| `tiktokstalker` | Lookup TikTok profile |
+| `pexels` | Search high-quality photos on Pexels |
 
 ### 🎌 Anime
 | Command | Description |
