@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export interface GoogleImageResult {
+export interface BingImageResult {
     url: string;
     thumbnail: string;
     width: number;
@@ -9,22 +9,19 @@ export interface GoogleImageResult {
     source: string;
 }
 
-export interface GoogleImagesSearchOptions {
+export interface BingImagesSearchOptions {
     perPage?: number;
 }
 
-/**
- * Bing Images.
- */
-export class GoogleImagesScraper {
+export class BingImagesScraper {
     private readonly UA =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
         "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
     async search(
         searchTerm: string,
-        options: GoogleImagesSearchOptions = {}
-    ): Promise<GoogleImageResult[]> {
+        options: BingImagesSearchOptions = {}
+    ): Promise<BingImageResult[]> {
         const count = options.perPage ?? 60;
 
         const response = await axios.get("https://www.bing.com/images/async", {
@@ -47,14 +44,11 @@ export class GoogleImagesScraper {
             decompress: true,
         });
 
-        // Bing embeds image metadata as HTML-entity-encoded JSON inside the
-        // page HTML. Decode entities first, then extract with regex.
         const decoded: string = (response.data as string)
             .replace(/&quot;/g, '"')
             .replace(/&amp;/g, "&");
 
-        const results: GoogleImageResult[] = [];
-        // Pattern: "murl":"<original>","turl":"<thumb>","md5":"...","shkey":"...","t":"<title>"
+        const results: BingImageResult[] = [];
         const re =
             /"murl":"(https?:[^"]+)","turl":"(https?:[^"]+)","md5":"[^"]*","shkey":"[^"]*","t":"([^"]*)"/g;
         let m: RegExpExecArray | null;

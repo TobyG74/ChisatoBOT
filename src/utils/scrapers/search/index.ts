@@ -1,1 +1,2 @@
-export * from "./google-images.scraper";
+export * from "./bing-images.scraper";
+export * from "./duckduckgo-images.scraper";

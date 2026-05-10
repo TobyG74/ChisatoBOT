@@ -1,10 +1,10 @@
-export interface GoogleImageResult {
+export interface BingImageResult {
     url: string;
     width: number;
     height: number;
 }
 
-export interface GoogleImagesSearchOptions {
+export interface BingImagesSearchOptions {
     searchTerm: string;
     queryStringAddition?: string;
     filterOutDomains?: string[];

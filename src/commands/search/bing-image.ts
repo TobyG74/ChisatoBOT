@@ -1,5 +1,5 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { GoogleImagesScraper } from "../../utils/scrapers/search";
+import { BingImagesScraper } from "../../utils/scrapers/search";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 import axios from "axios";
 
@@ -7,16 +7,16 @@ import axios from "axios";
 const searchCache = new Map<string, { results: any[], timestamp: number }>();
 
 export default {
-    name: "googleimage",
-    alias: ["gimage", "gimg", "googleimg"],
+    name: "bingimage",
+    alias: ["bimage", "bimg", "bingimg"],
     usage: "[query] [page]",
     category: "search",
-    description: "Search images on Google",
+    description: "Search images on Bing",
     cooldown: 5,
     limit: 2,
-    example: `*「 GOOGLE IMAGE SEARCH 」*
+    example: `*「 BING IMAGE SEARCH 」*
 
-🔍 Search for images on Google!
+🔍 Search for images on Bing!
 
 📝 *How to use:*
 {prefix}{command.name} [query] [page]
@@ -24,7 +24,7 @@ export default {
 💡 *Example:*
 • {prefix}{command.name} cat
 • {prefix}{command.alias} beautiful sunset
-• {prefix}gimg anime wallpaper 2`,
+• {prefix}bimg anime wallpaper 2`,
     async run({ Chisato, from, query, prefix, message, command }) {
         const args = query?.trim().split(/\s+/) || [];
         const pageNum = args.length > 1 && !isNaN(parseInt(args[args.length - 1])) 
@@ -42,7 +42,7 @@ export default {
             if (cached && (Date.now() - cached.timestamp) < 300000) {
                 results = cached.results;
             } else {
-                const scraper = new GoogleImagesScraper();
+                const scraper = new BingImagesScraper();
                 results = await scraper.search(searchQuery);
                 
                 searchCache.set(cacheKey, { results, timestamp: Date.now() });
@@ -75,16 +75,16 @@ export default {
             
             if (maxResults === 1 && totalPages === 1) {
                 const image = results[0];
-                let text = `*「 GOOGLE IMAGE SEARCH 」*\n\n`;
+                let text = `*「 BING IMAGE SEARCH 」*\n\n`;
                 text += `🔍 *Query:* ${searchQuery}\n`;
-                text += `📊 *Dimensions:* ${image.width}x${image.height}\n`;
-                text += `\n✨ Powered by Google Images`;
+                if (image.title) text += `📌 *Title:* ${image.title}\n`;
+                text += `\n✨ Powered by Bing Images`;
 
                 const builder = new TemplateBuilder.Native(Chisato);
                 
                 builder
                     .mainBody(text)
-                    .mainFooter("Google Image Search");
+                    .mainFooter("Bing Image Search");
 
                 builder.buttons(
                     builder.button.url({
@@ -103,8 +103,8 @@ export default {
                         responseType: "arraybuffer",
                         timeout: 15000,
                         headers: {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                            "Referer": "https://www.google.com/",
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                            "Referer": "https://www.bing.com/",
                         },
                     });
                     const imageBuffer = Buffer.from(response.data);
@@ -112,7 +112,7 @@ export default {
                     await Chisato.sendImage(
                         from,
                         imageBuffer,
-                        `*${searchQuery}*\n${image.width}x${image.height}`,
+                        `*${searchQuery}*`,
                         message
                     );
                 } catch (error) {
@@ -124,8 +124,8 @@ export default {
                                 responseType: "arraybuffer",
                                 timeout: 15000,
                                 headers: {
-                                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                                    "Referer": "https://www.google.com/",
+                                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                                    "Referer": "https://www.bing.com/",
                                 },
                             });
                             const imageBuffer = Buffer.from(response.data);
@@ -133,7 +133,7 @@ export default {
                             await Chisato.sendImage(
                                 from,
                                 imageBuffer,
-                                `*${searchQuery}*\n${altImage.width}x${altImage.height}`,
+                                `*${searchQuery}*`,
                                 message
                             );
                             break;
@@ -159,8 +159,8 @@ export default {
                             responseType: "arraybuffer",
                             timeout: 15000,
                             headers: {
-                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                                "Referer": "https://www.google.com/",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                                "Referer": "https://www.bing.com/",
                             },
                         });
                         
@@ -179,7 +179,7 @@ export default {
                         ];
 
                         validCards.push({
-                            body: `*Dimensions:* ${image.width}x${image.height}`,
+                            body: image.title ? `*${image.title.slice(0, 60)}*` : `Image ${imageIndex}`,
                             footer: `Image ${imageIndex} | Page ${currentPage}/${totalPages}`,
                             title: "",
                             header: imageBuffer,
@@ -189,7 +189,6 @@ export default {
                         console.error(
                             `Skipping image ${resultIndex} (${err?.response?.status || err?.message})`
                         );
-                        // Continue to next image
                     }
                 }
 
@@ -214,17 +213,17 @@ export default {
                 }
 
                 const msg = await builder
-                    .mainHeader("*「 GOOGLE IMAGE SEARCH 」*", false)
+                    .mainHeader("*「 BING IMAGE SEARCH 」*", false)
                     .mainBody(
-                        `*「 GOOGLE IMAGE SEARCH 」*\n\n` +
+                        `*「 BING IMAGE SEARCH 」*\n\n` +
                         `🔍 *Query:* ${searchQuery}\n` +
                         `📊 *Showing:* ${validCards.length} images\n` +
                         `🌐 *Total Found:* ${results.length}` +
                         navText +
-                        `\n\n✨ Powered by Google Images\n\n` +
+                        `\n\n✨ Powered by Bing Images\n\n` +
                         `Swipe to see all images! 👉`
                     )
-                    .mainFooter("Google Image Search")
+                    .mainFooter("Bing Image Search")
                     .cards(validCards)
                     .render();
 
@@ -274,7 +273,7 @@ export default {
             const errorMessage = error instanceof Error ? error.message : String(error);
             Chisato.logger.error(command.name, errorMessage);
 
-            let text = `*「 GOOGLE IMAGE SEARCH ERROR 」*\n\n`;
+            let text = `*「 BING IMAGE SEARCH ERROR 」*\n\n`;
             text += `❌ Failed to search images:\n`;
             text += `${errorMessage}\n\n`;
             text += `💡 *Tips:*\n`;
