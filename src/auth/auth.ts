@@ -1,19 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
-import type { AuthenticationCreds, SignalDataTypeMap, proto } from "baileys";
+import makeWASocket, { AuthenticationCreds, SignalDataTypeMap, proto, BufferJSON, initAuthCreds } from "baileys";
 import type { AuthState } from "../types/auth/auth";
-
-// Dynamic import cache for baileys
-let baileysModule: any = null;
-
-async function getBaileys() {
-    if (!baileysModule) {
-        // Use Function constructor to prevent TypeScript from transforming dynamic import
-        const dynamicImport = new Function('specifier', 'return import(specifier)');
-        const m = await dynamicImport("baileys");
-        baileysModule = (typeof m.makeWASocket === 'function') ? m : (m.default ?? m);
-    }
-    return baileysModule;
-}
 
 export const useMultiAuthState = async (
     Database: PrismaClient
@@ -28,8 +15,6 @@ export const useMultiAuthState = async (
 
     const writeData = async (data: unknown, fileName: string) => {
         try {
-            const baileys = await getBaileys();
-            const { BufferJSON } = baileys;
             const sessionId = fixFileName(fileName);
             const session = JSON.stringify(data, BufferJSON.replacer);
             await Database.session.upsert({
@@ -47,8 +32,6 @@ export const useMultiAuthState = async (
             return keyCache.get(cacheKey);
         }
         try {
-            const baileys = await getBaileys();
-            const { BufferJSON } = baileys;
             const data = await Database.session.findFirst({
                 where: { sessionId: cacheKey },
             });
@@ -69,10 +52,8 @@ export const useMultiAuthState = async (
         } catch {}
     };
 
-    const baileys = await getBaileys();
-    const { initAuthCreds, proto } = baileys;
     const creds: AuthenticationCreds =
-        (await readData("creds")) || initAuthCreds();
+        ((await readData("creds")) as AuthenticationCreds) || initAuthCreds();
 
     return {
         state: {
@@ -150,9 +131,6 @@ export const useSingleAuthState = async (
         "lid-mapping": "lidMappings",
         "tctoken": "tcTokens",
     };
-
-    const baileys = await getBaileys();
-    const { BufferJSON, initAuthCreds, proto } = baileys;
 
     let creds: AuthenticationCreds;
     let keys: unknown = {};

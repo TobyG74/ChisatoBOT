@@ -47,13 +47,13 @@ export default {
 
             const quotedMessage = message.quoted.body || "Media Message";
 
-            const blankPicPath = path.join(process.cwd(), "media", "blank_profile.png");
+            const blankPicPath = path.join(process.cwd(), "media", "noprofile.png");
             let profilePicData: string | Buffer = fs.readFileSync(blankPicPath);
             try {
                 const ppUrl = await Chisato.profilePictureUrl(message.quoted.sender, "image");
                 if (ppUrl) profilePicData = ppUrl;
             } catch {
-                // keep blank_profile.png fallback
+                // keep noprofile.png fallback
             }
 
             const imageBuffer = await StickerGenerator.generateBubbleChatSticker(

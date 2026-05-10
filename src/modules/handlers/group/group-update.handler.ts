@@ -1,6 +1,3 @@
-import {
-    proto
-} from "baileys";
 import { GroupSerialize } from "../../../types/structure/serialize";
 import { Group as GroupDatabase } from "../../../libs/database";
 import { Client } from "../../../libs";
@@ -9,23 +6,154 @@ import { createWelcomeImage, createLeaveImage } from "../../../utils/converter";
 import path from "path";
 import util from "util";
 
+// Cache baileys proto — avoids redundant dynamic import on every event
+let cachedProto: any = null;
+async function getProto() {
+    if (cachedProto) return cachedProto;
+    const dynamicImport = new Function("specifier", "return import(specifier)");
+    const baileys = await dynamicImport("baileys");
+    cachedProto = baileys.proto;
+    return cachedProto;
+}
+
+type ParticipantsUpdate = {
+    id: string;
+    author?: string;
+    participants: string[];
+    action: "add" | "remove" | "promote" | "demote" | "modify";
+};
+
 export class GroupUpdateHandler {
     private Database = {
         Group: new GroupDatabase(),
     };
 
-    async handle(Chisato: Client, message: GroupSerialize): Promise<void> {
+    /**
+     * Real-time handler for participant add/remove/promote/demote.
+     * Fires immediately from Baileys, much faster than messageStubType via messages.upsert.
+     */
+    async handleParticipantsUpdate(
+        Chisato: Client,
+        update: ParticipantsUpdate
+    ): Promise<void> {
         try {
-            const dynamicImport = new Function('specifier', 'return import(specifier)');
-            const baileys = await dynamicImport("baileys");
-            const { proto } = baileys;
-            
-            const { parameters, from, participant, type, expiration, pushName } = message;
-
-            if (!from || !participant) return
+            const { id: from, participants, action, author } = update;
+            if (!from || !participants?.length) return;
 
             const { Group } = this.Database;
-            
+            const botNumber = await Chisato.decodeJid(Chisato.user.id);
+            const actor = author ? await Chisato.decodeJid(author) : botNumber;
+
+            // Fetch group metadata + settings in parallel
+            let [groupMetadata, groupSettings] = await Promise.all([
+                Group.get(from),
+                Group.getSettings(from).catch(() => null),
+            ]);
+
+            if (!groupMetadata) {
+                try {
+                    groupMetadata = await Group.upsert(Chisato, from);
+                } catch (err) {
+                    logger.error(
+                        `handleParticipantsUpdate: Failed to upsert group metadata: ${
+                            err instanceof Error ? err.message : String(err)
+                        }`
+                    );
+                    return;
+                }
+            }
+            if (!groupMetadata?.subject) return;
+
+            if (!groupSettings) {
+                groupSettings = groupMetadata.settings;
+            }
+
+            const isBotAdmin = groupMetadata.participants
+                ?.filter((v: any) => v.admin !== null)
+                .map((v: any) => v.id)
+                .includes(botNumber);
+
+            const isNotify = groupSettings?.notify;
+            const isWelcome = groupSettings?.welcome;
+            const isLeave = groupSettings?.leave;
+            const isBanned = participants.some((jid) =>
+                groupSettings?.banned?.includes(jid)
+            );
+
+            switch (action) {
+                case "add":
+                    await this.handleAntiBotKick(
+                        Chisato,
+                        from,
+                        participants,
+                        groupSettings?.antibot ?? false,
+                        isBotAdmin
+                    );
+                    await this.handleParticipantAdd(
+                        Chisato,
+                        from,
+                        participants,
+                        groupMetadata,
+                        groupSettings,
+                        isBanned,
+                        isWelcome
+                    );
+                    await this.updateGroupMetadata(Chisato, from);
+                    break;
+
+                case "remove":
+                    await this.handleParticipantLeave(
+                        Chisato,
+                        from,
+                        participants,
+                        botNumber,
+                        groupMetadata,
+                        groupSettings,
+                        isLeave
+                    );
+                    break;
+
+                case "promote":
+                    await this.handleParticipantPromote(
+                        Chisato,
+                        from,
+                        actor,
+                        participants,
+                        isNotify
+                    );
+                    await this.updateGroupMetadata(Chisato, from);
+                    break;
+
+                case "demote":
+                    await this.handleParticipantDemote(
+                        Chisato,
+                        from,
+                        actor,
+                        participants,
+                        isNotify
+                    );
+                    await this.updateGroupMetadata(Chisato, from);
+                    break;
+            }
+        } catch (error) {
+            logger.error(
+                `Participants update handler error: ${
+                    error instanceof Error ? util.inspect(error) : String(error)
+                }`
+            );
+        }
+    }
+
+    async handle(Chisato: Client, message: GroupSerialize): Promise<void> {
+        try {
+            const proto = await getProto();
+
+            const { parameters, from, participant, type, expiration } = message;
+
+            if (!from || !participant) return;
+
+            const { Group } = this.Database;
+
             let groupMetadata = await Group.get(from);
             if (!groupMetadata) {
                 try {
@@ -33,30 +161,23 @@ export class GroupUpdateHandler {
                 } catch (upsertError) {
                     logger.error(
                         `Group update: Failed to upsert group metadata: ${
-                            upsertError instanceof Error ? upsertError.message : String(upsertError)
+                            upsertError instanceof Error
+                                ? upsertError.message
+                                : String(upsertError)
                         }`
                     );
                 }
             }
-            
+
             if (!groupMetadata || !groupMetadata.subject) {
                 return;
             }
-            
-            const GroupSetting = await Group.getSettings(from).catch(() => groupMetadata?.settings);
-            const botNumber = await Chisato.decodeJid(Chisato.user.id);
-            
-            const groupName = groupMetadata.subject;
 
-            const isBotAdmin = groupMetadata.participants
-                ?.filter((v) => v.admin !== null)
-                .map((v) => v.id)
-                .includes(botNumber);
+            const GroupSetting = await Group.getSettings(from).catch(
+                () => groupMetadata?.settings
+            );
 
             const isNotify = GroupSetting?.notify;
-            const isWelcome = GroupSetting?.welcome;
-            const isLeave = GroupSetting?.leave;
-            const isBanned = GroupSetting?.banned?.includes(participant);
 
             switch (type) {
                 case proto.WebMessageInfo.StubType.GROUP_CHANGE_ANNOUNCE:
@@ -172,65 +293,9 @@ export class GroupUpdateHandler {
                     logger.info(`Group icon updated for ${from}`);
                     break;
 
-                case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_PROMOTE:
-                    await this.handleParticipantPromote(
-                        Chisato,
-                        from,
-                        participant,
-                        parameters,
-                        isNotify
-                    );
-                    await this.updateGroupMetadata(Chisato, from);
-                    logger.info(`Group participant promoted in ${from}`);
-                    break;
-
-                case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_DEMOTE:
-                    await this.handleParticipantDemote(
-                        Chisato,
-                        from,
-                        participant,
-                        parameters,
-                        isNotify
-                    );
-                    await this.updateGroupMetadata(Chisato, from);
-                    logger.info(`Group participant demoted in ${from}`);
-                    break;
-
-                case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_ADD:
-                case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_INVITE:
-                    await this.handleAntiBotKick(
-                        Chisato,
-                        from,
-                        participant,
-                        parameters,
-                        GroupSetting?.antibot ?? false,
-                        isBotAdmin
-                    );
-                    await this.handleParticipantAdd(
-                        Chisato,
-                        from,
-                        participant,
-                        parameters,
-                        groupName,
-                        isBanned,
-                        isWelcome
-                    );
-                    await this.updateGroupMetadata(Chisato, from);
-                    logger.info(`Group participant added in ${from}`);
-                    break;
-
-                case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_LEAVE:
-                case proto.WebMessageInfo.StubType.GROUP_PARTICIPANT_REMOVE:
-                    await this.handleParticipantLeave(
-                        Chisato,
-                        from,
-                        participant,
-                        parameters,
-                        botNumber,
-                        isLeave
-                    );
-                    logger.info(`Group participant left or removed in ${from}`);
-                    break;
+                // GROUP_PARTICIPANT_ADD/INVITE/LEAVE/REMOVE/PROMOTE/DEMOTE are
+                // handled via the real-time `group-participants.update` event
+                // for faster response (see handleParticipantsUpdate).
             }
         } catch (error) {
             logger.error(
@@ -457,165 +522,159 @@ export class GroupUpdateHandler {
     private async handleParticipantPromote(
         Chisato: Client,
         from: string,
-        participant: string,
-        parameters: any,
+        actor: string,
+        participants: string[],
         isNotify: boolean
     ): Promise<void> {
         if (!isNotify) return;
 
         let caption = `「 *GROUP PARTICIPANTS* 」\n\n@${
-            participant.split("@")[0]
+            actor.split("@")[0]
         } has promoted`;
 
-        for (const user of parameters) {
-            const obj = JSON.parse(user);
-            caption += ` @${obj.id.split("@")[0]}`;
+        for (const jid of participants) {
+            caption += ` @${jid.split("@")[0]}`;
         }
 
         caption += ` to admin`;
 
         await Chisato.sendText(from, caption, null, {
-            mentions: [
-                participant,
-                ...parameters.map(u => JSON.parse(u).id)
-            ],
+            mentions: [actor, ...participants],
         });
     }
 
     private async handleParticipantDemote(
         Chisato: Client,
         from: string,
-        participant: string,
-        parameters: any,
+        actor: string,
+        participants: string[],
         isNotify: boolean
     ): Promise<void> {
         if (!isNotify) return;
 
         let caption = `「 *GROUP PARTICIPANTS* 」\n\n@${
-            participant.split("@")[0]
+            actor.split("@")[0]
         } has demoted`;
 
-        for (const user of parameters) {
-            const obj = JSON.parse(user);
-            caption += ` @${obj.id.split("@")[0]}`;
-        }  
+        for (const jid of participants) {
+            caption += ` @${jid.split("@")[0]}`;
+        }
 
         caption += ` from admin`;
 
         await Chisato.sendText(from, caption, null, {
-            mentions: [
-                participant,
-                ...parameters.map(p => JSON.parse(p).id)
-            ],
+            mentions: [actor, ...participants],
         });
     }
 
     private async handleParticipantAdd(
         Chisato: Client,
         from: string,
-        participant: string,
-        parameters: any,
-        groupName: string,
+        participants: string[],
+        groupMetadata: any,
+        groupSettings: any,
         isBanned: boolean,
         isWelcome: boolean
     ): Promise<void> {
         if (isBanned) {
-            const caption = `「 *GROUP BANNED* 」\n\n@${
-                participant.split("@")[0]
-            } has been listed on the banned list in this Group`;
-
-            await Chisato.sendText(from, caption, null, {
-                mentions: [participant],
-            });
+            const banned = participants.filter((jid) =>
+                groupSettings?.banned?.includes(jid)
+            );
+            if (banned.length) {
+                const caption = banned
+                    .map(
+                        (jid) =>
+                            `「 *GROUP BANNED* 」\n\n@${
+                                jid.split("@")[0]
+                            } has been listed on the banned list in this Group`
+                    )
+                    .join("\n\n");
+                await Chisato.sendText(from, caption, null, {
+                    mentions: banned,
+                });
+            }
         }
 
-        if (isWelcome) {
+        if (!isWelcome) return;
+
+        const memberCount = groupMetadata.participants?.length ?? 0;
+        const groupName = groupMetadata.subject;
+        const groupOwner = groupMetadata.owner || "";
+        const customMessage = groupSettings?.welcomeMessage;
+
+        for (const userNumber of participants) {
             try {
-                const groupMetadata = await Chisato.groupMetadata(from);
-                const memberCount = groupMetadata.participants.length;
-                const groupName = groupMetadata.subject;
-                const groupOwner = groupMetadata.owner || "";
-                
-                // Get custom welcome message
-                const groupSettings = await this.Database.Group.getSettings(from);
-                const customMessage = groupSettings?.welcomeMessage;
+                let profilePicUrl: string = path.join(
+                    process.cwd(),
+                    "media",
+                    "noprofile.png"
+                );
+                try {
+                    const url = await Chisato.profilePictureUrl(
+                        userNumber,
+                        "image"
+                    );
+                    if (url) profilePicUrl = url;
+                } catch {
+                    // fallback to default
+                }
 
-                for (const user of parameters) {
-                    const obj = JSON.parse(user);
-                    const userNumber = obj.id;
+                const username = userNumber.split("@")[0];
 
-                    let profilePicUrl: string;
-                    try {
-                        profilePicUrl = await Chisato.profilePictureUrl(userNumber, "image");
-                    } catch {
-                        profilePicUrl = path.join(process.cwd(), "media", "noprofile.png");
+                let caption: string;
+                const mentions: string[] = [userNumber];
+
+                if (customMessage) {
+                    caption = customMessage
+                        .replace(/@user/g, `@${username}`)
+                        .replace(/@group/g, groupName)
+                        .replace(
+                            /@ownergroup/g,
+                            groupOwner
+                                ? `@${groupOwner.split("@")[0]}`
+                                : "Admin"
+                        );
+
+                    if (customMessage.includes("@ownergroup") && groupOwner) {
+                        mentions.push(groupOwner);
                     }
 
-                    const username = userNumber.split("@")[0];
-
-                    // Process custom message if exists
-                    let caption: string;
-                    let mentions: string[] = [userNumber];
-                    
-                    if (customMessage) {
-                        // Replace variables in custom message
-                        caption = customMessage
-                            .replace(/@user/g, `@${username}`)
-                            .replace(/@group/g, groupName)
-                            .replace(/@ownergroup/g, groupOwner ? `@${groupOwner.split("@")[0]}` : "Admin");
-                        
-                        // Add owner to mentions if present
-                        if (customMessage.includes("@ownergroup") && groupOwner) {
-                            mentions.push(groupOwner);
+                    const phoneRegex = /@(\d+)/g;
+                    let match;
+                    while ((match = phoneRegex.exec(customMessage)) !== null) {
+                        const phoneNumber = match[1] + "@s.whatsapp.net";
+                        if (!mentions.includes(phoneNumber)) {
+                            mentions.push(phoneNumber);
                         }
-                        
-                        // Extract phone numbers mentioned in format @628xxx
-                        const phoneRegex = /@(\d+)/g;
-                        let match;
-                        while ((match = phoneRegex.exec(customMessage)) !== null) {
-                            const phoneNumber = match[1] + "@s.whatsapp.net";
-                            if (!mentions.includes(phoneNumber)) {
-                                mentions.push(phoneNumber);
-                            }
-                            // Replace @628xxx with proper WhatsApp mention format
-                            caption = caption.replace(`@${match[1]}`, `@${match[1]}`);
-                        }
-                    } else {
-                        // Default message
-                        caption = `👋 Welcome to *${groupName}*!\n\n@${username}\n\nYou are member #${memberCount}`;
                     }
-
-                    const welcomeBuffer = await createWelcomeImage(
-                        profilePicUrl,
-                        username,
-                        groupName,
-                        memberCount
-                    );
-
-                    await Chisato.sendImage(
-                        from,
-                        welcomeBuffer,
-                        caption,
-                        null,
-                        { mentions }
-                    );
+                } else {
+                    caption = `👋 Welcome to *${groupName}*!\n\n@${username}\n\nYou are member #${memberCount}`;
                 }
-            } catch (error) {
-                logger.error(`Failed to send welcome image: ${error instanceof Error ? error.message : String(error)}`);
-                
-                let caption = `「 *GROUP WELCOME* 」\n\nHello`;
-                for (const user of parameters) {
-                    const obj = JSON.parse(user);
-                    caption += ` @${obj.id.split("@")[0]}`;
-                }
-                caption += ` Welcome to the ${groupName}`;
 
-                await Chisato.sendText(from, caption, null, {
-                    mentions: [
-                        participant,
-                        ...parameters.map(u => JSON.parse(u).id)
-                    ],
+                const welcomeBuffer = await createWelcomeImage(
+                    profilePicUrl,
+                    username,
+                    groupName,
+                    memberCount
+                );
+
+                await Chisato.sendImage(from, welcomeBuffer, caption, null, {
+                    mentions,
                 });
+            } catch (error) {
+                logger.error(
+                    `Failed to send welcome image for ${userNumber}: ${
+                        error instanceof Error ? error.message : String(error)
+                    }`
+                );
+
+                const username = userNumber.split("@")[0];
+                await Chisato.sendText(
+                    from,
+                    `「 *GROUP WELCOME* 」\n\nHello @${username} — welcome to the ${groupName}`,
+                    null,
+                    { mentions: [userNumber] }
+                );
             }
         }
     }
@@ -623,64 +682,71 @@ export class GroupUpdateHandler {
     private async handleParticipantLeave(
         Chisato: Client,
         from: string,
-        participant: string,
-        parameters: any,
+        participants: string[],
         botNumber: string,
+        groupMetadata: any,
+        groupSettings: any,
         isLeave: boolean
     ): Promise<void> {
         const { Group } = this.Database;
 
         if (isLeave) {
-            try {
-                const groupMetadata = await Chisato.groupMetadata(from);
-                const groupName = groupMetadata.subject;
-                const memberCount = groupMetadata.participants.length;
-                const groupOwner = groupMetadata.owner || "";
-                
-                // Get custom leave message
-                const groupSettings = await Group.getSettings(from);
-                const customMessage = groupSettings?.leaveMessage;
+            const groupName = groupMetadata.subject;
+            const memberCount = groupMetadata.participants?.length ?? 0;
+            const groupOwner = groupMetadata.owner || "";
+            const customMessage = groupSettings?.leaveMessage;
 
-                for (const user of parameters) {
-                    const obj = JSON.parse(user);
-                    const userNumber = obj.id;
-
-                    let profilePicUrl: string;
+            for (const userNumber of participants) {
+                try {
+                    let profilePicUrl: string = path.join(
+                        process.cwd(),
+                        "media",
+                        "noprofile.png"
+                    );
                     try {
-                        profilePicUrl = await Chisato.profilePictureUrl(userNumber, "image");
+                        const url = await Chisato.profilePictureUrl(
+                            userNumber,
+                            "image"
+                        );
+                        if (url) profilePicUrl = url;
                     } catch {
-                        profilePicUrl = path.join(process.cwd(), "media", "noprofile.png");
+                        // fallback to default
                     }
 
                     const username = userNumber.split("@")[0];
 
-                    // Process custom message if exists
                     let caption: string;
-                    let mentions: string[] = [userNumber];
-                    
+                    const mentions: string[] = [userNumber];
+
                     if (customMessage) {
-                        // Replace variables in custom message
                         caption = customMessage
                             .replace(/@user/g, `@${username}`)
                             .replace(/@group/g, groupName)
-                            .replace(/@ownergroup/g, groupOwner ? `@${groupOwner.split("@")[0]}` : "Admin");
-                        
-                        // Add owner to mentions if present
-                        if (customMessage.includes("@ownergroup") && groupOwner) {
+                            .replace(
+                                /@ownergroup/g,
+                                groupOwner
+                                    ? `@${groupOwner.split("@")[0]}`
+                                    : "Admin"
+                            );
+
+                        if (
+                            customMessage.includes("@ownergroup") &&
+                            groupOwner
+                        ) {
                             mentions.push(groupOwner);
                         }
-                        
-                        // Extract phone numbers mentioned in format @628xxx
+
                         const phoneRegex = /@(\d+)/g;
                         let match;
-                        while ((match = phoneRegex.exec(customMessage)) !== null) {
+                        while (
+                            (match = phoneRegex.exec(customMessage)) !== null
+                        ) {
                             const phoneNumber = match[1] + "@s.whatsapp.net";
                             if (!mentions.includes(phoneNumber)) {
                                 mentions.push(phoneNumber);
                             }
                         }
                     } else {
-                        // Default message
                         caption = `👋 Goodbye *@${username}*!\n\nThanks for being part of *${groupName}*\n\nRemaining members: ${memberCount}`;
                     }
 
@@ -691,34 +757,34 @@ export class GroupUpdateHandler {
                         memberCount
                     );
 
-                    await Chisato.sendImage(
+                    await Chisato.sendImage(from, leaveBuffer, caption, null, {
+                        mentions,
+                    });
+                } catch (error) {
+                    logger.error(
+                        `Failed to send leave image for ${userNumber}: ${
+                            error instanceof Error
+                                ? error.message
+                                : String(error)
+                        }`
+                    );
+
+                    const username = userNumber.split("@")[0];
+                    await Chisato.sendText(
                         from,
-                        leaveBuffer,
-                        caption,
+                        `「 *GROUP LEAVE* 」\n\nByee @${username} — goodbye and see you again`,
                         null,
-                        { mentions }
+                        { mentions: [userNumber] }
                     );
                 }
-            } catch (error) {
-                logger.error(`Failed to send leave image: ${error instanceof Error ? error.message : String(error)}`);
-                
-                let caption = `「 *GROUP LEAVE* 」\n\nByee`;
-                for (const user of parameters) {
-                    const obj = JSON.parse(user);
-                    caption += ` @${obj.id.split("@")[0]}`;
-                }
-                caption += ` Goodbye and see you again`;
-
-                await Chisato.sendText(from, caption, null, {
-                    mentions: [
-                        participant,
-                        ...parameters.map(u => JSON.parse(u).id)
-                    ],
-                });
             }
         }
 
-        if (participant.split("@")[0] === botNumber.split("@")[0]) {
+        // If the bot itself was removed, clean up the group from DB
+        const botLeft = participants.some(
+            (jid) => jid.split("@")[0] === botNumber.split("@")[0]
+        );
+        if (botLeft) {
             await Group.delete(from);
         } else {
             await this.updateGroupMetadata(Chisato, from);
@@ -742,26 +808,13 @@ export class GroupUpdateHandler {
     private async handleAntiBotKick(
         Chisato: Client,
         from: string,
-        participant: string,
-        parameters: any,
+        participants: string[],
         isAntibot: boolean,
         isBotAdmin: boolean
     ): Promise<void> {
         if (!isAntibot || !isBotAdmin) return;
 
-        const toBoot: string[] = [];
-
-        for (const entry of parameters) {
-            try {
-                const obj = JSON.parse(entry);
-                const jid: string = obj.id || obj.id || "";
-                if (jid && this.isBotJid(jid)) {
-                    toBoot.push(jid);
-                }
-            } catch {
-                // ignore malformed entries
-            }
-        }
+        const toBoot = participants.filter((jid) => this.isBotJid(jid));
 
         for (const botJid of toBoot) {
             try {
@@ -769,7 +822,9 @@ export class GroupUpdateHandler {
 
                 const caption =
                     `*「 ANTI-BOT 」*\n\n` +
-                    `🤖 Bot account @${botJid.split("@")[0]} has been automatically kicked.\n\n` +
+                    `🤖 Bot account @${
+                        botJid.split("@")[0]
+                    } has been automatically kicked.\n\n` +
                     `_Anti-bot is enabled in this group._`;
 
                 await Chisato.sendText(from, caption, null, {
@@ -808,24 +863,4 @@ export class GroupUpdateHandler {
             );
         }
     }
-
-    private extractId = (entry: any): string | null => {
-        if (!entry) return null;
-
-        if (typeof entry === "string") {
-            try {
-                const parsed = JSON.parse(entry);
-                if (parsed && parsed.id) return parsed.id;
-            } catch (e) {
-                return entry;
-            }
-        }
-
-        if (typeof entry === "object") {
-            if (entry.id) return entry.id;
-            if (entry.phoneNumber) return entry.phoneNumber;
-        }
-
-        return null;
-    };
 }

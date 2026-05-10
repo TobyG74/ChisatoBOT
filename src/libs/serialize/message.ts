@@ -21,6 +21,7 @@ export const message = async (
         m.key = message.key;
         m.id = message.key.id;
         m.from = message.key.remoteJid;
+        if (!m.from) return m;
         m.fromMe = message.key.fromMe;
         m.isGroup = m.from.endsWith("@g.us");
         m.message = message.message;

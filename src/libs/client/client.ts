@@ -57,6 +57,12 @@ type Events = {
     "group.update": (creds: proto.IWebMessageInfo) => void;
     "messages.upsert": (messages: proto.IWebMessageInfo) => void;
     "contacts.update": (contact: Partial<Contact>) => void;
+    "group-participants.update": (update: {
+        id: string;
+        author?: string;
+        participants: string[];
+        action: "add" | "remove" | "promote" | "demote" | "modify";
+    }) => void;
     call: (call: WACallEvent) => void;
 };
 
@@ -154,25 +160,11 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         }
 
         /** Chisato as Client */
-        // A simple CacheStore implementation backed by a Map, used to track
-        // how many times Baileys has retried decrypting a given message.
-        // Without this, failed decryptions loop forever and each retry
-        // triggers a new prekey bundle exchange ("Closing session" spam).
-        const _retryMap = new Map<string, number>();
-        const msgRetryCounterCache = {
-            get: (key: string) => _retryMap.get(key),
-            set: (key: string, value: number) => { _retryMap.set(key, value); return true; },
-            del: (key: string) => { _retryMap.delete(key); return true; },
-            flushAll: () => _retryMap.clear(),
-        };
-
         const Chisato: Chisato = makeWASocket({
             ...this.socketConfig,
             version,
             printQRInTerminal: false,
             markOnlineOnConnect: false,
-            msgRetryCounterCache,
-            getMessage: async (_key: any) => undefined,
             auth: {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(
@@ -444,12 +436,13 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         /** Message Event */
         Chisato.ev?.on("messages.upsert", async ({ messages }) => {
             for (const message of messages) {
+                if (!message?.key?.remoteJid) continue;
                 if (
                     message.message?.protocolMessage?.type === 3 ||
                     message?.messageStubType
                 ) {
                     this.emit("group.update", message);
-                } else {
+                } else if (message.message) {
                     this.emit("messages.upsert", message);
                 }
             }
@@ -460,6 +453,11 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             for (const call of calls) {
                 this.emit("call", call);
             }
+        });
+
+        /** Group Participants Update (real-time welcome/leave/promote/demote) */
+        Chisato.ev?.on("group-participants.update", (update: any) => {
+            this.emit("group-participants.update", update);
         });
 
         for (const ev of [
@@ -481,7 +479,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             "message-receipt.update",
             "groups.upsert",
             "groups.update",
-            "group-participants.update",
+            // 'group-participants.update',
             "blocklist.set",
             "blocklist.update",
             // 'call',

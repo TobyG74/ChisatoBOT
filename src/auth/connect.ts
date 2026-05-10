@@ -81,11 +81,25 @@ logger.connect("Connecting to database...");
         // Handle group updates
         Chisato.on("group.update", async (update) => {
             try {
+                console.log(update)
                 const serialized = await serialize.group(update as any);
                 await groupUpdateHandler.handle(Chisato, serialized);
             } catch (error) {
                 logger.error(
                     `Group update error: ${
+                        error instanceof Error ? util.inspect(error) : String(error)
+                    }`
+                );
+            }
+        });
+
+        // Handle real-time participant add/remove/promote/demote (faster than stub-based)
+        Chisato.on("group-participants.update", async (update) => {
+            try {
+                await groupUpdateHandler.handleParticipantsUpdate(Chisato, update);
+            } catch (error) {
+                logger.error(
+                    `Group participants update error: ${
                         error instanceof Error ? util.inspect(error) : String(error)
                     }`
                 );
@@ -119,9 +133,9 @@ logger.connect("Connecting to database...");
         });
 
         // Unhandled rejection handler
-        process.on("unhandledRejection", (reason, promise) => {
+        process.on("unhandledRejection", (reason, _promise) => {
             logger.error(
-                `Unhandled Rejection at: ${promise}, reason: ${reason}`
+                `Unhandled Rejection: ${reason instanceof Error ? reason.message : String(reason)}`
             );
         });
 
