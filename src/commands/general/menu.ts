@@ -33,7 +33,7 @@ export default {
     alias: ["allmenu", "commands", "command", "cmd"],
     category: "general",
     description: "See All Menu List",
-    async run({ Chisato, from, message, prefix, botName }) {
+    async run({ Chisato, from, message, prefix, botName, Database }) {
         const config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
         const tz: string = config.timezone || config.timeZone || "Asia/Jakarta";
         const { pushName } = message;
@@ -48,6 +48,9 @@ export default {
             if (!category[cat]) category[cat] = [];
             category[cat].push(cmd);
         }
+
+        const totalUsers = await Database.User.getAll();
+        const totalGroups = await Database.Group.getAll();
 
         const now      = moment().tz(tz);
         const greeting = getGreeting(tz);
@@ -64,10 +67,12 @@ export default {
 
         // Stats 
         text += `┌─────「 📊 *BOT STATS* 」\n`;
-        text += `│  🤖 *Bot*    : ${botName}\n`;
-        text += `│  🔑 *Prefix* : ${prefix}\n`;
-        text += `│  📦 *Cmds*   : ${allCmds.length}\n`;
-        text += `│  🗂️ *Cats*   : ${catKeys.length}\n`;
+        text += `│  🤖 *Bot*      : ${botName}\n`;
+        text += `│  🔑 *Prefix*   : ${prefix}\n`;
+        text += `│  📦 *Cmds*     : ${allCmds.length}\n`;
+        text += `│  🗂️ *Category* : ${catKeys.length}\n`;
+        text += `│  👥 *Users*    : ${totalUsers.length}\n`;
+        text += `│  🏢 *Groups*   : ${totalGroups.length}\n`;
         text += `└${"─".repeat(24)}\n\n`;
 
         // Legend
