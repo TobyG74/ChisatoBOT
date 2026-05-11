@@ -29,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 
 /** Config */
 import { commands, aliasIndex } from "./commands";
+import { configService } from "../../core/config/config.service";
 
 /** Types */
 import type { SocketConfig } from "../../types/auth/socket";
@@ -83,14 +84,13 @@ async function getBaileys() {
 }
 
 export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>) {
-    private config: Config;
+    get config(): Config { return configService.getConfig() as unknown as Config; }
     private package: any;
     private time: string;
     private socketConfig: SocketConfig;
     public logger = logger;
     constructor(socketConfig: SocketConfig) {
         super();
-        this.config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
         this.package = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
         this.socketConfig = socketConfig;
         moment.tz.setDefault(this.config.timezone);

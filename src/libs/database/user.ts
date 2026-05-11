@@ -1,11 +1,9 @@
 import { Client, Database } from "..";
 import { User as UserType } from "@prisma/client";
-import fs from "fs";
+import { configService } from "../../core/config/config.service";
 
 export class User {
-    public config: Config = JSON.parse(
-        fs.readFileSync("./config.json", "utf-8")
-    );
+    get config(): Config { return configService.getConfig() as unknown as Config; }
     /**
      * Add User Data to Database
      * @param Chisato
