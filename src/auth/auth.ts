@@ -96,8 +96,8 @@ export const useMultiAuthState = async (
                             );
                         }
                     }
-                    // allSettled: a single DB failure won't discard other writes
-                    await Promise.allSettled(tasks);
+                    // Fire-and-forget: in-memory keyCache is already updated above
+                    Promise.allSettled(tasks).catch(() => {});
                 },
             },
         },
