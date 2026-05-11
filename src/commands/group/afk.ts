@@ -1,4 +1,5 @@
 import type { ConfigCommands } from "../../types/structure/commands";
+import { MessageContextBuilder } from "../../modules/handlers/message/message-context.builder";
 
 export default {
     name: "afk",
@@ -21,6 +22,7 @@ export default {
                 since: Date.now(),
             },
         });
+        MessageContextBuilder.invalidateUser(sender);
 
         return Chisato.sendText(
             from,

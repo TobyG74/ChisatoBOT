@@ -28,7 +28,7 @@ import util from "util";
 import { fileURLToPath, pathToFileURL } from "url";
 
 /** Config */
-import { commands } from "./commands";
+import { commands, aliasIndex } from "./commands";
 
 /** Types */
 import type { SocketConfig } from "../../types/auth/socket";
@@ -52,6 +52,9 @@ import { logger } from "../../core/logger";
 
 /** Livs */
 import { User as UserDatabase, Group as GroupDatabase } from "../database";
+
+/** Context cache */
+import { MessageContextBuilder } from "../../modules/handlers/message/message-context.builder";
 
 type Events = {
     "group.update": (creds: proto.IWebMessageInfo) => void;
@@ -173,6 +176,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 ),
             },
             logger: Pino({ level: "silent" }),
+            cachedGroupMetadata: async (jid: string) => MessageContextBuilder.getCachedGroupMeta(jid),
         });
 
         const _requestPairingCode = Chisato.requestPairingCode;
@@ -463,6 +467,22 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             this.emit("group-participants.update", update);
         });
 
+        /** Populate cachedGroupMetadata on group upsert/update events */
+        Chisato.ev?.on("groups.upsert", (groups: any[]) => {
+            for (const g of groups) {
+                if (g?.id) MessageContextBuilder.setCachedGroupMeta(g.id, g);
+            }
+        });
+        Chisato.ev?.on("groups.update", (updates: any[]) => {
+            for (const u of updates) {
+                if (!u?.id) continue;
+                const existing = MessageContextBuilder.getCachedGroupMeta(u.id);
+                if (existing) {
+                    MessageContextBuilder.setCachedGroupMeta(u.id, { ...existing, ...u });
+                }
+            }
+        });
+
         for (const ev of [
             // 'connection.update',
             // 'creds.update',
@@ -548,11 +568,15 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 const fileUrl = pathToFileURL(filePath).href;
                 let cmd = (await import(fileUrl)).default;
                 commands.set(cmd.name, cmd);
+                for (const alias of cmd.alias) aliasIndex.set(alias.toLowerCase(), cmd);
                 fs.watchFile(filePath, async () => {
                     this.logger.info(`Hot-reload: ${file} updated, reloading...`);
+                    // Remove old aliases before reloading
+                    if (cmd?.alias) for (const alias of cmd.alias) aliasIndex.delete(alias.toLowerCase());
                     commands.delete(cmd.name);
                     cmd = (await import(`${fileUrl}?update=${Date.now()}`)).default;
                     commands.set(cmd.name, cmd);
+                    for (const alias of cmd.alias) aliasIndex.set(alias.toLowerCase(), cmd);
                 });
             });
         });

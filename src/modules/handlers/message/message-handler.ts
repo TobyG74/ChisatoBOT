@@ -8,7 +8,8 @@ import { CommandValidator } from "./command-validator";
 import { AfkHandler } from "./afk-handler";
 import { EvalExecHandler } from "./eval-exec-handler";
 import { SessionHandler } from "./session-handler";
-import { commands, cooldowns } from "../../../libs";
+import { commands, aliasIndex, cooldowns } from "../../../libs";
+import { calculateXPReward, getRankInfo } from "../../../utils/leveling";
 import {
     Group as GroupDatabase,
     User as UserDatabase,
@@ -58,13 +59,10 @@ export class MessageHandler {
                 this.Database
             );
 
-            // Get command if exists
+            // Get command if exists — O(1) direct + O(1) alias lookup
             if (!context) return;
             const command = context.cmd
-                ? commands.get(context.cmd) ??
-                  Array.from(commands.values()).find((v) =>
-                      v.alias.find((x) => x.toLowerCase() === context.cmd)
-                  )
+                ? (commands.get(context.cmd) ?? aliasIndex.get(context.cmd) ?? null)
                 : null;
 
             // Skip own messages in selfbot mode (team/owner always bypasses)
@@ -120,16 +118,11 @@ export class MessageHandler {
                     );
                 }
 
-                // Handle AFK for non-commands
-                await AfkHandler.handle(
-                    Chisato,
-                    context,
-                    message,
-                    this.Database
-                );
-
-                // Handle group settings
-                await this.handleGroupSettings(Chisato, message, context);
+                // Run AFK handler and group settings concurrently — they are independent
+                await Promise.all([
+                    AfkHandler.handle(Chisato, context, message, this.Database),
+                    this.handleGroupSettings(Chisato, message, context),
+                ]);
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -245,8 +238,7 @@ export class MessageHandler {
 
             // Add XP for command usage (leveling system)
             try {
-                if (message.fromMe) return; 
-                const { calculateXPReward } = await import("../../../utils/leveling");
+                if (message.fromMe) return;
                 const xpReward = calculateXPReward(
                     command.category,
                     context.isPremium
@@ -260,7 +252,6 @@ export class MessageHandler {
 
                 // Notify user if they leveled up
                 if (result.leveledUp && result.newLevel) {
-                    const { getRankInfo } = await import("../../../utils/leveling");
                     const rankInfo = getRankInfo(result.newLevel);
                     
                     await Chisato.sendText(

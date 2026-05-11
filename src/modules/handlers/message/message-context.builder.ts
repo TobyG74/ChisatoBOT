@@ -8,9 +8,10 @@ interface TTLCache<T> {
     expiresAt: number;
 }
 
-const BLOCKLIST_TTL = 5 * 60 * 1000; // 5 minutes
-const USER_TTL = 15 * 1000;           // 15 seconds
-const GROUP_META_TTL = 15 * 1000;     // 15 seconds
+const BLOCKLIST_TTL  = 5  * 60 * 1000; // 5 minutes
+const USER_TTL       = 5  * 60 * 1000; // 5 minutes  
+const GROUP_META_TTL = 2  * 60 * 1000; // 2 minutes  
+const GROUP_DB_TTL   = 10 * 60 * 1000; // 10 minutes 
 
 /**
  * MessageContextBuilder is responsible for constructing a comprehensive context object for each incoming message.
@@ -19,17 +20,33 @@ const GROUP_META_TTL = 15 * 1000;     // 15 seconds
 export class MessageContextBuilder {
     private static blockListCache: TTLCache<string[]> | null = null;
     private static botNumberCache: string | null = null;
-    private static userCache = new Map<string, TTLCache<any>>();
+    private static userCache    = new Map<string, TTLCache<any>>();
     private static groupMetaCache = new Map<string, TTLCache<any>>();
+    private static groupDbCache   = new Map<string, TTLCache<any>>();
 
     static invalidateUser(sender: string): void {
         MessageContextBuilder.userCache.delete(sender);
     }
     static invalidateGroup(jid: string): void {
         MessageContextBuilder.groupMetaCache.delete(jid);
+        MessageContextBuilder.groupDbCache.delete(jid);
     }
     static invalidateBlockList(): void {
         MessageContextBuilder.blockListCache = null;
+    }
+
+    /** Returns cached group metadata for use by Baileys cachedGroupMetadata option. */
+    static getCachedGroupMeta(jid: string): any | undefined {
+        const entry = MessageContextBuilder.groupMetaCache.get(jid);
+        return (entry && Date.now() < entry.expiresAt) ? entry.value : undefined;
+    }
+
+    /** Stores group metadata directly (used by client groups.upsert handler). */
+    static setCachedGroupMeta(jid: string, meta: any): void {
+        MessageContextBuilder.groupMetaCache.set(jid, {
+            value: meta,
+            expiresAt: Date.now() + GROUP_META_TTL,
+        });
     }
 
     private static async getBlockList(Chisato: Client): Promise<string[]> {
@@ -72,6 +89,16 @@ export class MessageContextBuilder {
         } catch {
             return null;
         }
+    }
+
+    private static async getGroupDb(Group: any, Chisato: Client, from: string): Promise<any> {
+        const now = Date.now();
+        const cached = MessageContextBuilder.groupDbCache.get(from);
+        if (cached && now < cached.expiresAt) return cached.value;
+        const data = await Group.get(from);
+        const result = data ?? (await Group.upsert(Chisato, from));
+        if (result) MessageContextBuilder.groupDbCache.set(from, { value: result, expiresAt: now + GROUP_DB_TTL });
+        return result;
     }
 
     static async build(
@@ -133,20 +160,20 @@ export class MessageContextBuilder {
             let groupAdmins: MessageContext["groupAdmins"] = undefined;
 
             if (isGroup) {
-                // Fetch WA group metadata (cached) and DB group record in parallel
+                // Fetch WA group metadata (cached) and DB group record (cached) in parallel
                 const [waMeta, dbGroup] = await Promise.all([
                     MessageContextBuilder.getGroupMetadata(Chisato, from),
-                    Group.get(from),
+                    MessageContextBuilder.getGroupDb(Group, Chisato, from),
                 ]);
 
-                groupMetadata = waMeta || dbGroup || (await Group.upsert(Chisato, from));
+                groupMetadata = waMeta || dbGroup;
 
                 if (groupMetadata) {
-                    groupSettingData = dbGroup ?? (await Group.upsert(Chisato, from))?.settings;
+                    groupSettingData = dbGroup?.settings ?? dbGroup;
                     groupName = groupMetadata.subject;
                     groupDescription = groupMetadata.desc;
                     groupParticipants = groupMetadata.participants;
-                    groupAdmins = groupMetadata.participants.filter(
+                    groupAdmins = groupMetadata.participants?.filter(
                         (v: any) => v.admin !== null
                     );
                 }

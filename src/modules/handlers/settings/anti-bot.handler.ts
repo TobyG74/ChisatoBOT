@@ -30,10 +30,23 @@ const BOT_ONLY_TYPES = new Set([
     "pollCreationMessage",
 ]);
 
+const SETTINGS_TTL = 5 * 60 * 1000; // 5 minutes
+
 export class AntiBotMessageHandler {
     private Database = {
         Group: new GroupDatabase(),
     };
+
+    private settingsCache = new Map<string, { value: any; expiresAt: number }>();
+
+    private async getGroupSettings(from: string): Promise<any> {
+        const now = Date.now();
+        const cached = this.settingsCache.get(from);
+        if (cached && now < cached.expiresAt) return cached.value;
+        const data = await this.Database.Group.getSettings(from);
+        if (data) this.settingsCache.set(from, { value: data, expiresAt: now + SETTINGS_TTL });
+        return data;
+    }
 
     async handle(
         Chisato: Client,
@@ -48,8 +61,8 @@ export class AntiBotMessageHandler {
 
         const { from, sender, pushName, type } = message;
 
-        // Check anti-bot setting
-        const groupData = await this.Database.Group.getSettings(from);
+        // Check anti-bot setting (cached)
+        const groupData = await this.getGroupSettings(from);
         if (!groupData?.antibot) return;
 
         // Check if message type is bot-only

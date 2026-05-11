@@ -11,6 +11,31 @@ async function getBotJid(Chisato: Client): Promise<string> {
     return cachedBotJid;
 }
 
+/**
+ * Resolve any @lid JIDs in a mentions array to their @s.whatsapp.net equivalents.
+ * WhatsApp LID addressing sends mentions as LID JIDs; DB stores users as PN JIDs.
+ */
+async function normalizeMentions(Chisato: Client, mentions: string[]): Promise<string[]> {
+    if (!mentions.length) return mentions;
+    const lidJids = mentions.filter(j => j.endsWith("@lid"));
+    if (!lidJids.length) return mentions;
+    try {
+        const signalRepo = (Chisato as any).signalRepository;
+        const mappings: Array<{ lid: string; pn: string }> | null =
+            await signalRepo?.lidMapping?.getPNsForLIDs(lidJids);
+        if (!mappings) return mentions;
+        // decodeJid strips device suffix: "27226099679412:0@s.whatsapp.net" → "27226099679412@s.whatsapp.net"
+        const lidToPN = new Map<string, string>();
+        for (const entry of mappings) {
+            const normalized = await Chisato.decodeJid(entry.pn);
+            if (normalized) lidToPN.set(entry.lid, normalized);
+        }
+        return mentions.map(jid => (jid.endsWith("@lid") ? (lidToPN.get(jid) ?? jid) : jid));
+    } catch {
+        return mentions;
+    }
+}
+
 export const message = async (
     Chisato: Client,
     message: WAMessage
@@ -54,7 +79,10 @@ export const message = async (
         m.expiration = m.message[m.type].expiration || 0;
         m.messageTimestamp = message.messageTimestamp;
         m.pushName = message.pushName;
-        m.mentions = m.message[m.type]?.contextInfo?.mentionedJid || [];
+        m.mentions = await normalizeMentions(
+            Chisato,
+            m.message[m.type]?.contextInfo?.mentionedJid || []
+        );
         const botJid = await getBotJid(Chisato);
         m.sender = m.isGroup
             ? await Chisato.decodeJid(m.key.participantAlt)

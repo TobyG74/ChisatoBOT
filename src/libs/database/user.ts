@@ -79,8 +79,10 @@ export class User {
                 const metadata = await Database.user.findUnique({
                     where: { userId },
                 });
-                if (metadata?.name !== pushName && pushName)
-                    await this.update(userId, { name: pushName });
+                // Fire-and-forget name update 
+                if (metadata?.name !== pushName && pushName) {
+                    this.update(userId, { name: pushName }).catch(() => {});
+                }
                 resolve(metadata);
             } catch (err) {
                 resolve(null);

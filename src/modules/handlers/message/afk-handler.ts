@@ -1,6 +1,7 @@
 import { MessageSerialize } from "../../../types/structure/serialize";
 import { logger } from "../../../core/logger/logger.service";
 import * as Libs from "../../../libs";
+import { MessageContextBuilder } from "./message-context.builder";
 
 export class AfkHandler {
     static async handle(
@@ -55,6 +56,8 @@ export class AfkHandler {
         await Database.User.update(context.sender, {
             afk: { status: false, reason: null, since: 0 },
         });
+        // Invalidate cache so the next message reads updated DB data (prevents re-triggering return)
+        MessageContextBuilder.invalidateUser(context.sender);
     }
 
     private static async handleAfkMentions(
@@ -63,16 +66,18 @@ export class AfkHandler {
         message: MessageSerialize,
         Database: any
     ): Promise<void> {
-        for (const mention of message.mentions) {
-            // Skip if the mention is the bot itself
-            if (mention === context.botNumber) continue;
+        const mentions = message.mentions.filter(m => m !== context.botNumber);
+        if (mentions.length === 0) return;
 
-            const afkUser = await Database.User.get(mention);
-            const afkData = afkUser?.afk;
+        // Fetch all mentioned users' data in parallel instead of serial loop
+        const afkUsers = await Promise.all(mentions.map(m => Database.User.get(m)));
+
+        for (let i = 0; i < mentions.length; i++) {
+            const mention = mentions[i];
+            const afkData = afkUsers[i]?.afk;
 
             if (afkData?.status) {
-                const since =
-                    afkData?.since && Libs.getRemaining(afkData.since);
+                const since = afkData?.since && Libs.getRemaining(afkData.since);
                 const reason = afkData?.reason || "No reason";
 
                 await Chisato.sendMessage(
