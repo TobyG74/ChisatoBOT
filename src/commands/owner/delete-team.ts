@@ -1,5 +1,5 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import fs from "fs";
+import { configService } from "../../core/config/config.service";
 
 export default {
     name: "delteam",
@@ -9,49 +9,42 @@ export default {
     description: "Delete User from Team",
     isOwner: true,
     async run({ Chisato, args, from, message }) {
-        const config: Config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
+        const config = configService.getConfig();
         if (message.quoted) {
-            if (config.teamNumber.includes(message.quoted.sender.split("@")[0])) {
-                config.teamNumber.splice(config.teamNumber.indexOf(message.quoted.sender.split("@")[0]), 1);
-                fs.writeFileSync("./config.json", JSON.stringify(config, null, 4));
-                Chisato.sendText(
-                    from,
-                    `Successfully delete @${message.quoted.sender.split("@")[0]} from team`,
-                    message,
-                    {
-                        mentions: [message.quoted.sender],
-                    }
-                );
+            const num = message.quoted.sender.split("@")[0];
+            if (config.teamNumber.includes(num)) {
+                configService.updateConfig({ teamNumber: config.teamNumber.filter(n => n !== num) });
+                Chisato.sendText(from, `Successfully delete @${num} from team`, message, {
+                    mentions: [message.quoted.sender],
+                });
             } else {
-                Chisato.sendText(from, `@${message.quoted.sender.split("@")[0]} is not in team`, message, {
+                Chisato.sendText(from, `@${num} is not in team`, message, {
                     mentions: [message.quoted.sender],
                 });
             }
-        } else if (message.mentions) {
+        } else if (message.mentions && message.mentions.length > 0) {
             let caption = `Successfully delete `;
-            for (let i in message.mentions) {
-                if (config.teamNumber.includes(message.mentions[i].split("@")[0])) {
-                    config.teamNumber.splice(config.teamNumber.indexOf(message.mentions[i].split("@")[0]), 1);
-                    fs.writeFileSync("./config.json", JSON.stringify(config, null, 4));
-                    caption += `@${message.mentions[i].split("@")[0]} `;
-                } else {
-                    caption += `@${message.mentions[i].split("@")[0]} `;
-                }
+            let updated = [...config.teamNumber];
+            for (const mention of message.mentions) {
+                const num = mention.split("@")[0];
+                updated = updated.filter(n => n !== num);
+                caption += `@${num} `;
             }
+            configService.updateConfig({ teamNumber: updated });
             caption += `from team`;
             await Chisato.sendText(from, caption, message, {
                 mentions: message.mentions,
             });
         } else if (args[0]) {
-            if (config.teamNumber.includes(args[0] + "@s.whatsapp.net")) {
-                config.teamNumber.splice(config.teamNumber.indexOf(args[0] + "@s.whatsapp.net"), 1);
-                fs.writeFileSync("./config.json", JSON.stringify(config, null, 4));
-                Chisato.sendText(from, `Successfully delete @${args[0]} from team`, message, {
-                    mentions: [args[0] + "@s.whatsapp.net"],
+            const num = args[0];
+            if (config.teamNumber.includes(num)) {
+                configService.updateConfig({ teamNumber: config.teamNumber.filter(n => n !== num) });
+                Chisato.sendText(from, `Successfully delete @${num} from team`, message, {
+                    mentions: [num + "@s.whatsapp.net"],
                 });
             } else {
-                Chisato.sendText(from, `@${args[0]} is not in team`, message, {
-                    mentions: [args[0] + "@s.whatsapp.net"],
+                Chisato.sendText(from, `@${num} is not in team`, message, {
+                    mentions: [num + "@s.whatsapp.net"],
                 });
             }
         } else {
