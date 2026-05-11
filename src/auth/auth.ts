@@ -78,26 +78,34 @@ export const useMultiAuthState = async (
                     return data;
                 },
                 set: async (data) => {
-                    const tasks: Promise<void>[] = [];
+                    // Signal session writes MUST be awaited — if the bot restarts
+                    // before they persist, the ratchet counter is lost → Bad MAC /
+                    // "Key used already" decryption failures.
+                    // Only 'sender-key-memory' is an optimization hint (controls
+                    // whether to re-send the sender-key distribution message) and
+                    // is safe to persist in the background.
+                    const criticalTasks: Promise<void>[] = [];
+                    const bgTasks: Promise<void>[] = [];
                     for (const category in data) {
                         for (const id in data[category]) {
                             const value: unknown = data[category][id];
                             const file = `${category}-${id}`;
                             const cacheKey = fixFileName(file);
-                            // Update in-memory cache immediately so the next
-                            // keys.get sees the value without waiting for DB.
                             if (value) {
                                 keyCache.set(cacheKey, value);
                             } else {
                                 keyCache.delete(cacheKey);
                             }
-                            tasks.push(
-                                value ? writeData(value, file) : removeData(file)
-                            );
+                            const task = value ? writeData(value, file) : removeData(file);
+                            if (category === "sender-key-memory") {
+                                bgTasks.push(task);
+                            } else {
+                                criticalTasks.push(task);
+                            }
                         }
                     }
-                    // Fire-and-forget: in-memory keyCache is already updated above
-                    Promise.allSettled(tasks).catch(() => {});
+                    if (criticalTasks.length) await Promise.allSettled(criticalTasks);
+                    if (bgTasks.length) Promise.allSettled(bgTasks).catch(() => {});
                 },
             },
         },
