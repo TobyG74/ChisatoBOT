@@ -1,6 +1,17 @@
 import "dotenv/config";
 import Pino from "pino";
 import util from "util";
+
+// Suppress verbose libsignal noise on stdout.
+const _origInfo = console.info.bind(console);
+console.info = (...args: unknown[]) => {
+    if (typeof args[0] === "string" && (
+        args[0].startsWith("Closing session") ||
+        args[0].startsWith("Decrypted message with closed session")
+    )) return;
+    _origInfo(...args);
+};
+
 import { Client } from "../libs/client/client";
 import { setClientInstance } from "../libs/client/instance";
 import * as serialize from "../libs/serialize";
