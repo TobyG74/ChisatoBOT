@@ -7,7 +7,9 @@ const _origInfo = console.info.bind(console);
 console.info = (...args: unknown[]) => {
     if (typeof args[0] === "string" && (
         args[0].startsWith("Closing session") ||
-        args[0].startsWith("Decrypted message with closed session")
+        args[0].startsWith("Decrypted message with closed session") ||
+        args[0].startsWith("Failed to decrypt message with closed session") ||
+        args[0].startsWith("Removing old closed session")
     )) return;
     _origInfo(...args);
 };
