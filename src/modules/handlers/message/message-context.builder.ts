@@ -11,7 +11,11 @@ interface TTLCache<T> {
 const BLOCKLIST_TTL  = 5  * 60 * 1000; // 5 minutes
 const USER_TTL       = 5  * 60 * 1000; // 5 minutes  
 const GROUP_META_TTL = 2  * 60 * 1000; // 2 minutes  
-const GROUP_DB_TTL   = 10 * 60 * 1000; // 10 minutes 
+const GROUP_DB_TTL   = 10 * 60 * 1000; // 10 minutes
+const SWEEP_INTERVAL = 5  * 60 * 1000; // sweep every 5 minutes
+
+const MAX_USER_CACHE  = 500;
+const MAX_GROUP_CACHE = 300;
 
 /**
  * MessageContextBuilder is responsible for constructing a comprehensive context object for each incoming message.
@@ -20,9 +24,28 @@ const GROUP_DB_TTL   = 10 * 60 * 1000; // 10 minutes
 export class MessageContextBuilder {
     private static blockListCache: TTLCache<string[]> | null = null;
     private static botNumberCache: string | null = null;
-    private static userCache    = new Map<string, TTLCache<any>>();
+    private static userCache      = new Map<string, TTLCache<any>>();
     private static groupMetaCache = new Map<string, TTLCache<any>>();
     private static groupDbCache   = new Map<string, TTLCache<any>>();
+
+    /** Sweep all caches, deleting expired entries. Called on a timer. */
+    static sweep(): void {
+        const now = Date.now();
+        for (const [k, v] of MessageContextBuilder.userCache)
+            if (now >= v.expiresAt) MessageContextBuilder.userCache.delete(k);
+        for (const [k, v] of MessageContextBuilder.groupMetaCache)
+            if (now >= v.expiresAt) MessageContextBuilder.groupMetaCache.delete(k);
+        for (const [k, v] of MessageContextBuilder.groupDbCache)
+            if (now >= v.expiresAt) MessageContextBuilder.groupDbCache.delete(k);
+    }
+
+    /** Evict oldest entry if the cache is over its size limit. */
+    private static prune<T>(cache: Map<string, TTLCache<T>>, max: number): void {
+        if (cache.size > max) {
+            const firstKey = cache.keys().next().value;
+            if (firstKey !== undefined) cache.delete(firstKey);
+        }
+    }
 
     static invalidateUser(sender: string): void {
         MessageContextBuilder.userCache.delete(sender);
@@ -43,6 +66,7 @@ export class MessageContextBuilder {
 
     /** Stores group metadata directly (used by client groups.upsert handler). */
     static setCachedGroupMeta(jid: string, meta: any): void {
+        MessageContextBuilder.prune(MessageContextBuilder.groupMetaCache, MAX_GROUP_CACHE);
         MessageContextBuilder.groupMetaCache.set(jid, {
             value: meta,
             expiresAt: Date.now() + GROUP_META_TTL,
@@ -74,6 +98,7 @@ export class MessageContextBuilder {
         const cached = MessageContextBuilder.userCache.get(sender);
         if (cached && now < cached.expiresAt) return cached.value;
         const data = (await User.get(sender)) ?? (await User.upsert(Chisato, sender, pushName));
+        MessageContextBuilder.prune(MessageContextBuilder.userCache, MAX_USER_CACHE);
         MessageContextBuilder.userCache.set(sender, { value: data, expiresAt: now + USER_TTL });
         return data;
     }
@@ -84,7 +109,10 @@ export class MessageContextBuilder {
         if (cached && now < cached.expiresAt) return cached.value;
         try {
             const meta = await Chisato.groupMetadata(from);
-            if (meta) MessageContextBuilder.groupMetaCache.set(from, { value: meta, expiresAt: now + GROUP_META_TTL });
+            if (meta) {
+                MessageContextBuilder.prune(MessageContextBuilder.groupMetaCache, MAX_GROUP_CACHE);
+                MessageContextBuilder.groupMetaCache.set(from, { value: meta, expiresAt: now + GROUP_META_TTL });
+            }
             return meta;
         } catch {
             return null;
@@ -97,7 +125,10 @@ export class MessageContextBuilder {
         if (cached && now < cached.expiresAt) return cached.value;
         const data = await Group.get(from);
         const result = data ?? (await Group.upsert(Chisato, from));
-        if (result) MessageContextBuilder.groupDbCache.set(from, { value: result, expiresAt: now + GROUP_DB_TTL });
+        if (result) {
+            MessageContextBuilder.prune(MessageContextBuilder.groupDbCache, MAX_GROUP_CACHE);
+            MessageContextBuilder.groupDbCache.set(from, { value: result, expiresAt: now + GROUP_DB_TTL });
+        }
         return result;
     }
 
@@ -241,3 +272,7 @@ export class MessageContextBuilder {
         }
     }
 }
+
+// Periodically evict expired entries so the Maps don't grow forever.
+// .unref() ensures this timer doesn't prevent the process from exiting cleanly.
+setInterval(() => MessageContextBuilder.sweep(), SWEEP_INTERVAL).unref();

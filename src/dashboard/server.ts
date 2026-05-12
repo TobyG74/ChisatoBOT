@@ -10,6 +10,8 @@ import { authRoutes } from "./routes/auth";
 import { configRoutes } from "./routes/config";
 import { authMiddleware } from "./middleware/auth.middleware";
 import { setDashboardLogHandler } from "../core/logger/logger.service";
+import { ipSecurityService } from "./services/ip-security.service";
+import { Database } from "../infrastructure/database";
 
 export class DashboardServer {
     private fastify: any;
@@ -67,6 +69,7 @@ export class DashboardServer {
 
     public async start() {
         try {
+            await ipSecurityService.init(Database);
             await this.fastify.listen({ port: this.port, host: this.host });
         } catch (err) {
             console.error("Failed to start dashboard server:", err);

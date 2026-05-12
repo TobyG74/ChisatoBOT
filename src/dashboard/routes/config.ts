@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { configService } from "../../core/config/config.service";
 import type { CommandOverride } from "../../core/config/config.service";
 import { verifyToken } from "./auth";
+import { ipSecurityService } from "../services/ip-security.service";
 import path from "path";
 import { pathToFileURL } from "url";
 import fs from "fs";
@@ -254,12 +255,7 @@ export async function configRoutes(fastify: FastifyInstance) {
     fastify.get("/ip", async (request, reply) => {
         if (!requireOwner(request, reply)) return;
         try {
-            const config = configService.getConfig();
-            return reply.send({
-                success: true,
-                ipWhitelist: config.dashboard?.ipWhitelist ?? [],
-                ipBlacklist: config.dashboard?.ipBlacklist ?? [],
-            });
+            return reply.send({ success: true, ...ipSecurityService.getLists() });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }
@@ -271,15 +267,8 @@ export async function configRoutes(fastify: FastifyInstance) {
         try {
             const { ip } = request.body;
             if (!ip?.trim()) return reply.status(400).send({ success: false, message: "IP required" });
-            const config = configService.getConfig();
-            const dashboard = config.dashboard ?? { ipWhitelist: [], ipBlacklist: [] };
-            if (!dashboard.ipWhitelist.includes(ip.trim())) {
-                dashboard.ipWhitelist.push(ip.trim());
-                // Remove from blacklist if present
-                dashboard.ipBlacklist = dashboard.ipBlacklist.filter(b => b !== ip.trim());
-                configService.updateConfig({ dashboard });
-            }
-            return reply.send({ success: true, ipWhitelist: dashboard.ipWhitelist, ipBlacklist: dashboard.ipBlacklist });
+            await ipSecurityService.addToWhitelist(ip.trim());
+            return reply.send({ success: true, ...ipSecurityService.getLists() });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }
@@ -290,11 +279,8 @@ export async function configRoutes(fastify: FastifyInstance) {
         if (!requireOwner(request, reply)) return;
         try {
             const ip = decodeURIComponent(request.params.ip);
-            const config = configService.getConfig();
-            const dashboard = config.dashboard ?? { ipWhitelist: [], ipBlacklist: [] };
-            dashboard.ipWhitelist = dashboard.ipWhitelist.filter(w => w !== ip);
-            configService.updateConfig({ dashboard });
-            return reply.send({ success: true, ipWhitelist: dashboard.ipWhitelist, ipBlacklist: dashboard.ipBlacklist });
+            await ipSecurityService.removeFromWhitelist(ip);
+            return reply.send({ success: true, ...ipSecurityService.getLists() });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }
@@ -306,15 +292,8 @@ export async function configRoutes(fastify: FastifyInstance) {
         try {
             const { ip } = request.body;
             if (!ip?.trim()) return reply.status(400).send({ success: false, message: "IP required" });
-            const config = configService.getConfig();
-            const dashboard = config.dashboard ?? { ipWhitelist: [], ipBlacklist: [] };
-            if (!dashboard.ipBlacklist.includes(ip.trim())) {
-                dashboard.ipBlacklist.push(ip.trim());
-                // Remove from whitelist if present
-                dashboard.ipWhitelist = dashboard.ipWhitelist.filter(w => w !== ip.trim());
-                configService.updateConfig({ dashboard });
-            }
-            return reply.send({ success: true, ipWhitelist: dashboard.ipWhitelist, ipBlacklist: dashboard.ipBlacklist });
+            await ipSecurityService.addToBlacklist(ip.trim());
+            return reply.send({ success: true, ...ipSecurityService.getLists() });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }
@@ -325,11 +304,8 @@ export async function configRoutes(fastify: FastifyInstance) {
         if (!requireOwner(request, reply)) return;
         try {
             const ip = decodeURIComponent(request.params.ip);
-            const config = configService.getConfig();
-            const dashboard = config.dashboard ?? { ipWhitelist: [], ipBlacklist: [] };
-            dashboard.ipBlacklist = dashboard.ipBlacklist.filter(b => b !== ip);
-            configService.updateConfig({ dashboard });
-            return reply.send({ success: true, ipWhitelist: dashboard.ipWhitelist, ipBlacklist: dashboard.ipBlacklist });
+            await ipSecurityService.removeFromBlacklist(ip);
+            return reply.send({ success: true, ...ipSecurityService.getLists() });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }

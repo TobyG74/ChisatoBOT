@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { getClientInstance } from "../../libs/client/instance";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 import { configService } from "../../core/config/config.service";
+import { ipSecurityService } from "../services/ip-security.service";
 
 const JWT_SECRET = process.env.JWT_SECRET || "chisato-dashboard-secret-key";
 const JWT_EXPIRES_IN = "7d";
@@ -219,28 +220,12 @@ function getAccessRole(phoneNumber: string): AccessRole | null {
     return null;
 }
 
-function readIpLists(): { whitelist: string[]; blacklist: string[] } {
-    try {
-        const raw = fs.readFileSync("./config.json", "utf-8");
-        const parsed = JSON.parse(raw);
-        const dashboard = parsed?.dashboard || {};
-        return {
-            whitelist: Array.isArray(dashboard.ipWhitelist) ? dashboard.ipWhitelist : [],
-            blacklist: Array.isArray(dashboard.ipBlacklist) ? dashboard.ipBlacklist : [],
-        };
-    } catch {
-        return { whitelist: [], blacklist: [] };
-    }
-}
-
 export function isIpBlocked(ip: string): boolean {
-    const { blacklist } = readIpLists();
-    return blacklist.includes(ip);
+    return ipSecurityService.isBlocked(ip);
 }
 
 export function isIpWhitelisted(ip: string): boolean {
-    const { whitelist } = readIpLists();
-    return whitelist.includes(ip);
+    return ipSecurityService.isWhitelisted(ip);
 }
 
 function buildLoginButtons(role: AccessRole): LoginActionButton[] {
@@ -521,7 +506,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             );
 
             // IP whitelist — skip approval flow, activate session immediately
-            if (isIpWhitelisted(requesterIp)) {
+            if (ipSecurityService.isWhitelisted(requesterIp)) {
                 setSessionActivity(sessionId);
                 // Clear any previous rate limit record for this IP
                 ipRateLimits.delete(requesterIp);

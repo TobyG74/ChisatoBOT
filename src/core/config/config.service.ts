@@ -92,7 +92,6 @@ class ConfigService {
     }
 
     public getConfig(): BotConfig {
-        this.loadConfig();
         return this.config;
     }
 

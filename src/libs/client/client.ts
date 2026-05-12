@@ -569,6 +569,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 let cmd = (await import(fileUrl)).default;
                 commands.set(cmd.name, cmd);
                 for (const alias of cmd.alias) aliasIndex.set(alias.toLowerCase(), cmd);
+                if (process.env.NODE_ENV !== "production") {
                 fs.watchFile(filePath, async () => {
                     this.logger.info(`Hot-reload: ${file} updated, reloading...`);
                     // Remove old aliases before reloading
@@ -578,6 +579,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                     commands.set(cmd.name, cmd);
                     for (const alias of cmd.alias) aliasIndex.set(alias.toLowerCase(), cmd);
                 });
+                }
             });
         });
     }
@@ -676,7 +678,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 type: type || "default",
                 pack: options.pack,
                 author: options.author,
-                quality: 80,
+                quality: 50,
                 isVideo
             });
 
