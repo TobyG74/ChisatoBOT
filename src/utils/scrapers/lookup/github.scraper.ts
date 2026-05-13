@@ -1,19 +1,7 @@
 import axios from "axios";
+import type { GithubUser } from "../../../types/lookup/github";
 
-export interface GithubUser {
-    login: string;
-    name: string | null;
-    avatar_url: string;
-    html_url: string;
-    bio: string | null;
-    location: string | null;
-    company: string | null;
-    blog: string | null;
-    public_repos: number;
-    followers: number;
-    following: number;
-    created_at: string;
-}
+export type { GithubUser };
 
 const cache = new Map<string, { data: GithubUser; expiresAt: number }>();
 const CACHE_TTL = 10 * 60 * 1000;

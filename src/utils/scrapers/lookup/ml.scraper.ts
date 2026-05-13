@@ -1,23 +1,12 @@
 import Axios from "axios";
 import * as cheerio from "cheerio";
+import type { MLPlayerResponse } from "../../../types/lookup/ml";
+
+export type { MLPlayerResult, MLPlayerError, MLPlayerResponse } from "../../../types/lookup/ml";
 
 const BASE_URL = "https://gempaytopup.com/stalk-ml";
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
-
-export interface MLPlayerResult {
-    success: true;
-    username: string;
-    region: string;
-    countryCode: string;
-}
-
-export interface MLPlayerError {
-    success: false;
-    message: string;
-}
-
-export type MLPlayerResponse = MLPlayerResult | MLPlayerError;
 
 export async function checkMLPlayer(
     userID: string,

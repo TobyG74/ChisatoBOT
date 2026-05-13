@@ -104,7 +104,7 @@ class IpSecurityService {
         await this.persist();
     }
 
-    // ── Internal ─────────────────────────────────────────────────────────────
+    // Internal
 
     private async persist(): Promise<void> {
         if (!this.prisma) return;
