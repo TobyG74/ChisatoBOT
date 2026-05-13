@@ -285,6 +285,16 @@ type ConfigCommands = {
 |---|---|
 | `mlcheck` | Check Mobile Legends Account |
 | `githubprofile` | Get GitHub profile info |
+| `tiktokstalk` | Get TikTok user profile |
+| `genshincheck` | Get Genshin Impact character info |
+| `genshincharacters` | Get Genshin Impact character info card |
+| `genshinweapons` | Get Genshin Impact weapon info card |
+| `hsrcheck` | Get Honkai: Star Rail character info |
+| `hsrcharacters` | Get Honkai: Star Rail character info card |
+| `hsrweapons` | Get Honkai: Star Rail Light Cones |
+| `zzzcheck` | Get Zenless Zone Zero agent info |
+| `zzzagents` | Get Zenless Zone Zero agents |
+| `zzzweapons` | Get Zenless Zone Zero W-Engines |
 
 ### 🎌 Anime
 | Command | Description |
