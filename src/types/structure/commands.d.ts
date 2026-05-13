@@ -13,6 +13,7 @@ declare type ConfigCommands = {
     cooldown?: number; // in seconds
     limit?: number;
     example?: string;
+    interactiveSelection?: boolean; // skip cooldown when query contains '|' (list-selection response)
     isOwner?: boolean;
     isTeam?: boolean;
     isPrivate?: boolean;
