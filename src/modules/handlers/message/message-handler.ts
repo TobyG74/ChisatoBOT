@@ -308,6 +308,11 @@ export class MessageHandler {
             return false;
         }
 
+        // List-selection responses (query contains '|') bypass cooldown
+        if (command.interactiveSelection && context.query?.includes("|")) {
+            return false;
+        }
+
         if (cooldowns.has(context.sender + command.name)) {
             const remaining =
                 (Date.now() - cooldowns.get(context.sender + command.name)!) /

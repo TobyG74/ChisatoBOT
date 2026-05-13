@@ -33,7 +33,7 @@ export default {
     alias: ["allmenu", "commands", "command", "cmd"],
     category: "general",
     description: "See All Menu List",
-    async run({ Chisato, from, message, prefix, botName, Database }) {
+    async run({ Chisato, from, message, prefix, botName, Database, isOwner, isTeam }) {
         const config = JSON.parse(fs.readFileSync("./config.json", "utf-8"));
         const tz: string = config.timezone || config.timeZone || "Asia/Jakarta";
         const { pushName } = message;
@@ -80,8 +80,11 @@ export default {
         text += `  ⭐ Owner  💎 Team  👑 Admin  ✅ Public\n`;
         text += `  〰️ = under maintenance\n\n`;
 
+        const canSeeDebugging = isOwner || isTeam;
+
         // Categories
         for (const key of catKeys) {
+            if (key === "debugging" && !canSeeDebugging) continue;
             const icon   = CATEGORY_ICON[key] ?? "📂";
             const sorted = category[key].sort((a, b) => a.name.localeCompare(b.name));
 
