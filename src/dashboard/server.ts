@@ -50,6 +50,15 @@ export class DashboardServer {
         await this.fastify.register(fastifyStatic, {
             root: path.join(process.cwd(), "public"),
             prefix: "/",
+            setHeaders(res: any, filePath: string) {
+                if (filePath.endsWith(".html")) {
+                    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                    res.setHeader("Pragma", "no-cache");
+                    res.setHeader("Expires", "0");
+                } else {
+                    res.setHeader("Cache-Control", "no-cache");
+                }
+            },
         });
     }
 
