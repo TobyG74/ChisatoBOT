@@ -521,6 +521,16 @@ export async function authRoutes(fastify: FastifyInstance) {
                 });
             }
 
+            // Approval requires an owner to respond — if none are configured, reject early
+            const approvalConfig = readPhoneAccessConfig();
+            if (!approvalConfig.ownerNumber.length) {
+                return reply.status(503).send({
+                    success: false,
+                    configNotReady: true,
+                    message: "Login approval cannot be sent because no owner number has been configured. Please set the owner number first.",
+                });
+            }
+
             const pending = createPendingLoginRequest(
                 normalizedPhone,
                 role,
