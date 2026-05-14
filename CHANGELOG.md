@@ -2,6 +2,17 @@
 
 All notable changes to ChisatoBOT are documented in this file.
 
+## 2026-05-14
+
+- feat: Allow team role to view Commands and Settings pages (read-only)
+- feat: Hide Phone Numbers section and save/reset buttons from team users
+- feat: Disable maintenance toggle and command edit button for team in Commands table
+- feat: Add /api/changelog public endpoint that parses CHANGELOG.md
+- feat: Add changelog popup modal with "What's New" button on login page
+- feat: Display parsed changelog in dashboard Overview section
+- fix: Reject login approval request if no owner number is configured
+- fix: Allow /api/changelog without authentication (public path)
+
 ## 2026-05-13
 
 - feat: Add Genshin Impact, Honkai: Star Rail, and Zenless Zone Zero lookup commands (character card with canvas, artifacts/relics, skills, profile picture)
