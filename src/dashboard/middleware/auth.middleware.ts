@@ -20,7 +20,8 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
         "/api/auth/login", 
         "/api/auth/approval-status",
         "/api/auth/logout",
-        "/api/health"
+        "/api/health",
+        "/api/changelog"
     ];
     
     const staticPaths = ["/js/", "/css/", "/images/", "/favicon.ico"];
