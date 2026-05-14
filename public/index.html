@@ -170,6 +170,15 @@
             }
             .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
             @keyframes spin{to{transform:rotate(360deg)}}
+            /* Changelog */
+            .cl-date-label{font-size:.7rem;font-weight:700;color:#6366f1;letter-spacing:.05em;margin-bottom:.5rem}
+            .cl-entries-grid{display:flex;flex-direction:column;gap:.35rem}
+            .cl-entry{display:flex;align-items:flex-start;gap:.5rem;font-size:.8125rem;color:#94a3b8;line-height:1.4}
+            .cl-badge{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;margin-top:2px}
+            .cl-feat{background:rgba(16,185,129,.15);color:#34d399}.cl-fix{background:rgba(245,158,11,.15);color:#fbbf24}
+            .cl-refactor{background:rgba(99,102,241,.15);color:#818cf8}.cl-perf{background:rgba(6,182,212,.15);color:#38bdf8}
+            .cl-docs{background:rgba(148,163,184,.12);color:#94a3b8}.cl-note{background:rgba(148,163,184,.12);color:#94a3b8}
+            .cl-default{background:rgba(148,163,184,.12);color:#94a3b8}
 </style>
     </head>
     <script>
@@ -221,7 +230,7 @@
                 <a href="#" class="nav-link" data-view="logs">
                     <i class="fas fa-file-alt w-[18px] flex-shrink-0 text-center text-sm"></i><span>Logs</span>
                 </a>
-                <div class="sidebar-section-label text-[0.6rem] font-bold text-[#4a5678] uppercase tracking-[0.1em] px-3 pt-4 pb-1">Owner</div>
+                <div class="sidebar-section-label text-[0.6rem] font-bold text-[#4a5678] uppercase tracking-[0.1em] px-3 pt-4 pb-1">Management</div>
                 <a href="#" class="nav-link" data-view="commands" id="nav-commands">
                     <i class="fas fa-terminal w-[18px] flex-shrink-0 text-center text-sm"></i><span>Commands</span>
                 </a>
@@ -357,6 +366,14 @@
                             <div class="sysinfo-row"><span class="sysinfo-key">Memory Usage</span><span class="sysinfo-val" id="memory-usage">—</span></div>
                         </div>
                     </div>
+
+                    <!-- Changelog -->
+                    <div class="section-card" id="changelog-section" style="display:none">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+                            <h3 class="section-title" style="margin:0"><i class="fas fa-scroll" style="margin-right:0.4rem;font-size:0.85rem;color:#818cf8"></i>Changelog</h3>
+                        </div>
+                        <div id="changelog-dashboard-entries" style="display:flex;flex-direction:column;gap:1.25rem"></div>
+                    </div>
                 </div>
 
                 <!-- Groups View -->
@@ -479,7 +496,7 @@
                     <div id="commands-owner-only" class="hidden">
                         <div class="section-card" style="text-align:center;padding:3rem;">
                             <i class="fas fa-lock" style="font-size:2rem;color:var(--text-subtle);margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted);font-size:0.9rem;">This feature is only accessible by <strong>Owner</strong>.</p>
+                            <p style="color:var(--text-muted);font-size:0.9rem;">This feature is only accessible by <strong>Owner</strong> or <strong>Team</strong>.</p>
                         </div>
                     </div>
                     <div id="commands-content">
@@ -532,7 +549,7 @@
                     <div id="settings-owner-only" class="hidden">
                         <div class="section-card" style="text-align:center;padding:3rem;">
                             <i class="fas fa-lock" style="font-size:2rem;color:var(--text-subtle);margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted);font-size:0.9rem;">This feature is only accessible by the <strong>Owner</strong>.</p>
+                            <p style="color:var(--text-muted);font-size:0.9rem;">This feature is only accessible by <strong>Owner</strong> or <strong>Team</strong>.</p>
                         </div>
                     </div>
                     <div id="settings-content">
@@ -578,7 +595,7 @@
                             </div>
                         </div>
                         <!-- Phone Numbers (Owner only) -->
-                        <div class="section-card" style="margin-bottom:1rem;">
+                        <div class="section-card" id="phone-numbers-section" style="margin-bottom:1rem;">
                             <h3 class="section-title">Phone Numbers</h3>
                             <!-- Owner Numbers -->
                             <div style="margin-bottom:1.25rem;">
