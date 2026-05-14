@@ -1,0 +1,122 @@
+# Changelog
+
+All notable changes to ChisatoBOT are documented in this file.
+
+## 2026-05-13
+
+- feat: Add Genshin Impact, Honkai: Star Rail, and Zenless Zone Zero lookup commands (character card with canvas, artifacts/relics, skills, profile picture)
+- feat: Add character list and weapon list commands for HSR & ZZZ
+- feat: Enhance menu command to include owner and team visibility for debugging category
+- refactor: Move GithubUser and MLPlayer types to separate type files
+
+## 2026-05-12
+
+- feat: Implement IP security service with whitelist/blacklist management
+
+## 2026-05-11
+
+- refactor: Replace file system config access with configService in Client and User classes
+- refactor: Replace file system operations with configService for team management
+- feat: Send greeting message upon joining a group
+- feat: Enhance bot stats display with user and group counts
+- refactor: Suppress verbose libsignal noise in console output
+- refactor: Streamline task handling in useMultiAuthState for improved performance
+- feat: Implement caching for group settings and metadata to reduce database hits
+- feat: Enhance participant update handling with logging and profile picture resolution
+- feat: Implement real-time participant updates and improve group handling logic
+
+## 2026-05-10
+
+- feat: Add GitHub profile lookup command and scraper
+- feat: Update game commands and messages to English
+- feat: Implement Pexels image search command and scraper
+- feat: Add Bing and DuckDuckGo image search commands with caching support
+- feat: Implement caching and retry logic for anime and manga ranking fetch
+- feat: Add AFK checks to ignore bot messages and mentions
+- feat: Implement in-memory cache for session data to optimize DB reads
+- feat: Add Werewolf game with internationalization support
+- docs: Update README with new game features and command details
+
+## 2026-05-09
+
+- feat: Update project structure for ES module support and improve import handling
+- feat: Add loading spinner to refresh buttons and improve error handling
+- feat: Add phone number management and group joining functionality
+
+## 2026-05-08
+
+- feat: Add Mobile Legends player checker command and scraper
+- feat: Add dashboard IP whitelist and blacklist with new device login notification
+- feat: Add IP security page to dashboard
+- fix: Handle missing message type in serialization
+- fix: Update threads downloader
+- fix: Correct regex patterns for helper and maintenance flags
+- perf: Cache blocklist, botJid, user and group metadata to reduce per-message latency
+
+## 2026-05-07
+
+- feat: Anti-bot detection (on-join + message type), anonymous chat, menu redesign
+
+## 2026-05-05
+
+- feat: Add Threads media downloader command
+- feat: Add config readiness check for login functionality
+- feat: Update dashboard and terminal images; add login image
+
+## 2026-05-04
+
+- refactor: Update existing commands across all categories
+- feat: Add stickerwm, dashboard-approve, and dashboard-reject commands
+- feat: Update pairing and connection flow
+- feat: Add dashboard config route, login page UI
+- feat: Realtime SSE monitor, groups settings icons, bot admin badge
+- feat: Add OS memory metrics and SSE real-time stream endpoint
+- fix: Prevent WASocket from overriding LoggerService
+
+## 2025-12-05
+
+- feat: Add emoji support and video sticker validation
+- feat: Merge level and stats into me command
+- feat: Integrate XP tracking on command execution
+- feat: Implement complete user leveling system
+- feat: Add user leveling and statistics system
+- refactor: Rename stats command to avoid conflict
+
+## 2025-12-02
+
+- feat: Add owner group list and invite link commands
+- feat: Add TikTok user stalker/lookup command
+- feat: Add custom welcome and leave message commands
+- feat: Add emoji support and WhatsApp bubble chat sticker
+- feat: Implement custom welcome/leave messages with variable support
+- feat: Add reply-text-to-sticker and emoji-mix commands
+- fix: Update phone number parsing to use awesome-phonenumber v7 API
+
+## 2025-12-01
+
+- feat: Add centralized template variable system for command examples
+- feat: Add automated installation scripts for Windows and Linux
+- feat: Add welcome/leave image greeting with profile picture and group info
+- feat: Add session timeout management for dashboard
+- feat: Add support for interactive response message parsing
+- refactor: Reorganize text converter utilities
+- refactor: Update all command categories to use template system
+
+## 2025-11-28
+
+- refactor: Project restructure
+
+## 2024-04-17
+
+- fix: TikTok downloader
+
+## 2024-02-07
+
+- fix: Forbidden when get groupMetadata
+- fix: Catch error not logging
+
+## 2024-01-22
+
+- feat: ChisatoBOT v1.0.0 — Initial release
+- docs: Update community link
+- deps: Add TypeScript dependency
