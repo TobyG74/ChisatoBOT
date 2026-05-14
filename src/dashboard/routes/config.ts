@@ -21,6 +21,20 @@ function requireOwner(request: FastifyRequest, reply: FastifyReply): boolean {
     return true;
 }
 
+function requireOwnerOrTeam(request: FastifyRequest, reply: FastifyReply): boolean {
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+        reply.status(401).send({ success: false, message: "Unauthorized" });
+        return false;
+    }
+    const decoded = verifyToken(authHeader.substring(7)) as any;
+    if (!decoded || (decoded.role !== "owner" && decoded.role !== "team")) {
+        reply.status(403).send({ success: false, message: "Owner or team only" });
+        return false;
+    }
+    return true;
+}
+
 function getCommandList(): string[] {
     const commandsDir = path.join(process.cwd(), "src", "commands");
     const commands: string[] = [];
@@ -50,9 +64,9 @@ function getCommandList(): string[] {
 
 export async function configRoutes(fastify: FastifyInstance) {
 
-    // GET /api/config — return full config (owner only)
+    // GET /api/config — return full config (owner or team)
     fastify.get("/", async (request, reply) => {
-        if (!requireOwner(request, reply)) return;
+        if (!requireOwnerOrTeam(request, reply)) return;
         try {
             const config = configService.getConfig();
             return reply.send({ success: true, config });
@@ -102,9 +116,9 @@ export async function configRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // GET /api/config/maintenance — list maintenance commands
+    // GET /api/config/maintenance — list maintenance commands (owner or team)
     fastify.get("/maintenance", async (request, reply) => {
-        if (!requireOwner(request, reply)) return;
+        if (!requireOwnerOrTeam(request, reply)) return;
         try {
             const config = configService.getConfig();
             const allCommands = getCommandList();
@@ -157,9 +171,9 @@ export async function configRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // GET /api/config/commands — list all commands with their overrides
+    // GET /api/config/commands — list all commands with their overrides (owner or team)
     fastify.get("/commands", async (request, reply) => {
-        if (!requireOwner(request, reply)) return;
+        if (!requireOwnerOrTeam(request, reply)) return;
         try {
             const overrides = configService.getAllCommandOverrides();
             // Load commands from dist (same as CommandLoader does)
