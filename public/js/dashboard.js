@@ -337,10 +337,42 @@ async function loadOverview() {
         // Update charts
         updateUserChart(growth.users?.byRole ?? {});
         updateGroupSettingsChart(growth.groups?.settingsEnabled ?? {});
+
+        // Changelog (fire-and-forget, only loads once)
+        if (!document.getElementById('changelog-section').dataset.loaded) {
+            loadChangelog();
+        }
     } catch (error) {
         if (error.message === "Unauthorized") return;
         console.error("loadOverview failed:", error);
     }
+}
+
+const CHANGELOG_BADGE = { feat:'cl-feat', fix:'cl-fix', refactor:'cl-refactor', perf:'cl-perf', docs:'cl-docs', note:'cl-note' };
+
+async function loadChangelog() {
+    try {
+        const res = await fetch(`${API_BASE}/changelog`);
+        const data = await res.json();
+        if (!data.success || !data.changelog?.length) return;
+        const section = document.getElementById('changelog-section');
+        const container = document.getElementById('changelog-dashboard-entries');
+        container.innerHTML = data.changelog.map(s => `
+            <div>
+                <div class="cl-date-label">${s.date}</div>
+                <div class="cl-entries-grid">
+                    ${s.entries.map(e => `
+                        <div class="cl-entry">
+                            <span class="cl-badge ${CHANGELOG_BADGE[e.type] || 'cl-default'}">${e.type}</span>
+                            <span>${e.message}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+        section.dataset.loaded = '1';
+        section.style.display = '';
+    } catch { /* silent */ }
 }
 
 function updateTaskManager(system, stats) {
@@ -922,25 +954,60 @@ function updatePagination(type, pagination) {
     const container = document.getElementById(`${type}-pagination`);
     container.innerHTML = "";
 
-    if (pagination.totalPages <= 1) return;
+    const { page: current, totalPages } = pagination;
+    if (totalPages <= 1) return;
 
-    for (let i = 1; i <= pagination.totalPages; i++) {
+    function makeBtn(label, page, isActive, isDisabled) {
         const btn = document.createElement("button");
-        btn.textContent = i;
-        btn.className = `glow-button`;
-        if (i === pagination.page) {
+        btn.textContent = label;
+        btn.className = "glow-button";
+        if (isActive) {
             btn.style.cssText = "background:#6366f1;color:#fff;font-weight:600";
+        } else if (isDisabled) {
+            btn.style.cssText = "background:rgba(148,163,184,0.05);color:#475569;border:1px solid rgba(148,163,184,0.1);cursor:default;pointer-events:none";
         } else {
             btn.style.cssText = "background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)";
         }
-        btn.addEventListener("click", () => {
-            currentPage[type] = i;
-            if (type === "groups") loadGroups(i);
-            else if (type === "users") loadUsers(i);
-            else if (type === "logs") loadLogs(i);
-        });
-        container.appendChild(btn);
+        if (!isDisabled) {
+            btn.addEventListener("click", () => {
+                currentPage[type] = page;
+                if (type === "groups") loadGroups(page);
+                else if (type === "users") loadUsers(page);
+                else if (type === "logs") loadLogs(page);
+            });
+        }
+        return btn;
     }
+
+    function makeEllipsis() {
+        const span = document.createElement("span");
+        span.textContent = "…";
+        span.style.cssText = "color:#475569;padding:0 4px;align-self:center";
+        return span;
+    }
+
+    // Prev button
+    container.appendChild(makeBtn("‹", current - 1, false, current === 1));
+
+    // Build page range: always show first, last, current±2
+    const delta = 2;
+    const pages = new Set();
+    pages.add(1);
+    pages.add(totalPages);
+    for (let i = Math.max(2, current - delta); i <= Math.min(totalPages - 1, current + delta); i++) {
+        pages.add(i);
+    }
+    const sorted = [...pages].sort((a, b) => a - b);
+
+    let prev = 0;
+    for (const p of sorted) {
+        if (p - prev > 1) container.appendChild(makeEllipsis());
+        container.appendChild(makeBtn(p, p, p === current, false));
+        prev = p;
+    }
+
+    // Next button
+    container.appendChild(makeBtn("›", current + 1, false, current === totalPages));
 }
 
 // Helper functions
@@ -1283,30 +1350,37 @@ const SETTING_META = [
 async function loadSettings() {
     const profile = JSON.parse(localStorage.getItem('adminProfile') || '{}');
     const isOwner = profile.role === 'owner';
-    document.getElementById('settings-owner-only')?.classList.toggle('hidden', isOwner);
-    document.getElementById('settings-content')?.classList.toggle('hidden', !isOwner);
-    if (!isOwner) return;
+    const hasAccess = isOwner || profile.role === 'team';
+    document.getElementById('settings-owner-only')?.classList.toggle('hidden', hasAccess);
+    document.getElementById('settings-content')?.classList.toggle('hidden', !hasAccess);
+    // Phone numbers and save/reset buttons: owner only
+    document.getElementById('phone-numbers-section')?.classList.toggle('hidden', !isOwner);
+    document.getElementById('settings-save')?.classList.toggle('hidden', !isOwner);
+    document.getElementById('settings-reset')?.classList.toggle('hidden', !isOwner);
+    if (!hasAccess) return;
     try {
         const data = await authFetch(`${API_BASE}/config`).then(r => r.json());
         if (!data.success) return showToast('Failed to load config', 'error');
         _cachedConfig = data.config;
-        renderSettingsToggles(data.config.settings);
+        renderSettingsToggles(data.config.settings, isOwner);
         document.getElementById('cfg-prefix').value = data.config.prefix || '.';
         document.getElementById('cfg-timezone').value = data.config.timeZone || '';
         document.getElementById('cfg-limit').value = data.config.limit?.command || 30;
         document.getElementById('cfg-call').value = data.config.call?.status || 'reject';
         document.getElementById('cfg-sticker-pack').value = data.config.stickers?.packname || '';
         document.getElementById('cfg-sticker-author').value = data.config.stickers?.author || '';
-        // Load phone numbers
-        const numRes = await authFetch(`${API_BASE}/config/numbers`).then(r => r.json());
-        if (numRes.success) {
-            renderNumberList('owner', numRes.ownerNumber || []);
-            renderNumberList('team', numRes.teamNumber || []);
+        // Load phone numbers (owner only)
+        if (isOwner) {
+            const numRes = await authFetch(`${API_BASE}/config/numbers`).then(r => r.json());
+            if (numRes.success) {
+                renderNumberList('owner', numRes.ownerNumber || []);
+                renderNumberList('team', numRes.teamNumber || []);
+            }
         }
     } catch { showToast('Failed to load settings', 'error'); }
 }
 
-function renderSettingsToggles(settings) {
+function renderSettingsToggles(settings, isOwner = true) {
     const wrap = document.getElementById('settings-toggles');
     if (!wrap) return;
     wrap.innerHTML = '';
@@ -1319,11 +1393,12 @@ function renderSettingsToggles(settings) {
                 <div class="setting-desc">${desc}</div>
             </div>
             <label class="toggle-switch">
-                <input type="checkbox" data-key="${key}" ${settings[key] ? 'checked' : ''} />
+                <input type="checkbox" data-key="${key}" ${settings[key] ? 'checked' : ''} ${!isOwner ? 'disabled' : ''} />
                 <span class="toggle-slider"></span>
             </label>`;
         wrap.appendChild(row);
     });
+    if (!isOwner) return; // team: read-only, no change listeners
     wrap.querySelectorAll('input[type=checkbox]').forEach(chk => {
         chk.addEventListener('change', async () => {
             try {
@@ -1400,14 +1475,17 @@ async function toggleMaintenance(name) {
 
 let _allCommands = [];
 let _commandsPage = 1;
+let _commandsIsOwner = false;
 const CMDS_PER_PAGE = 20;
 
 async function loadCommands() {
     const profile = JSON.parse(localStorage.getItem('adminProfile') || '{}');
     const isOwner = profile.role === 'owner';
-    document.getElementById('commands-owner-only')?.classList.toggle('hidden', isOwner);
-    document.getElementById('commands-content')?.classList.toggle('hidden', !isOwner);
-    if (!isOwner) return;
+    const hasAccess = isOwner || profile.role === 'team';
+    _commandsIsOwner = isOwner;
+    document.getElementById('commands-owner-only')?.classList.toggle('hidden', hasAccess);
+    document.getElementById('commands-content')?.classList.toggle('hidden', !hasAccess);
+    if (!hasAccess) return;
 
     document.getElementById('commands-table').innerHTML = `<tr><td colspan="12" class="table-empty">Loading...</td></tr>`;
     try {
@@ -1469,10 +1547,18 @@ function renderCommandsTable() {
             const ov = cmd.override || {};
             const hasOverride = !!cmd.override && Object.keys(cmd.override).length > 0;
             const inMaint = _maintenance.includes(cmd.name);
-            const maintBtn = `<label class="toggle-switch toggle-green" title="${inMaint ? 'Disable maintenance' : 'Enable maintenance'}" onclick="event.preventDefault();toggleMaintenance('${cmd.name}')">
+            const maintBtn = _commandsIsOwner
+                ? `<label class="toggle-switch toggle-green" title="${inMaint ? 'Disable maintenance' : 'Enable maintenance'}" onclick="event.preventDefault();toggleMaintenance('${cmd.name}')">
                 <input type="checkbox" ${inMaint ? 'checked' : ''} readonly />
                 <span class="toggle-slider"></span>
+            </label>`
+                : `<label class="toggle-switch toggle-green" style="opacity:0.5;pointer-events:none">
+                <input type="checkbox" ${inMaint ? 'checked' : ''} disabled />
+                <span class="toggle-slider"></span>
             </label>`;
+            const actionsBtn = _commandsIsOwner
+                ? `<button onclick="openCommandModal('${cmd.name}')" class="btn btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.8rem;"><i class="fas fa-pen"></i></button>`
+                : `<span style="color:var(--text-subtle);font-size:0.75rem;">—</span>`;
             return `<tr>
                 <td class="cmd-name"><strong style="color:var(--text)">${cmd.name}</strong>
                     ${cmd.alias?.length ? `<br><span style="font-size:0.7rem;color:var(--text-subtle)">${cmd.alias.join(', ')}</span>` : ''}
@@ -1487,7 +1573,7 @@ function renderCommandsTable() {
                 <td class="hide-sm">${numBadge(ov.limit !== undefined ? ov.limit : null, cmd.limit)}</td>
                 <td class="cmd-override">${hasOverride ? '<span style="font-size:0.75rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;padding:2px 8px;border-radius:6px;">Modified</span>' : '<span style="color:var(--text-subtle);font-size:0.75rem;">Default</span>'}</td>
                 <td class="cmd-maint" style="text-align:center">${maintBtn}</td>
-                <td class="cmd-actions"><button onclick="openCommandModal('${cmd.name}')" class="btn btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.8rem;"><i class="fas fa-pen"></i></button></td>
+                <td class="cmd-actions">${actionsBtn}</td>
             </tr>`;
         }).join('');
     }
@@ -1495,11 +1581,26 @@ function renderCommandsTable() {
     // Pagination
     const pag = document.getElementById('commands-pagination');
     if (pag) {
-        let html = '';
-        for (let i = 1; i <= totalPages; i++) {
-            html += `<button class="glow-button ${i === _commandsPage ? 'btn-primary' : 'btn-ghost'}" onclick="goCommandsPage(${i})">${i}</button>`;
+        pag.innerHTML = '';
+        if (totalPages > 1) {
+            const delta = 2;
+            const pages = new Set([1, totalPages]);
+            for (let i = Math.max(2, _commandsPage - delta); i <= Math.min(totalPages - 1, _commandsPage + delta); i++) pages.add(i);
+            const sorted = [...pages].sort((a, b) => a - b);
+
+            const prevDisabled = _commandsPage === 1;
+            pag.insertAdjacentHTML('beforeend', `<button class="glow-button" style="${prevDisabled ? 'background:rgba(148,163,184,0.05);color:#475569;border:1px solid rgba(148,163,184,0.1);cursor:default;pointer-events:none' : 'background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)'}" ${prevDisabled ? '' : `onclick="goCommandsPage(${_commandsPage - 1})"`}>&#8249;</button>`);
+
+            let prev = 0;
+            for (const p of sorted) {
+                if (p - prev > 1) pag.insertAdjacentHTML('beforeend', '<span style="color:#475569;padding:0 4px;align-self:center">…</span>');
+                pag.insertAdjacentHTML('beforeend', `<button class="glow-button" style="${p === _commandsPage ? 'background:#6366f1;color:#fff;font-weight:600' : 'background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)'}" onclick="goCommandsPage(${p})">${p}</button>`);
+                prev = p;
+            }
+
+            const nextDisabled = _commandsPage === totalPages;
+            pag.insertAdjacentHTML('beforeend', `<button class="glow-button" style="${nextDisabled ? 'background:rgba(148,163,184,0.05);color:#475569;border:1px solid rgba(148,163,184,0.1);cursor:default;pointer-events:none' : 'background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)'}" ${nextDisabled ? '' : `onclick="goCommandsPage(${_commandsPage + 1})"`}>&#8250;</button>`);
         }
-        pag.innerHTML = html;
     }
 }
 
