@@ -179,6 +179,18 @@
             .cl-refactor{background:rgba(99,102,241,.15);color:#818cf8}.cl-perf{background:rgba(6,182,212,.15);color:#38bdf8}
             .cl-docs{background:rgba(148,163,184,.12);color:#94a3b8}.cl-note{background:rgba(148,163,184,.12);color:#94a3b8}
             .cl-default{background:rgba(148,163,184,.12);color:#94a3b8}
+            /* Changelog Modal */
+            .cl-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);z-index:300;align-items:center;justify-content:center;padding:1.5rem}
+            .cl-overlay.show{display:flex;animation:fadeInBg .18s ease both}
+            @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
+            .cl-modal-panel{background:rgba(10,18,38,0.97);border:1px solid var(--border-strong);border-radius:20px;padding:1.75rem;width:100%;max-width:520px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 60px rgba(99,102,241,0.1);animation:slideUpCl .22s cubic-bezier(0.16,1,0.3,1) both}
+            @keyframes slideUpCl{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:none}}
+            .cl-modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-shrink:0}
+            .cl-modal-ttl{font-size:.875rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
+            .cl-modal-ttl i{color:var(--accent)}
+            .cl-modal-x{background:none;border:none;color:var(--text-subtle);cursor:pointer;font-size:1rem;padding:4px;border-radius:6px;transition:color .15s,background .15s;line-height:1}
+            .cl-modal-x:hover{color:var(--text);background:rgba(99,102,241,.1)}
+            .cl-modal-bd{overflow-y:auto;display:flex;flex-direction:column;gap:1.25rem;flex:1;padding-right:4px}
 </style>
     </head>
     <script>
@@ -242,6 +254,9 @@
                 </a>
             </nav>
             <div class="sidebar-footer py-3 px-2.5 border-t border-[rgba(99,102,241,0.12)]">
+                <button id="changelog-modal-btn" class="nav-link" style="display:none" onclick="document.getElementById('changelog-overlay').classList.add('show')">
+                    <i class="fas fa-scroll w-[18px] flex-shrink-0 text-center text-sm"></i><span>What's New</span>
+                </button>
                 <button onclick="logout()" class="nav-link nav-logout">
                     <i class="fas fa-sign-out-alt w-[18px] flex-shrink-0 text-center text-sm"></i><span>Logout</span>
                 </button>
@@ -367,13 +382,7 @@
                         </div>
                     </div>
 
-                    <!-- Changelog -->
-                    <div class="section-card" id="changelog-section" style="display:none">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-                            <h3 class="section-title" style="margin:0"><i class="fas fa-scroll" style="margin-right:0.4rem;font-size:0.85rem;color:#818cf8"></i>Changelog</h3>
-                        </div>
-                        <div id="changelog-dashboard-entries" style="display:flex;flex-direction:column;gap:1.25rem"></div>
-                    </div>
+
                 </div>
 
                 <!-- Groups View -->
@@ -728,6 +737,17 @@
 
         <!-- Toast Container -->
         <div class="toast-container" id="toast-container"></div>
+
+        <!-- Changelog Modal -->
+        <div class="cl-overlay" id="changelog-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+            <div class="cl-modal-panel">
+                <div class="cl-modal-hdr">
+                    <div class="cl-modal-ttl"><i class="fas fa-scroll"></i> Changelog</div>
+                    <button class="cl-modal-x" onclick="document.getElementById('changelog-overlay').classList.remove('show')"><i class="fas fa-xmark"></i></button>
+                </div>
+                <div class="cl-modal-bd" id="changelog-modal-body"></div>
+            </div>
+        </div>
 
         <!-- Join Group Modal -->
         <div id="join-group-modal" class="modal">

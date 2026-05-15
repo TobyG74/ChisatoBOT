@@ -340,7 +340,7 @@ async function loadOverview() {
         updateGroupSettingsChart(growth.groups?.settingsEnabled ?? {});
 
         // Changelog (fire-and-forget, only loads once)
-        if (!document.getElementById('changelog-section').dataset.loaded) {
+        if (!document.getElementById('changelog-modal-btn').dataset.loaded) {
             loadChangelog();
         }
     } catch (error) {
@@ -356,10 +356,10 @@ async function loadChangelog() {
         const res = await fetch(`${API_BASE}/changelog`);
         const data = await res.json();
         if (!data.success || !data.changelog?.length) return;
-        const section = document.getElementById('changelog-section');
-        const container = document.getElementById('changelog-dashboard-entries');
+        const btn = document.getElementById('changelog-modal-btn');
+        const container = document.getElementById('changelog-modal-body');
         container.innerHTML = data.changelog.map(s => `
-            <div>
+            <div class="cl-section">
                 <div class="cl-date-label">${s.date}</div>
                 <div class="cl-entries-grid">
                     ${s.entries.map(e => `
@@ -371,8 +371,8 @@ async function loadChangelog() {
                 </div>
             </div>
         `).join('');
-        section.dataset.loaded = '1';
-        section.style.display = '';
+        btn.dataset.loaded = '1';
+        btn.style.display = '';
     } catch { /* silent */ }
 }
 
