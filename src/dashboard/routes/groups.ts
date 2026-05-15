@@ -11,22 +11,36 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 page = 1,
                 limit = 10,
                 search = "",
+                communityType = "",
             } = request.query as {
                 page?: number;
                 limit?: number;
                 search?: string;
+                communityType?: string;
             };
 
             const skip = (Number(page) - 1) * Number(limit);
 
-            const where = search
-                ? {
-                      subject: {
-                          contains: search,
-                          mode: "insensitive" as const,
-                      },
-                  }
-                : {};
+            let typeFilter: Record<string, boolean> = {};
+            if (communityType === "community") {
+                typeFilter = { isCommunity: true };
+            } else if (communityType === "communityAnnounce") {
+                typeFilter = { isCommunityAnnounce: true };
+            } else if (communityType === "regular") {
+                typeFilter = { isCommunity: false, isCommunityAnnounce: false };
+            }
+
+            const where = {
+                ...(search
+                    ? {
+                          subject: {
+                              contains: search,
+                              mode: "insensitive" as const,
+                          },
+                      }
+                    : {}),
+                ...typeFilter,
+            };
 
             const [groups, total] = await Promise.all([
                 Database.group.findMany({
@@ -44,6 +58,8 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                         announce: true,
                         restrict: true,
                         memberAddMode: true,
+                        isCommunity: true,
+                        isCommunityAnnounce: true,
                     },
                 }),
                 Database.group.count({ where }),

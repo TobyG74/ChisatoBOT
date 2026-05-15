@@ -265,6 +265,7 @@ function setupEventListeners() {
         "input",
         debounce(() => loadGroups(), 500)
     );
+    document.getElementById("filter-community")?.addEventListener("change", () => loadGroups());
     document.getElementById("join-group-btn")?.addEventListener("click", () => {
         document.getElementById("join-group-url").value = "";
         document.getElementById("join-group-error").style.display = "none";
@@ -610,7 +611,9 @@ function updateGroupSettingsChart(data) {
 // Load groups
 async function loadGroups(page = 1) {
     const search = document.getElementById("search-groups").value;
+    const communityType = document.getElementById("filter-community")?.value || "";
     const params = new URLSearchParams({ page, limit: 10, search });
+    if (communityType) params.set("communityType", communityType);
 
     const refreshBtn = document.getElementById("refresh-groups");
     if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.innerHTML = '<span class="spinner"></span>'; }
@@ -625,7 +628,7 @@ async function loadGroups(page = 1) {
 
         if (data.groups.length === 0) {
             tbody.innerHTML =
-                '<tr><td colspan="6" class="table-empty">No groups found</td></tr>';
+                '<tr><td colspan="7" class="table-empty">No groups found</td></tr>';
             return;
         }
 
@@ -656,8 +659,15 @@ async function loadGroups(page = 1) {
                 ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);font-weight:600"><i class="fas fa-shield-halved" style="margin-right:3px"></i>Admin</span>`
                 : `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(148,163,184,0.08);color:#4a5678;border:1px solid rgba(148,163,184,0.15)">Member</span>`;
 
+            const typeBadge = group.isCommunity
+                ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(139,92,246,0.15);color:#c084fc;border:1px solid rgba(139,92,246,0.3);font-weight:600"><i class="fas fa-people-group" style="margin-right:3px"></i>Community</span>`
+                : group.isCommunityAnnounce
+                ? `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);font-weight:600"><i class="fas fa-bullhorn" style="margin-right:3px"></i>Announce</span>`
+                : `<span style="font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(148,163,184,0.08);color:#64748b;border:1px solid rgba(148,163,184,0.15);font-weight:600"><i class="fas fa-users" style="margin-right:3px"></i>Group</span>`;
+
             row.innerHTML = `
                 <td>${escapeHtml(group.subject)}</td>
+                <td>${typeBadge}</td>
                 <td>${group.participantsCount}</td>
                 <td><div style="display:flex;gap:3px;align-items:center">${settingIcons}</div></td>
                 <td>${botAdminBadge}</td>

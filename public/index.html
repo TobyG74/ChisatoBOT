@@ -380,7 +380,15 @@
                 <div id="view-groups" class="view-content hidden">
                     <div class="section-card">
                         <div class="toolbar flex flex-wrap gap-2 justify-between items-center mb-5">
-                            <input type="text" id="search-groups" placeholder="Search groups..." class="toolbar-input" />
+                            <div class="toolbar-filters flex flex-wrap gap-2">
+                                <input type="text" id="search-groups" placeholder="Search groups..." class="toolbar-input" />
+                                <select id="filter-community" class="toolbar-select">
+                                    <option value="">All Types</option>
+                                    <option value="regular">Regular Group</option>
+                                    <option value="community">Community</option>
+                                    <option value="communityAnnounce">Community Announce</option>
+                                </select>
+                            </div>
                             <div class="flex gap-2">
                                 <button id="join-group-btn" class="btn btn-success">
                                     <i class="fas fa-right-to-bracket"></i> <span class="hidden sm:inline">Join Group</span>
@@ -395,6 +403,7 @@
                                 <thead>
                                     <tr>
                                         <th>Group Name</th>
+                                        <th>Type</th>
                                         <th>Participants</th>
                                         <th>Settings</th>
                                         <th>Bot Admin</th>
@@ -403,7 +412,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="groups-table">
-                                    <tr><td colspan="6" class="table-empty">Loading...</td></tr>
+                                    <tr><td colspan="7" class="table-empty">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
