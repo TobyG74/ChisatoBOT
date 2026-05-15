@@ -175,7 +175,7 @@ function setupMobileMenu() {
     closeSidebarBtn?.addEventListener("click", closeSidebar);
     mobileOverlay?.addEventListener("click", closeSidebar);
 
-    document.querySelectorAll(".nav-link").forEach((link) => {
+    document.querySelectorAll(".nav-link[data-view]").forEach((link) => {
         link.addEventListener("click", () => {
             if (window.innerWidth <= 768) {
                 closeSidebar();
@@ -186,10 +186,11 @@ function setupMobileMenu() {
 
 // Setup navigation
 function setupNavigation() {
-    document.querySelectorAll(".nav-link").forEach((link) => {
+    document.querySelectorAll(".nav-link[data-view]").forEach((link) => {
         link.addEventListener("click", (e) => {
             e.preventDefault();
             const view = link.dataset.view;
+            if (!view) return;
             switchView(view);
         });
     });
