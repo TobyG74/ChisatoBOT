@@ -1,5 +1,22 @@
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
 import { FileUtils } from "../../utils/core";
+import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 import type { ConfigCommands } from "../../types/structure/commands.js";
+
+const REPO_URL: string = (() => {
+    try {
+        const pkgPath = resolve(process.cwd(), "package.json");
+        if (existsSync(pkgPath)) {
+            const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+            const home = typeof pkg?.homepage === "string"
+                ? pkg.homepage.trim()
+                : "";
+            if (home) return home.replace(/#.*$/, "");  
+        }
+    } catch {  }
+    return "https://github.com/TobyG74/ChisatoBOT";
+})();
 
 export default {
     name: "groupbc",
@@ -17,7 +34,7 @@ export default {
 
 💡 *Example:*
 {prefix}{command.name} Hello everyone! This is a group broadcast message!`,
-    async run({ Chisato, query, from, message }) {
+    async run({ Chisato, query, from, message, prefix }) {
         const groups = Object.entries(
             await Chisato.groupFetchAllParticipating() as Record<string, any>
         )
@@ -43,31 +60,45 @@ export default {
             message
         );
 
+        const bodyText =
+            `*「 GROUP BROADCAST 」*\n\n` +
+            `${query}\n\n` +
+            `_Broadcast by ${message.pushName}_`;
+
+        const ownerCmd = `${prefix ?? "."}owner`;
+
         (async () => {
             for (const group of groups) {
                 await FileUtils.sleep(1000);
-                const str =
-                    `*「 GROUP BROADCAST 」*\n\n` +
-                    `${query}\n\n` +
-                    `_Broadcast by ${message.pushName}_`;
                 try {
+                    const builder = new TemplateBuilder.Native(Chisato);
+                    builder
+                        .mainBody(bodyText)
+                        .mainFooter(`Broadcast • ${message.pushName}`);
+
                     if (isImage && buffer) {
-                        await Chisato.sendImage(group, buffer, str, null, {
-                            contextInfo: {
-                                forwardingScore: groups.length,
-                                isForwarded: true,
-                            },
-                        });
+                        builder.mainHeader("*「 GROUP BROADCAST 」*", buffer);
                     } else {
-                        await Chisato.sendText(group, str, null, {
-                            contextInfo: {
-                                forwardingScore: groups.length,
-                                isForwarded: true,
-                            },
-                        });
+                        builder.mainHeader("*「 GROUP BROADCAST 」*");
                     }
+
+                    builder.buttons(
+                        builder.button.url({
+                            display: "🌐 GitHub Repository",
+                            url: REPO_URL,
+                        }),
+                        builder.button.reply({
+                            display: "👤 Contact Owner",
+                            id: ownerCmd,
+                        })
+                    );
+
+                    const msg = await builder.render();
+                    await Chisato.relayMessage(group, msg.message, {
+                        messageId: msg.key.id,
+                    });
                 } catch {
-                    // skip groups that fail (banned, left, etc.)
+                    // skip groups that fail (banned, left, missing templates, etc.)
                 }
             }
             await Chisato.sendText(
