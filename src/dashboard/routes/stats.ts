@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { Database } from "../../infrastructure/database";
 import os from "os";
+import { getLogicalUptimeSeconds } from "../../core/runtime";
 
 export async function statsRoutes(fastify: FastifyInstance) {
     // Get overall statistics
@@ -20,7 +21,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
                 ]);
 
             // Calculate uptime
-            const uptime = process.uptime();
+            const uptime = getLogicalUptimeSeconds();
             const uptimeString = formatUptime(uptime);
 
             // Calculate total participants across all groups
@@ -110,7 +111,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
     // Get memory usage
     fastify.get("/system", async (request, reply) => {
         try {
-            const uptime = process.uptime();
+            const uptime = getLogicalUptimeSeconds();
             const memoryUsage = process.memoryUsage();
             const totalMem = os.totalmem();
             const freeMem = os.freemem();
@@ -159,7 +160,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
 
         const sendData = () => {
             try {
-                const uptime = process.uptime();
+                const uptime = getLogicalUptimeSeconds();
                 const memoryUsage = process.memoryUsage();
                 const totalMem = os.totalmem();
                 const freeMem = os.freemem();

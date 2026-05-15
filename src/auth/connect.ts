@@ -26,6 +26,10 @@ import { configService } from "../core/config";
 import { databaseService } from "../infrastructure/database";
 import { DashboardServer } from "../dashboard/server";
 import { warmupGiSupplement } from "../utils/scrapers/lookup/enka-gi.scraper";
+import { initUptime, startMemoryMonitor } from "../core/runtime";
+
+// boot time across auto-restarts (e.g. memory-triggered restarts).
+initUptime();
 
 // Initialize services
 logger.connect("Initializing ChisatoBOT v2.0...");
@@ -174,6 +178,19 @@ logger.connect("Connecting to database...");
         });
 
         logger.connect("All event handlers registered successfully");
+
+        // Memory watchdog: restart the process if RSS stays above 1 GB for two
+        // consecutive 30 s samples. Uptime is preserved via the heartbeat file
+        // so users see a continuous runtime even after the restart. Requires
+        // PM2 (or another supervisor) to actually relaunch the process.
+        startMemoryMonitor({
+            threshold: 1024 * 1024 * 1024,    // 1 GB
+            interval: 30_000,
+            sustainedSamples: 2,
+            onBeforeRestart: async () => {
+                try { await databaseService.disconnect(); } catch { /* ignore */ }
+            },
+        });
     } catch (error) {
         logger.error(
             `Initialization error: ${

@@ -1,6 +1,6 @@
 {
     "name": "chisato-bot",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "type": "module",
     "description": "WhatsApp Bot Multi-Device using Baileys",
     "main": "start.js",
@@ -79,7 +79,7 @@
         "chisato-md",
         "baileys"
     ],
-    "homepage": "https://github.com/TobyG74/ChisatoBOT#readme",
+    "homepage": "https://github.com/TobyG74/ChisatoBOT",
     "repository": {
         "type": "git",
         "url": "https://github.com/TobyG74/ChisatoBOT.git"
