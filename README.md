@@ -62,12 +62,14 @@
 
 ## Getting Started
 
+### Windows Installation
+
 Requirements to run this project:
 
 -   [Node.js v18+](https://nodejs.org/en/)
--   [pnpm](https://pnpm.io/) — `npm install -g pnpm`
 -   [GIT](https://git-scm.com/downloads)
 -   [FFMPEG](https://ffmpeg.org/download.html)
+-   [Libwebp](https://developers.google.com/speed/webp/download) — for sticker conversion
 -   [MongoDB](https://www.mongodb.com/cloud/atlas) — local or Atlas
 -   [OCR Space API Key](https://ocr.space) — for OCR feature (optional)
 
@@ -112,7 +114,7 @@ chmod +x install.sh && ./install.sh
 ```
 
 The installer will automatically:
-- Check prerequisites (Git, Node.js, FFmpeg)
+- Check prerequisites (Git, Node.js, FFmpeg, Libwebp)
 - Install pnpm dependencies
 - Set up environment variables
 - Configure Prisma and push the database schema
@@ -125,18 +127,18 @@ The installer will automatically:
 git clone https://github.com/TobyG74/ChisatoBOT
 cd ChisatoBOT
 
-# 2. Install dependencies (uses pnpm workspaces)
-pnpm install
+# 2. Install dependencies (uses npm)
+npm install
 
 # 3. Push database schema
-pnpm prisma:push
+npx prisma db push
 
 # 4. Build
-pnpm build
+npm run build
 
 # 5. Run
-pnpm start           # plain Node
-pnpm pm2:start       # with PM2 (recommended for production)
+npm start           # plain Node
+npm run pm2:start   # with PM2 (recommended for production)
 ```
 
 ---
@@ -170,8 +172,30 @@ pnpm pm2:start       # with PM2 (recommended for production)
     },
     "limit": {
         "command": 30
+    },
+    "cfonts": {
+        "font": "block",
+        "align": "center",
+        "colors": [
+            "green",
+            "yellow"
+        ],
+        "background": "transparent",
+        "letterSpacing": 0,
+        "lineHeight": 0,
+        "space": true,
+        "maxLength": "0",
+        "gradient": false,
+        "independentGradient": false,
+        "transitionGradient": false,
+        "env": "node"
+    },
+    "commandOverrides": {},
+    "dashboard": {
+        "ipWhitelist": [],
+        "ipBlacklist": []
     }
-}
+};
 ```
 
 | Field | Description |
@@ -187,6 +211,12 @@ pnpm pm2:start       # with PM2 (recommended for production)
 | `autoReadMessage` | Automatically mark messages as read |
 | `autoReadStatus` | Automatically view status updates |
 | `autoCorrect` | Suggest correct command on typo |
+| `call.status` | "reject" to block all calls, "accept" to allow |
+| `limit.command` | Number of free command uses per user (if `useLimit` enabled) |
+| `cfonts` | Configuration for terminal logger fonts/colors |
+| `commandOverrides` | Override specific command configs (e.g. cooldown, limit) |
+| `dashboard.ipWhitelist` | Only allow these IPs to access the dashboard (empty = allow all) |
+| `dashboard.ipBlacklist` | Block these IPs from accessing the dashboard |
 
 ### Command Config Type
 
@@ -197,9 +227,10 @@ type ConfigCommands = {
     usage?: string;
     category: string;
     description: string;
-    cooldown?: number;       // seconds
+    cooldown?: number; // in seconds
     limit?: number;
     example?: string;
+    interactiveSelection?: boolean; // skip cooldown when query contains '|' (list-selection response)
     isOwner?: boolean;
     isTeam?: boolean;
     isPrivate?: boolean;
