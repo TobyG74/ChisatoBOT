@@ -29,8 +29,8 @@ const HANDLERS: Record<string, (ctx: Ctx) => Promise<void>> = {
 };
 
 export default {
-    name: "ww",
-    alias: ["werewolf", "werwolf"],
+    name: "werewolf",
+    alias: ["ww", "werwolf"],
     category: "games",
     description: "Werewolf / Mafia game for groups",
     async run(ctx) {
