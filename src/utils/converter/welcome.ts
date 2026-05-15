@@ -253,7 +253,7 @@ export async function createWelcomeImage(
     ctx.font = "38px Arial, sans-serif";
     ctx.fillStyle = "#e5e7eb";
     
-    let displayName = (parsePhoneNumber("+" + phoneNumber)).number.international
+    let displayName = parsePhoneNumber("+" + phoneNumber).number?.international ?? ("+" + phoneNumber);
     
     await drawTextWithEmoji(ctx, displayName, width / 2, 400);
     
@@ -451,7 +451,7 @@ export async function createLeaveImage(
     ctx.font = "38px Arial, sans-serif";
     ctx.fillStyle = "#e5e7eb";
     
-    let displayName = (parsePhoneNumber("+" + phoneNumber)).number.international
+    let displayName = parsePhoneNumber("+" + phoneNumber).number?.international ?? ("+" + phoneNumber);
     
     await drawTextWithEmoji(ctx, displayName, width / 2, 400);
     

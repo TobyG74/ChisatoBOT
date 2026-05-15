@@ -877,13 +877,15 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             const group = await Group.get(id);
             return (
                 group?.subject ||
-                parsePhoneNumber("+" + id.split("@")[0]).number.international
+                (parsePhoneNumber("+" + id.split("@")[0]).number?.international ??
+                "+" + id.split("@")[0])
             );
         } else {
             const user = await User.get(id);
             return (
                 user?.name ||
-                parsePhoneNumber("+" + id.split("@")[0]).number.international
+                (parsePhoneNumber("+" + id.split("@")[0]).number?.international ??
+                "+" + id.split("@")[0])
             );
         }
     };
@@ -906,7 +908,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
         for (let i of contacts) {
             const number = i.split("@")[0];
             const pushname = await this.getName(i);
-            const awesomeNumber = parsePhoneNumber("+" + number).number.international;
+            const awesomeNumber = parsePhoneNumber("+" + number).number?.international ?? ("+" + number);
             listContact.push({
                 displayName: pushname,
                 vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${pushname}\nFN:${pushname}\nitem1.TEL;waid=${number}:${awesomeNumber}\nitem1.X-ABLabel:Mobile\nEND:VCARD`,

@@ -63,7 +63,7 @@ class IpSecurityService {
         this.initialized = true;
     }
 
-    // ── Sync reads (safe for middleware) ────────────────────────────────────
+    // Sync reads (safe for middleware)
 
     public isBlocked(ip: string): boolean {
         return this.blacklist.has(ip);
