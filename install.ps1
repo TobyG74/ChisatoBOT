@@ -13,6 +13,7 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Write-Host " Git is installed" -ForegroundColor Green
 } else {
     Write-Host " Git is not installed!" -ForegroundColor Red
+    Write-Host " Please install Git from https://git-scm.com/downloads and try again." -ForegroundColor Red
     exit 1
 }
 
@@ -21,14 +22,16 @@ if (Get-Command node -ErrorAction SilentlyContinue) {
     Write-Host " Node.js is installed" -ForegroundColor Green
 } else {
     Write-Host " Node.js is not installed!" -ForegroundColor Red
+    Write-Host " Please install Node.js from https://nodejs.org/en/download/ and try again." -ForegroundColor Red
     exit 1
 }
 
-# Check NPM
-if (Get-Command npm -ErrorAction SilentlyContinue) {
-    Write-Host " NPM is installed" -ForegroundColor Green
+# Check Libwebp
+if (Get-Command cwebp -ErrorAction SilentlyContinue) {
+    Write-Host " Libwebp is installed" -ForegroundColor Green
 } else {
-    Write-Host " NPM is not installed!" -ForegroundColor Red
+    Write-Host " Libwebp is not installed!" -ForegroundColor Red
+    Write-Host " Please install Libwebp from https://developers.google.com/speed/webp/download and try again." -ForegroundColor Red
     exit 1
 }
 
@@ -37,6 +40,7 @@ if (Get-Command ffmpeg -ErrorAction SilentlyContinue) {
     Write-Host " FFmpeg is installed" -ForegroundColor Green
 } else {
     Write-Host " FFmpeg is not installed!" -ForegroundColor Red
+    Write-Host " Please install FFmpeg from https://ffmpeg.org/download.html and try again." -ForegroundColor Red
     exit 1
 }
 
