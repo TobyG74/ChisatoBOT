@@ -19,17 +19,7 @@ export type SvgIcon = {
     viewBox?: number;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  ICON DATA
-//
-//  Sources:
-//   • Genshin (FIGHT_PROP_*) — extracted from enka.network (14×14, official)
-//   • HSR (Icon*)            — extracted from enka.network (24×24, official)
-//   • ZZZ stat icons         — extracted from enka.network (14×14, official)
-//   • Element icons          — Anemo / Ice / FireFrost / Quantum are official;
-//                              the rest are custom 14×14 designs in the same
-//                              iconographic style.
-// ─────────────────────────────────────────────────────────────────────────────
+// Stat icons (14×14, official where possible)
 export const SVG_ICONS: Record<string, SvgIcon> = {
     // Genshin / shared (14×14, official) 
     HP: {
@@ -76,7 +66,7 @@ export const SVG_ICONS: Record<string, SvgIcon> = {
         ],
     },
 
-    // ── HSR-specific stats (24×24, official) ─────────────────────────────
+    // HSR-specific stats (24×24, official)
     SPEED: {
         viewBox: 24,
         paths: [
@@ -135,7 +125,7 @@ export const SVG_ICONS: Record<string, SvgIcon> = {
         ],
     },
 
-    // ── Element icons (14×14) ────────────────────────────────────────────
+    // Element icons (14×14)
     PYRO: {
         // Official enka.network FIGHT_PROP_FIRE_ADD_HURT (Genshin Pyro / HSR Fire / ZZZ Fire)
         paths: [
