@@ -25,6 +25,7 @@ import { logger } from "../core/logger";
 import { configService } from "../core/config";
 import { databaseService } from "../infrastructure/database";
 import { DashboardServer } from "../dashboard/server";
+import { warmupGiSupplement } from "../utils/scrapers/lookup/enka-gi.scraper";
 
 // Initialize services
 logger.connect("Initializing ChisatoBOT v2.0...");
@@ -72,6 +73,20 @@ logger.connect("Connecting to database...");
 
         // Connect to WhatsApp
         await Chisato.connect();
+
+        // Pre-warm Genshin/Enka supplement bundle in the background.
+        // This downloads & parses the LodaHoyoView JS bundle (~3.4 MB) ONCE
+        // at startup and writes a disk cache, so the first user lookup
+        // doesn't pay that cost. Errors are non-fatal (offline-friendly).
+        warmupGiSupplement()
+            .then(() => logger.connect("Enka supplement cache ready"))
+            .catch((err) =>
+                logger.warn(
+                    `Enka supplement warmup failed (non-fatal): ${
+                        err instanceof Error ? err.message : String(err)
+                    }`
+                )
+            );
 
         // Handle messages with new clean architecture
         Chisato.on("messages.upsert", async (message) => {

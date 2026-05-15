@@ -1,5 +1,8 @@
 import axios from "axios";
+import { readFileSync, existsSync, writeFileSync, statSync, mkdirSync } from "fs";
+import { resolve, dirname } from "path";
 import type { EnkaArtifact, EnkaArtifactStat, EnkaCharacter, EnkaUserData, GenshinCharacterInfo, GenshinWeaponInfo } from "../../../types/lookup/enka";
+import type { AxiosResponse } from "axios";
 
 const ENKA_BASE_URL = "https://enka.network";
 const ENKA_STORE_URL = "https://raw.githubusercontent.com/EnkaNetwork/API-docs/master/store";
@@ -46,6 +49,309 @@ async function getCharactersData() {
     const data = await getStoreData("characters.json");
     charactersCache = { value: data, expiresAt: Date.now() + STORE_CACHE_TTL };
     return charactersCache.value;
+}
+
+/** Extract character/weapon/pfp data from the live LodaHoyoView bundle, which is updated immediately on game patches. */
+interface GiSupplement {
+    characters: Record<string, any>;
+    weapons: Record<string, any>;
+    pfps: Record<string, string>;     // pfpId → bare iconName (e.g. "UI_AvatarIcon_Linnea")
+}
+let supplementCache: TTLCache<GiSupplement | null> | null = null;
+
+/** Extract a balanced JS object starting at the `{` at position `start`. */
+function extractJsObject(str: string, start: number): string | null {
+    let depth = 0;
+    let inString = false;
+    let stringChar = "";
+    let i = start;
+    while (i < str.length) {
+        const ch = str[i];
+        if (inString) {
+            if (ch === "\\") { i += 2; continue; }
+            if (ch === stringChar) inString = false;
+        } else {
+            if (ch === '"' || ch === "'") { inString = true; stringChar = ch; }
+            else if (ch === "{") depth++;
+            else if (ch === "}") { depth--; if (depth === 0) return str.slice(start, i + 1); }
+        }
+        i++;
+    }
+    return null;
+}
+
+/** Strip "/ui/" prefix and ".png" suffix from an Enka icon path. */
+function normPath(p: string | null | undefined): string | null {
+    if (!p || p === "None") return p ?? null;
+    return p.replace(/^\/ui\//, "").replace(/\.png$/, "");
+}
+
+/** Parse characters and weapons from the raw JS bundle text. */
+function parseBundleData(content: string): GiSupplement {
+    const characters: Record<string, any> = {};
+    const weapons: Record<string, any> = {};
+
+    // Characters: avatarId pattern 1000XXXX
+    const charRe = /\b(1000\d{4})\s*:\s*\{/g;
+    let m: RegExpExecArray | null;
+    while ((m = charRe.exec(content)) !== null) {
+        const avatarId = m[1];
+        const objStr = extractJsObject(content, m.index + m[0].length - 1);
+        if (!objStr) continue;
+
+        const element     = (objStr.match(/"?Element"?\s*:\s*"([^"]+)"/) || [])[1] ?? null;
+        const sideIcon    = (objStr.match(/"?SideIconName"?\s*:\s*"([^"]+)"/) || [])[1] ?? null;
+        const quality     = (objStr.match(/"?QualityType"?\s*:\s*"([^"]+)"/) || [])[1] ?? null;
+        const weaponType  = (objStr.match(/"?WeaponType"?\s*:\s*"([^"]+)"/) || [])[1] ?? null;
+        const nameHashStr = (objStr.match(/"?NameTextMapHash"?\s*:\s*(\d+)/) || [])[1] ?? null;
+
+        const skillOrderMatch = objStr.match(/"?SkillOrder"?\s*:\s*\[([^\]]*)\]/);
+        const skillOrder = skillOrderMatch
+            ? skillOrderMatch[1].split(",").map(n => parseInt(n.trim())).filter(n => !isNaN(n))
+            : [];
+
+        const skills: Record<string, string> = {};
+        const skillsMatch = objStr.match(/"?Skills"?\s*:\s*(\{[^}]*\})/);
+        if (skillsMatch) {
+            const kp = /(\d+)\s*:\s*"([^"]+)"/g;
+            let km: RegExpExecArray | null;
+            while ((km = kp.exec(skillsMatch[1])) !== null)
+                skills[km[1]] = normPath(km[2]) ?? km[2];
+        }
+
+        const consts: string[] = [];
+        const constsMatch = objStr.match(/"?Consts"?\s*:\s*(\[[^\]]*\])/);
+        if (constsMatch) {
+            const cp = /"([^"]+)"/g;
+            let km: RegExpExecArray | null;
+            while ((km = cp.exec(constsMatch[1])) !== null)
+                consts.push(normPath(km[1]) ?? km[1]);
+        }
+
+        // Derive readable name from SideIconName: "UI_AvatarIcon_Side_Hu_tao" → "Hu Tao"
+        const bareIcon = normPath(sideIcon) ?? "";
+        const sideSuffix = bareIcon.replace(/^UI_AvatarIcon_Side_/, "");
+        const derivedName = sideSuffix
+            ? sideSuffix.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")
+            : null;
+
+        characters[avatarId] = {
+            _derivedName: derivedName,
+            NameTextMapHash: nameHashStr ? Number(nameHashStr) : null,
+            Element: element,
+            SideIconName: normPath(sideIcon),
+            QualityType: quality,
+            WeaponType: weaponType,
+            SkillOrder: skillOrder,
+            Skills: skills,
+            Consts: consts,
+        };
+    }
+
+    // Weapons: 5-digit IDs with numeric WeaponType
+    const wRe = /\b(1[0-9]{4})\s*:\s*\{/g;
+    while ((m = wRe.exec(content)) !== null) {
+        const itemId = m[1];
+        const objStr = extractJsObject(content, m.index + m[0].length - 1);
+        if (!objStr) continue;
+        const weaponType = (objStr.match(/"?WeaponType"?\s*:\s*(\d+)/) || [])[1];
+        if (!weaponType) continue;
+        const icon       = (objStr.match(/"?Icon"?\s*:\s*"([^"]+)"/) || [])[1] ?? null;
+        const awakenIcon = (objStr.match(/"?AwakenIcon"?\s*:\s*"([^"]+)"/) || [])[1] ?? null;
+        const nameHashStr = (objStr.match(/"?NameTextMapHash"?\s*:\s*(\d+)/) || [])[1] ?? null;
+        const rarity      = (objStr.match(/"?Rarity"?\s*:\s*(\d+)/) || [])[1] ?? null;
+        weapons[itemId] = {
+            Icon: normPath(icon),
+            AwakenIcon: normPath(awakenIcon),
+            NameTextMapHash: nameHashStr ? Number(nameHashStr) : null,
+            RankLevel: rarity ? Number(rarity) : null,
+            WeaponType: Number(weaponType),
+        };
+    }
+
+    /**
+     * Profile pictures (pfps): `<id>: { IconPath: "/ui/UI_AvatarIcon_..._Circle.png" }`
+     * We only extract the IconPath since the ID is opaque and the name can be derived from the icon path itself. The Circle suffix is stripped since Enka's pfps.json doesn't have it, and it doesn't add info for our purposes. The resulting bare icon name (e.g. "UI_AvatarIcon_Linnea") can be cross-referenced with the loc.json to get a display name if needed.
+     */
+    const pfps: Record<string, string> = {};
+    const pfpRe = /\b(\d{3,7})\s*:\s*\{\s*IconPath\s*:\s*"([^"]+)"\s*\}/g;
+    while ((m = pfpRe.exec(content)) !== null) {
+        const id = m[1];
+        // Strip "/ui/" + ".png" + "_Circle" → bare icon name (matches pfps.json convention)
+        const bare = (normPath(m[2]) ?? m[2]).replace(/_Circle$/, "");
+        if (bare) pfps[id] = bare;
+    }
+
+    return { characters, weapons, pfps };
+}
+
+/** Fetch & parse the live LodaHoyoView bundle from enka.network. */
+async function fetchLiveSupplementData(): Promise<GiSupplement | null> {
+    try {
+        const homeRes: AxiosResponse<string> = await axios.get(`${ENKA_BASE_URL}/`, {
+            headers: { "User-Agent": USER_AGENT },
+            timeout: REQUEST_TIMEOUT,
+            responseType: "text",
+        });
+        const appEntryMatch = (homeRes.data as string).match(
+            /import\("(\.?\/_app\/immutable\/entry\/app\.[^"]+\.js)"\)/
+        );
+        if (!appEntryMatch) return null;
+        const appEntryUrl = `${ENKA_BASE_URL}/${appEntryMatch[1].replace(/^\.?\//, "")}`;
+
+        const appRes: AxiosResponse<string> = await axios.get(appEntryUrl, {
+            headers: { "User-Agent": USER_AGENT },
+            timeout: REQUEST_TIMEOUT,
+            responseType: "text",
+        });
+        const chunkMatch = (appRes.data as string).match(
+            /(LodaHoyoView\.svelte_svelte_type_style_lang\.[a-f0-9]+\.js)/
+        );
+        if (!chunkMatch) return null;
+        const bundleUrl = `${ENKA_BASE_URL}/_app/immutable/chunks/${chunkMatch[1]}`;
+
+        const bundleRes: AxiosResponse<string> = await axios.get(bundleUrl, {
+            headers: { "User-Agent": USER_AGENT },
+            timeout: 30_000,
+            responseType: "text",
+        });
+
+        return parseBundleData(bundleRes.data as string);
+    } catch {
+        return null;
+    }
+}
+
+/** Return supplement data (live-fetch → local-file fallback → null). */
+// On-disk cache so we don't have to refetch the 3.4 MB bundle each time the
+// process restarts — it just needs to refresh in the background after TTL.
+const SUPPLEMENT_DISK_PATH = resolve(process.cwd(), "temp/gi-store-supplement.json");
+
+function readSupplementFromDisk(): GiSupplement | null {
+    if (!existsSync(SUPPLEMENT_DISK_PATH)) return null;
+    try {
+        const json = JSON.parse(readFileSync(SUPPLEMENT_DISK_PATH, "utf-8"));
+        if (json && !json.pfps) json.pfps = {};
+        return json as GiSupplement;
+    } catch {
+        return null;
+    }
+}
+
+function writeSupplementToDisk(data: GiSupplement): void {
+    try {
+        mkdirSync(dirname(SUPPLEMENT_DISK_PATH), { recursive: true });
+        writeFileSync(
+            SUPPLEMENT_DISK_PATH,
+            JSON.stringify({ ...data, _writtenAt: new Date().toISOString() }, null, 2),
+            "utf-8"
+        );
+    } catch { /* swallow — disk cache is best-effort */ }
+}
+
+function diskFileAgeMs(): number {
+    try { return Date.now() - statSync(SUPPLEMENT_DISK_PATH).mtimeMs; }
+    catch { return Number.POSITIVE_INFINITY; }
+}
+
+let inflightRefresh: Promise<GiSupplement | null> | null = null;
+async function refreshSupplementInBackground(): Promise<GiSupplement | null> {
+    if (inflightRefresh) return inflightRefresh;          // de-dup concurrent triggers
+    inflightRefresh = (async () => {
+        try {
+            const fresh = await fetchLiveSupplementData();
+            if (fresh) {
+                if (!fresh.pfps) fresh.pfps = {};
+                supplementCache = { value: fresh, expiresAt: Date.now() + STORE_CACHE_TTL };
+                writeSupplementToDisk(fresh);
+            }
+            return fresh;
+        } finally {
+            inflightRefresh = null;
+        }
+    })();
+    return inflightRefresh;
+}
+
+/**
+ * Returns supplement data with stale-while-revalidate semantics:
+ *   1. Memory cache (instant) → if not expired, return immediately.
+ *   2. Disk cache (instant)   → if present, return immediately and refresh
+ *      live data in the background. Caller never waits for the bundle download.
+ *   3. Live fetch (slow)      → only when nothing is cached at all.
+ */
+async function getSupplementData(): Promise<GiSupplement | null> {
+    // 1. Memory hit
+    if (supplementCache && Date.now() < supplementCache.expiresAt) {
+        return supplementCache.value;
+    }
+
+    // 2. Disk hit → serve immediately, refresh in background
+    const disk = readSupplementFromDisk();
+    if (disk) {
+        // Prime the in-memory cache with disk data
+        supplementCache = { value: disk, expiresAt: Date.now() + STORE_CACHE_TTL };
+        // Trigger background refresh if memory was expired or disk file is older than TTL
+        if (diskFileAgeMs() > STORE_CACHE_TTL) {
+            void refreshSupplementInBackground();
+        }
+        return disk;
+    }
+
+    // 3. No cache at all — must fetch live (slow path, only on very first run)
+    const fresh = await refreshSupplementInBackground();
+    if (fresh) return fresh;
+
+    // Last resort: empty supplement so callers don't crash
+    return null;
+}
+
+/**
+ * Pre-warm the supplement cache. Call once at bot startup so the
+ * 3.4 MB bundle download happens BEFORE any user issues an Enka command,
+ * and so the in-memory cache is hot for the whole TTL window.
+ *
+ * - If a recent disk cache exists, it's loaded synchronously into memory
+ *   (instant) and a background refresh is kicked off.
+ * - Otherwise the live fetch runs to completion so first request is fast.
+ */
+export async function warmupGiSupplement(): Promise<void> {
+    // Hydrate from disk first (cheap, blocking; returns instantly if absent)
+    const disk = readSupplementFromDisk();
+    if (disk) {
+        supplementCache = { value: disk, expiresAt: Date.now() + STORE_CACHE_TTL };
+    }
+
+    // Decide whether to fetch live now or in the background:
+    //   - No disk cache         → block until we have something usable.
+    //   - Disk cache too old    → background refresh, don't block startup.
+    //   - Disk cache fresh      → nothing to do.
+    if (!disk) {
+        try { await refreshSupplementInBackground(); } catch { /* ignored */ }
+        return;
+    }
+    if (diskFileAgeMs() > STORE_CACHE_TTL) {
+        void refreshSupplementInBackground();
+    }
+}
+
+/** Derive a display name from a weapon icon path like "UI_EquipIcon_Catalyst_Brisingamen_Awaken" */
+function weaponNameFromIcon(icon: string | null | undefined): string | null {
+    if (!icon) return null;
+    const bare = icon
+        .replace(/UI_EquipIcon_/, "")
+        .replace(/_Awaken$/, "");
+    // bare is like "Catalyst_Brisingamen" — strip the weapon-type prefix (first word)
+    const parts = bare.split("_");
+    const meaningful = parts.length > 1 ? parts.slice(1) : parts;
+    return meaningful.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(" ") || null;
+}
+
+/** Derive artifact set ID from icon path like "UI_RelicIcon_15043_1" → "Set 15043" */
+function setNameFromIcon(icon: string | null | undefined): string {
+    if (!icon) return "Unknown Set";
+    const m = icon.match(/UI_RelicIcon_(\d+)_/);
+    return m ? `Set ${m[1]}` : "Unknown Set";
 }
 
 let pfpsCache: TTLCache<any> | null = null;
@@ -158,13 +464,14 @@ const genshinElementColors: Record<string, string> = {
 export async function fetchEnkaUser(uid: string | number): Promise<EnkaUserData> {
     if (isNaN(Number(uid))) throw new Error("UID harus berupa angka.");
 
-    // Fetch player data and store data in parallel
-    const [apiResult, storeResult] = await Promise.all([
+    // Fetch player data, store data, and supplement in parallel
+    const [apiResult, storeResult, supplementResult] = await Promise.all([
         axios.get(`${ENKA_BASE_URL}/api/uid/${uid}`, {
             headers: { "User-Agent": USER_AGENT },
             timeout: REQUEST_TIMEOUT,
         }).catch((e) => { if (e.response) return e.response; throw e; }),
         Promise.all([getCharactersData(), getLocData()]).catch(() => [null, null] as [null, null]),
+        getSupplementData().catch(() => null),
     ]);
 
     const { data, status } = apiResult;
@@ -175,6 +482,7 @@ export async function fetchEnkaUser(uid: string | number): Promise<EnkaUserData>
     if (status !== 200) throw new Error(`Request gagal: ${status}`);
 
     const [charStore, loc] = storeResult as [any, Record<string, string>] | [null, null];
+    const supplement = supplementResult as GiSupplement | null;
     const info = data.playerInfo || {};
 
     const characters: EnkaCharacter[] = (data.avatarInfoList || []).map((avatar: any) => {
@@ -182,10 +490,18 @@ export async function fetchEnkaUser(uid: string | number): Promise<EnkaUserData>
         const equipList: any[] = avatar.equipList || [];
         const fpm = avatar.fightPropMap || {};
 
-        // Resolve character from store
+        // Resolve character from GitHub store, then supplement as fallback
         const charId = String(avatar.avatarId);
-        const storeChar = charStore?.[charId] ?? charStore?.[charId.split("-")[0]];
-        const charName = loc && storeChar ? (loc[String(storeChar.NameTextMapHash)] || null) : null;
+        const skillDepotId = String(avatar.skillDepotId ?? "");
+        const storeChar =
+            charStore?.[charId] ??
+            (skillDepotId ? charStore?.[`${charId}-${skillDepotId}`] : undefined) ??
+            charStore?.[charId.split("-")[0]] ??
+            supplement?.characters?.[charId];
+
+        // Resolve name: try loc hash first, then _derivedName from supplement
+        const nameHash = storeChar?.NameTextMapHash ? String(storeChar.NameTextMapHash) : null;
+        const charName = (loc && nameHash ? (loc[nameHash] || null) : null) ?? storeChar?._derivedName ?? null;
         const element = elementMap[storeChar?.Element ?? ""] || storeChar?.Element || "Unknown";
         const elementColor = genshinElementColors[element] ?? "#888888";
         const weaponType = weaponTypeMap[storeChar?.WeaponType ?? ""] || storeChar?.WeaponType || "Unknown";
@@ -204,7 +520,8 @@ export async function fetchEnkaUser(uid: string | number): Promise<EnkaUserData>
         // Weapon
         const weaponEquip = equipList.find((e: any) => e.weapon);
         const wFlat = weaponEquip?.flat ?? {};
-        const weaponName = loc && wFlat.nameTextMapHash ? (loc[String(wFlat.nameTextMapHash)] || null) : null;
+        const weaponNameFromLoc = loc && wFlat.nameTextMapHash ? (loc[String(wFlat.nameTextMapHash)] || null) : null;
+        const weaponName = weaponNameFromLoc ?? weaponNameFromIcon(wFlat.icon as string);
 
         // Stats from fightPropMap
         const stats: { name: string; value: string }[] = [];
@@ -226,9 +543,9 @@ export async function fetchEnkaUser(uid: string | number): Promise<EnkaUserData>
             const slotInfo = artifactSlotMap[flat.equipType as string];
             if (!slotInfo) continue;
 
-            const setName = loc && flat.setNameTextMapHash
-                ? (loc[String(flat.setNameTextMapHash)] ?? "Unknown Set")
-                : "Unknown Set";
+            const setName = (loc && flat.setNameTextMapHash
+                ? loc[String(flat.setNameTextMapHash)] || null
+                : null) ?? setNameFromIcon(flat.icon as string);
 
             const mainId: string = flat.reliquaryMainstat?.mainPropId ?? "";
             const mainPropInfo = artifactPropMap[mainId];
@@ -321,8 +638,18 @@ export async function fetchEnkaUser(uid: string | number): Promise<EnkaUserData>
                 profileIcon = `${ENKA_BASE_URL}/ui/${iconName}.png`;
             }
         } catch {}
+
+        if (!profileIcon) {
+            try {
+                const sup = await getSupplementData();
+                const supIcon = sup?.pfps?.[String(pfpId)];
+                if (supIcon) {
+                    profileIcon = `${ENKA_BASE_URL}/ui/${supIcon}.png`;
+                }
+            } catch {}
+        }
     }
-    // Fallback: use first showcase character's avatar icon
+    // Fallback 2: use first showcase character's avatar icon
     if (!profileIcon) {
         const showList = info.showAvatarInfoList ?? [];
         const firstAvatar = showList[0]?.avatarId ?? (data.avatarInfoList?.[0]?.avatarId);
