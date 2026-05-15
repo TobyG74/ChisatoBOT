@@ -170,10 +170,10 @@ export class Group {
     public delete = (groupId: string) =>
         new Promise(async (resolve, reject) => {
             try {
-                const metadata = await Database.group.delete({
+                const result = await Database.group.deleteMany({
                     where: { groupId },
                 });
-                resolve(metadata);
+                resolve(result);
             } catch (err) {
                 reject(err);
             }
