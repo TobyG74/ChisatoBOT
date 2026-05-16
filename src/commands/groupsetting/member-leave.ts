@@ -13,6 +13,9 @@ export default {
 📝 *Description:*
 Leave message feature will send goodbye message when members leave the group.
 
+💡 *Set leave message:*
+{prefix}setleave [message] 
+
 💡 *Usage:*
 {prefix}{command.name} on
 {prefix}{command.name} off

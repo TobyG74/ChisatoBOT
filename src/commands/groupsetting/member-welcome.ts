@@ -13,6 +13,9 @@ export default {
 📝 *Description:*
 Welcome message feature will greet new members when they join the group.
 
+💡 *Set Welcome Message:*
+{prefix}setwelcome [message]
+
 💡 *Usage:*
 {prefix}{command.name} on
 {prefix}{command.name} off

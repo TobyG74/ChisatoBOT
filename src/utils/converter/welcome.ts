@@ -1,12 +1,92 @@
-import { createCanvas, loadImage, SKRSContext2D } from "@napi-rs/canvas";
+import { createCanvas, loadImage, SKRSContext2D, Image } from "@napi-rs/canvas";
 import path from "path";
 import axios from "axios";
 import twemojiParser from "twemoji-parser";
 const { parse: parseEmoji } = twemojiParser;
 import { parsePhoneNumber } from "awesome-phonenumber";
 
+// ---------------------------------------------------------------------------
+// Module-level caches — created once per process and reused across every
+// welcome/leave invocation. Generating these images is on the hot path of
+// group join/leave events, so avoiding redundant disk reads and network
+// round-trips matters a lot.
+// ---------------------------------------------------------------------------
+
+let cachedBackground: Image | null = null;
+async function getBackground(): Promise<Image> {
+    if (cachedBackground) return cachedBackground;
+    const templatePath = path.join(process.cwd(), "media", "welcome.png");
+    cachedBackground = await loadImage(templatePath);
+    return cachedBackground;
+}
+
+/** url → loaded twemoji image. Persistent for the process lifetime. */
+const emojiImageCache = new Map<string, Image>();
+/** url → in-flight load promise (prevents duplicate fetches for the same emoji). */
+const emojiImageInflight = new Map<string, Promise<Image | null>>();
+
+/** path/url → loaded profile image (small LRU). */
+const profileImageCache = new Map<string, { img: Image; expiresAt: number }>();
+const PROFILE_IMG_CACHE_TTL_MS = 5 * 60 * 1000;
+const PROFILE_IMG_CACHE_MAX = 100;
+
+async function getProfileImage(profileUrl: string): Promise<Image | null> {
+    const now = Date.now();
+    const cached = profileImageCache.get(profileUrl);
+    if (cached && cached.expiresAt > now) return cached.img;
+    try {
+        let img: Image;
+        if (profileUrl.startsWith("http://") || profileUrl.startsWith("https://")) {
+            const response = await axios.get(profileUrl, {
+                responseType: "arraybuffer",
+                timeout: 3000,
+            });
+            img = await loadImage(Buffer.from(response.data));
+        } else {
+            img = await loadImage(profileUrl);
+        }
+        if (profileImageCache.size >= PROFILE_IMG_CACHE_MAX) {
+            // Drop oldest
+            const oldestKey = profileImageCache.keys().next().value as string | undefined;
+            if (oldestKey) profileImageCache.delete(oldestKey);
+        }
+        profileImageCache.set(profileUrl, { img, expiresAt: now + PROFILE_IMG_CACHE_TTL_MS });
+        return img;
+    } catch {
+        return null;
+    }
+}
+
+async function getEmojiImage(url: string): Promise<Image | null> {
+    const cached = emojiImageCache.get(url);
+    if (cached) return cached;
+    const inflight = emojiImageInflight.get(url);
+    if (inflight) return inflight;
+    const promise = (async () => {
+        try {
+            const response = await axios.get(url, {
+                responseType: "arraybuffer",
+                timeout: 4000,
+            });
+            const img = await loadImage(Buffer.from(response.data));
+            emojiImageCache.set(url, img);
+            return img;
+        } catch {
+            return null;
+        } finally {
+            emojiImageInflight.delete(url);
+        }
+    })();
+    emojiImageInflight.set(url, promise);
+    return promise;
+}
+
 /**
- * Helper function to draw text with emoji support
+ * Helper function to draw text with emoji support.
+ *
+ * Performance: pre-fetches all emoji images concurrently (cached across
+ * invocations) before drawing, so a string with N emojis adds at most one
+ * round of fast cache hits — not N sequential network requests.
  */
 async function drawTextWithEmoji(
     ctx: SKRSContext2D,
@@ -16,11 +96,15 @@ async function drawTextWithEmoji(
     maxWidth?: number
 ): Promise<void> {
     const parsedEmoji = parseEmoji(text);
-    
+
     if (parsedEmoji.length === 0) {
         ctx.fillText(text, x, y, maxWidth);
         return;
     }
+
+    // Warm the emoji cache concurrently. After this `await Promise.all`, the
+    // per-emoji loop below should be hitting cache hits only.
+    const emojiImages = await Promise.all(parsedEmoji.map((e) => getEmojiImage(e.url)));
 
     let currentX = x;
     let lastIndex = 0;
@@ -35,7 +119,10 @@ async function drawTextWithEmoji(
         currentX = x - textWidth;
     }
 
-    for (const emoji of parsedEmoji) {
+    for (let i = 0; i < parsedEmoji.length; i++) {
+        const emoji = parsedEmoji[i];
+        const emojiImage = emojiImages[i];
+
         if (emoji.indices[0] > lastIndex) {
             const textBefore = text.substring(lastIndex, emoji.indices[0]);
             const savedAlign = ctx.textAlign;
@@ -45,11 +132,7 @@ async function drawTextWithEmoji(
             currentX += ctx.measureText(textBefore).width;
         }
 
-        try {
-            const emojiUrl = emoji.url;
-            const response = await axios.get(emojiUrl, { responseType: "arraybuffer" });
-            const emojiImage = await loadImage(Buffer.from(response.data));
-            
+        if (emojiImage) {
             let emojiY = y;
             if (ctx.textBaseline === "top") {
                 emojiY = y;
@@ -60,10 +143,12 @@ async function drawTextWithEmoji(
             } else {
                 emojiY = y - emojiSize * 0.85;
             }
-            
+
             ctx.drawImage(emojiImage, currentX, emojiY, emojiSize, emojiSize);
             currentX += emojiSize;
-        } catch (error) {
+        } else {
+            // Network fetch failed and there's no cached image — draw the
+            // emoji as plain text so we don't lose anything.
             const emojiText = emoji.text;
             const savedAlign = ctx.textAlign;
             ctx.textAlign = "left";
@@ -93,9 +178,8 @@ export async function createWelcomeImage(
     const width = 1024;
     const height = 576;
 
-    const templatePath = path.join(process.cwd(), "media", "welcome.png");
-    const background = await loadImage(templatePath);
-    
+    const background = await getBackground();
+
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -160,15 +244,9 @@ export async function createWelcomeImage(
 
     // Load and draw profile picture
     try {
-        let profileImage;
-        
-        if (profileUrl.startsWith("http://") || profileUrl.startsWith("https://")) {
-            const response = await axios.get(profileUrl, { responseType: "arraybuffer" });
-            profileImage = await loadImage(Buffer.from(response.data));
-        } else {
-            profileImage = await loadImage(profileUrl);
-        }
-        
+        const profileImage = await getProfileImage(profileUrl);
+        if (!profileImage) throw new Error("profile image unavailable");
+
         const profileSize = 160;
         const profileX = width / 2;
         const profileY = 150;
@@ -294,9 +372,8 @@ export async function createLeaveImage(
     const width = 1024;
     const height = 576;
 
-    const templatePath = path.join(process.cwd(), "media", "welcome.png");
-    const background = await loadImage(templatePath);
-    
+    const background = await getBackground();
+
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -358,15 +435,9 @@ export async function createLeaveImage(
     ctx.restore();
 
     try {
-        let profileImage;
-        
-        if (profileUrl.startsWith("http://") || profileUrl.startsWith("https://")) {
-            const response = await axios.get(profileUrl, { responseType: "arraybuffer" });
-            profileImage = await loadImage(Buffer.from(response.data));
-        } else {
-            profileImage = await loadImage(profileUrl);
-        }
-        
+        const profileImage = await getProfileImage(profileUrl);
+        if (!profileImage) throw new Error("profile image unavailable");
+
         const profileSize = 160;
         const profileX = width / 2;
         const profileY = 150;

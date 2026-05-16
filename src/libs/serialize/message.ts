@@ -61,24 +61,44 @@ export const message = async (
         const groupMetaForResolve = m.isGroup
             ? MessageContextBuilder.getCachedGroupMeta(m.from)
             : null;
+        // Mentions can be either format; resolve them all to PN once.
+        // resolveAllToPnJids is cache-first and only hits the signal store on
+        // a cache miss, so this is cheap when participants are already known.
         m.mentions = await resolveAllToPnJids(
             Chisato,
             m.message[m.type]?.contextInfo?.mentionedJid || [],
             groupMetaForResolve
         );
         const botJid = await getBotJid(Chisato);
-        // Resolve sender to PN form so commands using `message.sender` get the
-        // canonical phone-number JID even if Baileys handed us the LID.
-        const rawSender = m.isGroup
-            ? (m.key.participantAlt || m.key.participant)
-            : m.fromMe
-            ? botJid
-            : (m.key.remoteJidAlt || m.key.remoteJid);
-        m.sender = m.isGroup
-            ? await resolveToPnJid(Chisato, rawSender, groupMetaForResolve)
-            : m.fromMe
-            ? botJid
-            : await resolveToPnJid(Chisato, rawSender, groupMetaForResolve);
+        // For sender, prefer the alt fields Baileys already provides as PN —
+        // `participantAlt` (groups) and `remoteJidAlt` (DMs). Falling through
+        // to the resolver only when the alt field is missing avoids any
+        // signal-store round-trip on the message-decode hot path.
+        if (m.fromMe) {
+            m.sender = botJid;
+        } else if (m.isGroup) {
+            const altPn = m.key.participantAlt;
+            if (altPn && !altPn.endsWith("@lid") && !altPn.endsWith("@hosted.lid")) {
+                m.sender = await Chisato.decodeJid(altPn);
+            } else {
+                m.sender = await resolveToPnJid(
+                    Chisato,
+                    altPn || m.key.participant,
+                    groupMetaForResolve
+                );
+            }
+        } else {
+            const altPn = m.key.remoteJidAlt;
+            if (altPn && !altPn.endsWith("@lid") && !altPn.endsWith("@hosted.lid")) {
+                m.sender = await Chisato.decodeJid(altPn);
+            } else {
+                m.sender = await resolveToPnJid(
+                    Chisato,
+                    altPn || m.key.remoteJid,
+                    groupMetaForResolve
+                );
+            }
+        }
         m.body =
             m.type === "conversation"
                 ? m.message.conversation

@@ -49,8 +49,17 @@ async function withTimeout<T>(
     ]).catch(() => null);
 }
 
-const PROFILE_PIC_TIMEOUT_MS = 2000;
+const PROFILE_PIC_TIMEOUT_MS = 800;
+const PROFILE_PIC_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 const DEFAULT_PROFILE_PIC = path.join(process.cwd(), "media", "noprofile.png");
+
+/** user-part (e.g. "628xxxx" or "12345" for LID) → resolved URL/path. */
+const profilePicCache = new Map<string, { url: string; expiresAt: number }>();
+
+function jidUserPart(jid: string): string {
+    const [user] = jid.split("@");
+    return user?.split(":")[0] ?? "";
+}
 
 /**
  * Resolve a profile picture URL for a group participant.
@@ -60,24 +69,47 @@ async function resolveProfilePic(
     userJid: string,
     groupMetadata: any
 ): Promise<string> {
-    const participant = groupMetadata?.participants?.find(
-        (p: any) =>
-            p.id === userJid ||
-            p.phoneNumber === userJid ||
-            p.lid === userJid
-    );
-    const imgUrl = participant?.imgUrl;
-    if (imgUrl && imgUrl !== "changed") {
-        return imgUrl;
+    const userPart = jidUserPart(userJid);
+
+    if (userPart) {
+        const cached = profilePicCache.get(userPart);
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.url;
+        }
     }
 
+    if (groupMetadata?.participants?.length) {
+        for (const p of groupMetadata.participants) {
+            const candidates = [p.id, p.lid, p.phoneNumber].filter(Boolean) as string[];
+            if (!candidates.some((c) => jidUserPart(c) === userPart)) continue;
+            const imgUrl = (p as any).imgUrl;
+            if (imgUrl && imgUrl !== "changed") {
+                if (userPart) {
+                    profilePicCache.set(userPart, {
+                        url: imgUrl,
+                        expiresAt: Date.now() + PROFILE_PIC_CACHE_TTL_MS,
+                    });
+                }
+                return imgUrl;
+            }
+            break;
+        }
+    }
+
+    // 3. Remote lookup with a tight timeout.
     const url = await withTimeout(
         Chisato.profilePictureUrl(userJid, "image"),
         PROFILE_PIC_TIMEOUT_MS
     );
-    if (url) return url;
 
-    return DEFAULT_PROFILE_PIC;
+    const resolved = url || DEFAULT_PROFILE_PIC;
+    if (userPart) {
+        profilePicCache.set(userPart, {
+            url: resolved,
+            expiresAt: Date.now() + PROFILE_PIC_CACHE_TTL_MS,
+        });
+    }
+    return resolved;
 }
 
 export class GroupUpdateHandler {
