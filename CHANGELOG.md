@@ -2,6 +2,19 @@
 
 All notable changes to ChisatoBOT are documented in this file.
 
+## 2026-05-16
+
+- feat: Add leave message configuration and update related dashboard settings
+- feat: Add leave/welcome message configuration commands and improve JID resolution caching
+- feat: Implement LID-to-phone JID resolution for mentions and quoted senders
+- feat: Enhance dashboard login approval with IP whitelisting/blacklisting
+- feat: Add cache-control headers for dashboard JS/CSS assets
+- feat: Enhance sync database command with better error handling and summary output
+- feat: Update mute command response to include unmute instructions
+- feat: Rename werewolf command and alias for consistency
+- fix: Normalize IP entry handling in dashboard IP security
+- fix: Restrict mobile menu navigation to data-view links only
+
 ## 2026-05-14
 
 - feat: Allow team role to view Commands and Settings pages (read-only)
