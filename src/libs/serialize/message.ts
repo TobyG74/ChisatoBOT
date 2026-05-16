@@ -1,6 +1,8 @@
 import type { WAMessage } from "baileys";
 import { MessageSerialize } from "../../types/structure/serialize";
 import { Client } from "..";
+import { resolveAllToPnJids, resolveToPnJid } from "../../utils/jid-resolver";
+import { MessageContextBuilder } from "../../modules/handlers/message/message-context.builder";
 
 // Cache decoded bot JID — never changes after connect
 let cachedBotJid: string | null = null;
@@ -9,31 +11,6 @@ async function getBotJid(Chisato: Client): Promise<string> {
     if (cachedBotJid) return cachedBotJid;
     cachedBotJid = await Chisato.decodeJid(Chisato.user.id);
     return cachedBotJid;
-}
-
-/**
- * Resolve any @lid JIDs in a mentions array to their @s.whatsapp.net equivalents.
- * WhatsApp LID addressing sends mentions as LID JIDs; DB stores users as PN JIDs.
- */
-async function normalizeMentions(Chisato: Client, mentions: string[]): Promise<string[]> {
-    if (!mentions.length) return mentions;
-    const lidJids = mentions.filter(j => j.endsWith("@lid"));
-    if (!lidJids.length) return mentions;
-    try {
-        const signalRepo = (Chisato as any).signalRepository;
-        const mappings: Array<{ lid: string; pn: string }> | null =
-            await signalRepo?.lidMapping?.getPNsForLIDs(lidJids);
-        if (!mappings) return mentions;
-        // decodeJid strips device suffix: "27226099679412:0@s.whatsapp.net" → "27226099679412@s.whatsapp.net"
-        const lidToPN = new Map<string, string>();
-        for (const entry of mappings) {
-            const normalized = await Chisato.decodeJid(entry.pn);
-            if (normalized) lidToPN.set(entry.lid, normalized);
-        }
-        return mentions.map(jid => (jid.endsWith("@lid") ? (lidToPN.get(jid) ?? jid) : jid));
-    } catch {
-        return mentions;
-    }
 }
 
 export const message = async (
@@ -79,16 +56,29 @@ export const message = async (
         m.expiration = m.message[m.type].expiration || 0;
         m.messageTimestamp = message.messageTimestamp;
         m.pushName = message.pushName;
-        m.mentions = await normalizeMentions(
+        // Look up cached group metadata so the resolver can fall back to it
+        // when Baileys hasn't seen the LID yet.
+        const groupMetaForResolve = m.isGroup
+            ? MessageContextBuilder.getCachedGroupMeta(m.from)
+            : null;
+        m.mentions = await resolveAllToPnJids(
             Chisato,
-            m.message[m.type]?.contextInfo?.mentionedJid || []
+            m.message[m.type]?.contextInfo?.mentionedJid || [],
+            groupMetaForResolve
         );
         const botJid = await getBotJid(Chisato);
-        m.sender = m.isGroup
-            ? await Chisato.decodeJid(m.key.participantAlt)
+        // Resolve sender to PN form so commands using `message.sender` get the
+        // canonical phone-number JID even if Baileys handed us the LID.
+        const rawSender = m.isGroup
+            ? (m.key.participantAlt || m.key.participant)
             : m.fromMe
             ? botJid
-            : await Chisato.decodeJid(m.key.remoteJidAlt);
+            : (m.key.remoteJidAlt || m.key.remoteJid);
+        m.sender = m.isGroup
+            ? await resolveToPnJid(Chisato, rawSender, groupMetaForResolve)
+            : m.fromMe
+            ? botJid
+            : await resolveToPnJid(Chisato, rawSender, groupMetaForResolve);
         m.body =
             m.type === "conversation"
                 ? m.message.conversation
@@ -159,8 +149,10 @@ export const message = async (
                 m.quoted.message = m.quoted.message[m.quoted.type].message;
                 m.quoted.type = Object.keys(m.quoted.message)[0];
             }
-            m.quoted.sender = await Chisato.decodeJid(
-                m.message[m.type].contextInfo.participant
+            m.quoted.sender = await resolveToPnJid(
+                Chisato,
+                m.message[m.type].contextInfo.participant,
+                groupMetaForResolve
             );
             m.quoted.key = {
                 id: m.message[m.type].contextInfo.stanzaId,
@@ -213,9 +205,11 @@ export const message = async (
                     : m.quoted.type === "listMessage"
                     ? "List Message"
                     : "-";
-            m.quoted.mentions =
-                m.quoted.message[m.quoted.type]?.contextInfo?.mentionedJid ||
-                [];
+            m.quoted.mentions = await resolveAllToPnJids(
+                Chisato,
+                m.quoted.message[m.quoted.type]?.contextInfo?.mentionedJid || [],
+                groupMetaForResolve
+            );
             m.quoted.args = m.quoted.body.trim().split(/ +/).slice(1);
             m.quoted.arg = m.quoted.body.substring(
                 m.quoted.body.indexOf(" ") + 1

@@ -2,6 +2,7 @@ import type { Client } from "@libs/client/client";
 import type { MessageSerialize } from "../../../types/structure/serialize";
 import type { Database } from "../../../types/structure/commands";
 import { BotConfig } from "@core/config";
+import { indexGroupMetaForLidResolution } from "../../../utils/jid-resolver";
 
 interface TTLCache<T> {
     value: T;
@@ -71,6 +72,8 @@ export class MessageContextBuilder {
             value: meta,
             expiresAt: Date.now() + GROUP_META_TTL,
         });
+        // Feed any (lid, phoneNumber) pairs into the LID→PN resolver cache so
+        indexGroupMetaForLidResolution(meta);
     }
 
     private static async getBlockList(Chisato: Client): Promise<string[]> {
@@ -112,6 +115,7 @@ export class MessageContextBuilder {
             if (meta) {
                 MessageContextBuilder.prune(MessageContextBuilder.groupMetaCache, MAX_GROUP_CACHE);
                 MessageContextBuilder.groupMetaCache.set(from, { value: meta, expiresAt: now + GROUP_META_TTL });
+                indexGroupMetaForLidResolution(meta);
             }
             return meta;
         } catch {
