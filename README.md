@@ -190,11 +190,7 @@ npm run pm2:start   # with PM2 (recommended for production)
         "transitionGradient": false,
         "env": "node"
     },
-    "commandOverrides": {},
-    "dashboard": {
-        "ipWhitelist": [],
-        "ipBlacklist": []
-    }
+    "commandOverrides": {}
 };
 ```
 
@@ -215,8 +211,6 @@ npm run pm2:start   # with PM2 (recommended for production)
 | `limit.command` | Number of free command uses per user (if `useLimit` enabled) |
 | `cfonts` | Configuration for terminal logger fonts/colors |
 | `commandOverrides` | Override specific command configs (e.g. cooldown, limit) |
-| `dashboard.ipWhitelist` | Only allow these IPs to access the dashboard (empty = allow all) |
-| `dashboard.ipBlacklist` | Block these IPs from accessing the dashboard |
 
 ### Command Config Type
 

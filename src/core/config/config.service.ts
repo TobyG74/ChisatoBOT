@@ -41,10 +41,6 @@ export interface BotConfig {
         command: number;
     };
     cfonts: Record<string, any>;
-    dashboard: {
-        ipWhitelist: string[];
-        ipBlacklist: string[];
-    };
 }
 
 class ConfigService {
@@ -85,9 +81,6 @@ class ConfigService {
         }
         if (!this.config.commandOverrides) {
             this.config.commandOverrides = {};
-        }
-        if (!this.config.dashboard) {
-            this.config.dashboard = { ipWhitelist: [], ipBlacklist: [] };
         }
     }
 
