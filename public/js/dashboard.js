@@ -588,6 +588,7 @@ function updateGroupSettingsChart(data) {
         antilink: { icon: 'fa-link-slash',    color: '#818cf8', bg: 'rgba(99,102,241,0.15)',  label: 'Anti-Link' },
         antibot:  { icon: 'fa-robot',          color: '#f87171', bg: 'rgba(239,68,68,0.15)',   label: 'Anti-Bot'  },
         welcome:  { icon: 'fa-door-open',      color: '#34d399', bg: 'rgba(16,185,129,0.15)',  label: 'Welcome'   },
+        leave:    { icon: 'fa-door-closed',    color: '#fb7185', bg: 'rgba(244,63,94,0.15)',   label: 'Leave'     },
         notify:   { icon: 'fa-bell',           color: '#fbbf24', bg: 'rgba(245,158,11,0.15)',  label: 'Notify'    },
         mute:     { icon: 'fa-microphone-slash',color: '#fb7185', bg: 'rgba(244,63,94,0.15)',  label: 'Mute'      },
     };
@@ -637,6 +638,7 @@ async function loadGroups(page = 1) {
             { key: 'antilink', check: s => s.antilink?.status, icon: 'fa-link-slash',      color: '#818cf8', label: 'Anti-Link' },
             { key: 'antibot',  check: s => s.antibot,          icon: 'fa-robot',            color: '#f87171', label: 'Anti-Bot'  },
             { key: 'welcome',  check: s => s.welcome,          icon: 'fa-door-open',        color: '#34d399', label: 'Welcome'   },
+            { key: 'leave',    check: s => s.leave,            icon: 'fa-door-closed',      color: '#fb7185', label: 'Leave'     },
             { key: 'notify',   check: s => s.notify,           icon: 'fa-bell',             color: '#fbbf24', label: 'Notify'    },
             { key: 'mute',     check: s => s.mute,             icon: 'fa-microphone-slash', color: '#fb7185', label: 'Mute'      },
         ];
@@ -1098,6 +1100,8 @@ function openGroupModal(groupData) {
         groupData.settings.antibot || false;
     document.getElementById("group-welcome").checked =
         groupData.settings.welcome || false;
+    document.getElementById("group-leave").checked =
+        groupData.settings.leave || false;
     document.getElementById("group-notify").checked =
         groupData.settings.notify || false;
     document.getElementById("group-mute").checked =
@@ -1313,6 +1317,7 @@ document.getElementById("group-form")?.addEventListener("submit", (e) => {
         antilinkStatus: document.getElementById("group-antilink").checked,
         antibot: document.getElementById("group-antibot").checked,
         welcome: document.getElementById("group-welcome").checked,
+        leave: document.getElementById("group-leave").checked,
         notify: document.getElementById("group-notify").checked,
         mute: document.getElementById("group-mute").checked,
     };

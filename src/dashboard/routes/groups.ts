@@ -211,6 +211,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                         .length,
                     antibot: groups.filter((g) => g.settings.antibot).length,
                     welcome: groups.filter((g) => g.settings.welcome).length,
+                    leave: groups.filter((g) => g.settings.leave).length,
                     notify: groups.filter((g) => g.settings.notify).length,
                     mute: groups.filter((g) => g.settings.mute).length,
                 },
@@ -230,12 +231,14 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 antilinkStatus,
                 antibot,
                 welcome,
+                leave,
                 notify,
                 mute,
             } = request.body as {
                 antilinkStatus?: boolean;
                 antibot?: boolean;
                 welcome?: boolean;
+                leave?: boolean;
                 notify?: boolean;
                 mute?: boolean;
             };
@@ -257,6 +260,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
             }
             if (antibot !== undefined) settings.antibot = antibot;
             if (welcome !== undefined) settings.welcome = welcome;
+            if (leave !== undefined) settings.leave = leave;
             if (notify !== undefined) settings.notify = notify;
             if (mute !== undefined) settings.mute = mute;
 

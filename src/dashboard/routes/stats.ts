@@ -81,6 +81,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
                 antilink: 0,
                 antibot: 0,
                 welcome: 0,
+                leave: 0,
                 notify: 0,
                 mute: 0,
             };
@@ -89,6 +90,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
                 if (group.settings.antilink?.status) settingsStats.antilink++;
                 if (group.settings.antibot) settingsStats.antibot++;
                 if (group.settings.welcome) settingsStats.welcome++;
+                if (group.settings.leave) settingsStats.leave++;
                 if (group.settings.notify) settingsStats.notify++;
                 if (group.settings.mute) settingsStats.mute++;
             });
