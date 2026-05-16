@@ -55,6 +55,10 @@ export class DashboardServer {
                     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                     res.setHeader("Pragma", "no-cache");
                     res.setHeader("Expires", "0");
+                } else if (filePath.endsWith(".js") || filePath.endsWith(".css")) {
+                    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+                    res.setHeader("Pragma", "no-cache");
+                    res.setHeader("Expires", "0");
                 } else {
                     res.setHeader("Cache-Control", "no-cache");
                 }

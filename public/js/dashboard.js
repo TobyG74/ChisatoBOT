@@ -1737,10 +1737,18 @@ function renderIPTable(list, entries) {
     const tbody = document.getElementById(`${list}-tbody`);
     const countEl = document.getElementById(`${list}-count`);
 
-    // Normalize entries (string[] for legacy responses or {ip, role}[])
-    const normalized = (entries || []).map(e =>
-        typeof e === 'string' ? { ip: e, role: 'unknown' } : { ip: e.ip, role: e.role || 'unknown' }
-    );
+    // Normalize entries (string[] for legacy responses or {ip, role}[]).
+    const normalized = (entries || [])
+        .map(e => {
+            if (typeof e === 'string') return { ip: e, role: 'unknown' };
+            if (e && typeof e === 'object') {
+                const ip = typeof e.ip === 'string' ? e.ip : (e.ip != null ? String(e.ip) : '');
+                const role = typeof e.role === 'string' ? e.role : 'unknown';
+                return { ip, role };
+            }
+            return { ip: String(e ?? ''), role: 'unknown' };
+        })
+        .filter(e => e.ip);
 
     if (countEl) countEl.textContent = normalized.length;
 
