@@ -1720,39 +1720,82 @@ async function loadIPSecurity() {
     }
 }
 
-function renderIPTable(list, ips) {
+function ipRoleBadge(role) {
+    const safe = role === 'owner' || role === 'team' ? role : 'unknown';
+    const palette = {
+        owner:   { classes: 'bg-amber-500/10 border-amber-500/30 text-amber-400',  icon: 'fa-crown' },
+        team:    { classes: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400', icon: 'fa-user-shield' },
+        unknown: { classes: 'bg-slate-500/10 border-slate-500/30 text-slate-400',  icon: 'fa-circle-question' },
+    }[safe];
+    const label = safe.charAt(0).toUpperCase() + safe.slice(1);
+    return `<span class="inline-flex items-center gap-1 ${palette.classes} border px-2 py-px rounded-full text-[0.7rem] font-bold uppercase tracking-wider">
+        <i class="fas ${palette.icon} text-[0.6rem]"></i>${label}
+    </span>`;
+}
+
+function renderIPTable(list, entries) {
     const tbody = document.getElementById(`${list}-tbody`);
     const countEl = document.getElementById(`${list}-count`);
-    if (countEl) countEl.textContent = ips.length;
 
-    if (!ips.length) {
-        tbody.innerHTML = `<tr><td colspan="3" class="table-empty">No IPs in ${list}</td></tr>`;
+    // Normalize entries (string[] for legacy responses or {ip, role}[])
+    const normalized = (entries || []).map(e =>
+        typeof e === 'string' ? { ip: e, role: 'unknown' } : { ip: e.ip, role: e.role || 'unknown' }
+    );
+
+    if (countEl) countEl.textContent = normalized.length;
+
+    if (!normalized.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="table-empty">No IPs in ${list}</td></tr>`;
         return;
     }
 
-    const color = list === 'whitelist' ? '#4ade80' : '#fb7185';
+    // Group by role
+    const order = ['owner', 'team', 'unknown'];
+    const grouped = {};
+    for (const e of normalized) (grouped[e.role] = grouped[e.role] || []).push(e);
+
+    const dotClasses = list === 'whitelist' ? 'text-emerald-400' : 'text-rose-400';
     const iconClass = list === 'whitelist' ? 'fa-circle-check' : 'fa-ban';
 
-    tbody.innerHTML = ips.map((ip, i) => `
-        <tr>
-            <td style="color:var(--text-subtle);width:40px">${i + 1}</td>
-            <td>
-                <span style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:var(--text);">
-                    <i class="fas ${iconClass}" style="color:${color};font-size:0.7rem;margin-right:6px;"></i>${ip}
-                </span>
-            </td>
-            <td style="text-align:right;">
-                <button class="btn btn-danger" style="padding:0.25rem 0.625rem;font-size:0.8rem;" onclick="removeIpFromList('${list}','${ip}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    let html = '';
+    let counter = 0;
+    for (const role of order) {
+        const items = grouped[role];
+        if (!items?.length) continue;
+        html += `<tr><td colspan="4" class="bg-indigo-500/[0.04] px-3 py-2 text-[0.7rem] font-bold uppercase tracking-wider text-[color:var(--text-muted)]">
+            ${ipRoleBadge(role)} <span class="ml-2 text-[color:var(--text-subtle)] normal-case tracking-normal font-medium">${items.length} entr${items.length === 1 ? 'y' : 'ies'}</span>
+        </td></tr>`;
+        for (const e of items) {
+            counter++;
+            html += `
+                <tr>
+                    <td class="text-[color:var(--text-subtle)] w-10">${counter}</td>
+                    <td>
+                        <span class="font-mono text-sm text-[color:var(--text)] inline-flex items-center gap-1.5">
+                            <i class="fas ${iconClass} ${dotClasses} text-[0.7rem]"></i>${e.ip}
+                        </span>
+                    </td>
+                    <td>${ipRoleBadge(e.role)}</td>
+                    <td class="text-right whitespace-nowrap">
+                        <button class="btn btn-ghost px-2.5 py-1 text-xs mr-1" title="Edit" onclick="openIpEditModal('${list}','${e.ip}','${e.role}')">
+                            <i class="fas fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn btn-danger px-2.5 py-1 text-xs" title="Remove" onclick="removeIpFromList('${list}','${e.ip}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    tbody.innerHTML = html;
 }
 
 async function addIpToList(list) {
     const input = document.getElementById(`${list}-input`);
+    const roleSel = document.getElementById(`${list}-role`);
     const ip = input?.value?.trim();
+    const role = (roleSel?.value || 'unknown').toLowerCase();
     if (!ip) { showToast('Please enter an IP address first', 'error'); return; }
 
     // Basic IP validation (IPv4 and IPv6)
@@ -1767,11 +1810,11 @@ async function addIpToList(list) {
         const res = await authFetch(`${API_BASE}/config/ip/${list}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ip }),
+            body: JSON.stringify({ ip, role }),
         }).then(r => r.json());
 
         if (res.success) {
-            showToast(`IP ${ip} added to ${list}`);
+            showToast(`IP ${ip} added to ${list} (${role})`);
             input.value = '';
             renderIPTable('whitelist', res.ipWhitelist || []);
             renderIPTable('blacklist', res.ipBlacklist || []);
@@ -1800,6 +1843,81 @@ async function removeIpFromList(list, ip) {
         }
     } catch {
         showToast('Connection error', 'error');
+    }
+}
+
+function openIpEditModal(list, ip, role) {
+    const modal = document.getElementById('ip-edit-modal');
+    if (!modal) return;
+    const title = document.getElementById('ip-edit-title');
+    const errorEl = document.getElementById('ip-edit-error');
+    document.getElementById('ip-edit-list').value = list;
+    document.getElementById('ip-edit-original').value = ip;
+    document.getElementById('ip-edit-input').value = ip;
+    document.getElementById('ip-edit-role').value =
+        role === 'owner' || role === 'team' ? role : 'unknown';
+    if (title) {
+        const label = list === 'whitelist' ? 'Whitelist' : 'Blacklist';
+        title.textContent = `Edit ${label} Entry`;
+    }
+    if (errorEl) {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+    }
+    modal.classList.add('show');
+}
+
+function closeIpEditModal() {
+    document.getElementById('ip-edit-modal')?.classList.remove('show');
+}
+
+async function saveIpEdit() {
+    const list = document.getElementById('ip-edit-list').value;
+    const originalIp = document.getElementById('ip-edit-original').value;
+    const newIp = document.getElementById('ip-edit-input').value.trim();
+    const role = (document.getElementById('ip-edit-role').value || 'unknown').toLowerCase();
+    const errorEl = document.getElementById('ip-edit-error');
+    const showError = (msg) => {
+        if (!errorEl) return showToast(msg, 'error');
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+    };
+    if (errorEl) {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+    }
+
+    if (!newIp) {
+        showError('IP address is required');
+        return;
+    }
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6 = /^[0-9a-fA-F:]+$/;
+    if (!ipv4.test(newIp) && !ipv6.test(newIp)) {
+        showError('Invalid IP address format');
+        return;
+    }
+
+    try {
+        const res = await authFetch(
+            `${API_BASE}/config/ip/${list}/${encodeURIComponent(originalIp)}`,
+            {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip: newIp, role }),
+            }
+        ).then(r => r.json());
+
+        if (res.success) {
+            showToast(`IP entry updated (${list})`);
+            closeIpEditModal();
+            renderIPTable('whitelist', res.ipWhitelist || []);
+            renderIPTable('blacklist', res.ipBlacklist || []);
+        } else {
+            showError(res.message || 'Failed to update IP');
+        }
+    } catch {
+        showError('Connection error');
     }
 }
 

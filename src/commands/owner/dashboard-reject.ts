@@ -1,12 +1,12 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { handleLoginApproval } from "../../dashboard/routes/auth";
+import { handleLoginApproval, notifyTeamApprovalDecision } from "../../dashboard/routes/auth";
 
 export default {
     name: "dashboardreject",
-    alias: ["dashreject"],
+    alias: ["dashreject", "dashblock"],
     usage: "[approvalId]",
     category: "owner",
-    description: "Reject pending dashboard login request",
+    description: "Reject a pending dashboard login & block the requester IP for that role",
     isOwner: true,
     isPrivate: true,
     async run({ Chisato, from, args, message, sender }) {
@@ -16,17 +16,12 @@ export default {
             return Chisato.sendText(from, "❌ Approval ID tidak ditemukan.", message);
         }
 
-        const ownerNumber = sender?.split("@")[0] || "unknown";
-        const result = handleLoginApproval(approvalId, "rejected", ownerNumber);
+        const actorPhone = sender?.split("@")[0] || "unknown";
+        const result = await handleLoginApproval(approvalId, "block", actorPhone);
 
         await Chisato.sendText(from, result.ok ? `✅ ${result.message}` : `❌ ${result.message}`, message);
 
-        if (result.ok && result.loginPhone) {
-            await Chisato.sendText(
-                `${result.loginPhone}@s.whatsapp.net`,
-                "❌ Login dashboard kamu ditolak oleh owner.",
-                message
-            );
-        }
+        // Out-of-band notice for the team member if owner just blocked them.
+        await notifyTeamApprovalDecision(result);
     },
 } satisfies ConfigCommands;

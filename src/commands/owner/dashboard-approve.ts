@@ -1,12 +1,12 @@
 import type { ConfigCommands } from "../../types/structure/commands";
-import { handleLoginApproval } from "../../dashboard/routes/auth";
+import { handleLoginApproval, notifyTeamApprovalDecision } from "../../dashboard/routes/auth";
 
 export default {
     name: "dashboardapprove",
-    alias: ["dashapprove"],
+    alias: ["dashapprove", "dashwhitelist"],
     usage: "[approvalId]",
     category: "owner",
-    description: "Approve pending dashboard login request",
+    description: "Approve a pending dashboard login & whitelist the requester IP for that role",
     isOwner: true,
     isPrivate: true,
     async run({ Chisato, from, args, message, sender }) {
@@ -16,17 +16,14 @@ export default {
             return Chisato.sendText(from, "❌ Approval ID tidak ditemukan.", message);
         }
 
-        const ownerNumber = sender?.split("@")[0] || "unknown";
-        const result = handleLoginApproval(approvalId, "approved", ownerNumber);
+        const actorPhone = sender?.split("@")[0] || "unknown";
+        const result = await handleLoginApproval(approvalId, "whitelist", actorPhone);
 
         await Chisato.sendText(from, result.ok ? `✅ ${result.message}` : `❌ ${result.message}`, message);
 
-        if (result.ok && result.loginPhone) {
-            await Chisato.sendText(
-                `${result.loginPhone}@s.whatsapp.net`,
-                "✅ Login dashboard kamu sudah di-approve oleh owner. Silakan lanjut di halaman login.",
-                message
-            );
-        }
+        // Send a friendly out-of-band notice to a team member when their login
+        // was just approved by the owner (the dashboard UI will redirect them
+        // automatically, but a WhatsApp ping is nice).
+        await notifyTeamApprovalDecision(result);
     },
 } satisfies ConfigCommands;

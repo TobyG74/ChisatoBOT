@@ -10,6 +10,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
         <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>tailwind.config={important:true,corePlugins:{preflight:false}}</script>
         <style>
             *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -547,6 +549,23 @@
             .cl-docs   { background: rgba(148,163,184,0.12); color: #94a3b8; }
             .cl-note   { background: rgba(148,163,184,0.12); color: #94a3b8; }
             .cl-default { background: rgba(148,163,184,0.12); color: #94a3b8; }
+
+            /* Approval ring — minimal SVG-specific bits not expressible in Tailwind utilities */
+            .approval-progress {
+                fill: none;
+                stroke-width: 6;
+                stroke-linecap: round;
+                transition: stroke-dashoffset 1s linear;
+                filter: drop-shadow(0 0 6px rgba(99,102,241,0.4));
+            }
+            .approval-track {
+                fill: none;
+                stroke-width: 6;
+                stroke: rgba(99,102,241,0.12);
+            }
+            .approval-ring.urgent .approval-progress {
+                filter: drop-shadow(0 0 8px rgba(239,68,68,0.45));
+            }
         </style>
     </head>
     <body>
@@ -611,6 +630,54 @@
                         Sign In to Dashboard
                     </button>
                 </form>
+
+                <!-- Approval Wait Card (shown while polling owner/team approval) -->
+                <div
+                    id="approval-wait"
+                    role="status"
+                    aria-live="polite"
+                    class="hidden flex-col items-center gap-4 mt-6 mb-2 px-5 pt-5 pb-6 rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.08] to-violet-500/[0.04] shadow-[inset_0_0_30px_rgba(99,102,241,0.06)]"
+                >
+                    <div id="approval-ring" class="relative w-24 h-24">
+                        <svg viewBox="0 0 100 100" aria-hidden="true" class="w-full h-full -rotate-90">
+                            <defs>
+                                <linearGradient id="approvalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#6366f1" />
+                                    <stop offset="50%" stop-color="#8b5cf6" />
+                                    <stop offset="100%" stop-color="#06b6d4" />
+                                </linearGradient>
+                                <linearGradient id="approvalGradientUrgent" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f59e0b" />
+                                    <stop offset="100%" stop-color="#ef4444" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="approval-track" cx="50" cy="50" r="44" />
+                            <circle
+                                id="approval-progress"
+                                class="approval-progress"
+                                stroke="url(#approvalGradient)"
+                                cx="50" cy="50" r="44"
+                                stroke-dasharray="276.46"
+                                stroke-dashoffset="0"
+                            />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center font-extrabold text-[color:var(--text)] tracking-tight">
+                            <span id="approval-countdown-num" class="text-[1.75rem] leading-none">60</span>
+                            <span class="text-[0.65rem] font-semibold text-[color:var(--text-muted)] mt-0.5 uppercase tracking-[0.08em]">seconds</span>
+                        </div>
+                    </div>
+
+                    <div id="approval-title" class="text-[0.9rem] font-bold text-[color:var(--text)] text-center -tracking-[0.01em]">
+                        Waiting for approval…
+                    </div>
+                    <div id="approval-subtitle" class="text-[0.78rem] text-[color:var(--text-muted)] text-center leading-snug max-w-[320px]">
+                        Open WhatsApp and tap <b>Allow &amp; Whitelist</b> or <b>Block IP</b> on the message you just received.
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 text-[0.72rem] text-[color:var(--text-subtle)] bg-[rgba(6,11,24,0.6)] border border-[color:var(--border)] px-2.5 py-1 rounded-full font-mono">
+                        <i class="fas fa-hourglass-half text-[color:var(--accent)] text-[0.65rem]"></i>
+                        <span id="approval-meta-text">Window closes in 60s</span>
+                    </div>
+                </div>
 
                 <!-- Divider -->
                 <div class="divider">
@@ -726,6 +793,67 @@
                 draw();
             })();
 
+            // Approval countdown UI helpers
+            const APPROVAL_CIRCUMFERENCE = 2 * Math.PI * 44; // ≈ 276.46
+            const approvalEl = document.getElementById("approval-wait");
+            const approvalRing = document.getElementById("approval-ring");
+            const approvalProgress = document.getElementById("approval-progress");
+            const approvalCountNum = document.getElementById("approval-countdown-num");
+            const approvalMetaText = document.getElementById("approval-meta-text");
+            const approvalSubtitle = document.getElementById("approval-subtitle");
+            const approvalTitle = document.getElementById("approval-title");
+
+            if (approvalProgress) {
+                approvalProgress.setAttribute("stroke-dasharray", String(APPROVAL_CIRCUMFERENCE));
+                approvalProgress.setAttribute("stroke-dashoffset", "0");
+            }
+
+            function showApprovalWait(role) {
+                if (!approvalEl) return;
+                approvalEl.classList.remove("hidden");
+                approvalEl.classList.add("flex");
+                approvalRing.classList.remove("urgent");
+                approvalCountNum.classList.remove("text-red-300");
+                approvalProgress.setAttribute("stroke", "url(#approvalGradient)");
+                approvalTitle.textContent = "Waiting for approval…";
+                if (role === "team") {
+                    approvalSubtitle.innerHTML =
+                        "The owner has been notified that you're signing in. They will tap <b>Allow &amp; Whitelist</b> or <b>Block IP</b> on their own WhatsApp — please wait.";
+                } else {
+                    approvalSubtitle.innerHTML =
+                        "The approval prompt was sent to the <b>owner WhatsApp</b>. Tap <b>Allow &amp; Whitelist</b> or <b>Block IP</b> there to continue.";
+                }
+            }
+
+            function updateApprovalCountdown(remainingMs, totalMs) {
+                if (!approvalEl || approvalEl.classList.contains("hidden")) return;
+                const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+                const ratio = totalMs > 0 ? Math.max(0, Math.min(1, remainingMs / totalMs)) : 0;
+                approvalCountNum.textContent = remainingSec;
+                approvalProgress.setAttribute(
+                    "stroke-dashoffset",
+                    String(APPROVAL_CIRCUMFERENCE * (1 - ratio))
+                );
+                approvalMetaText.textContent = `Window closes in ${remainingSec}s`;
+                if (remainingSec <= 10) {
+                    approvalRing.classList.add("urgent");
+                    approvalCountNum.classList.add("text-red-300");
+                    approvalProgress.setAttribute("stroke", "url(#approvalGradientUrgent)");
+                } else {
+                    approvalRing.classList.remove("urgent");
+                    approvalCountNum.classList.remove("text-red-300");
+                    approvalProgress.setAttribute("stroke", "url(#approvalGradient)");
+                }
+            }
+
+            function hideApprovalWait() {
+                if (!approvalEl) return;
+                approvalEl.classList.add("hidden");
+                approvalEl.classList.remove("flex");
+                approvalRing.classList.remove("urgent");
+                approvalCountNum.classList.remove("text-red-300");
+            }
+
             // Login Form
             document.getElementById("login-form").addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -738,6 +866,7 @@
 
                 errorMessage.classList.remove("show");
                 successMessage.classList.remove("show");
+                hideApprovalWait();
 
                 if (!phoneNumber) {
                     document.getElementById("error-text").textContent = "Phone number is required";
@@ -745,17 +874,41 @@
                     return;
                 }
 
-                const waitApproval = async (approvalId) => {
+                const waitApproval = async (approvalId, totalMs, role) => {
+                    showApprovalWait(role);
                     const startedAt = Date.now();
-                    const timeoutMs = 5 * 60 * 1000;
-                    while (Date.now() - startedAt < timeoutMs) {
-                        const pollRes = await fetch(`/api/auth/approval-status/${approvalId}`);
-                        const pollData = await pollRes.json();
-                        if (pollData?.status === "approved" && pollData?.token) return pollData;
-                        if (pollData?.status === "rejected") throw new Error("Login was rejected by the owner.");
-                        await new Promise((resolve) => setTimeout(resolve, 2500));
+                    let countdownTimer = setInterval(() => {
+                        const remaining = Math.max(0, totalMs - (Date.now() - startedAt));
+                        updateApprovalCountdown(remaining, totalMs);
+                        if (remaining <= 0) clearInterval(countdownTimer);
+                    }, 250);
+                    updateApprovalCountdown(totalMs, totalMs);
+
+                    try {
+                        while (Date.now() - startedAt < totalMs + 1500) {
+                            const pollRes = await fetch(`/api/auth/approval-status/${approvalId}`);
+                            let pollData = {};
+                            try { pollData = await pollRes.json(); } catch { /* ignore */ }
+
+                            if (pollRes.status === 410 || pollData?.status === "expired") {
+                                throw new Error(
+                                    pollData?.message ||
+                                    "Approval window has expired. Please request approval again."
+                                );
+                            }
+                            if (pollData?.status === "approved" && pollData?.token) return pollData;
+                            if (pollData?.status === "rejected") {
+                                throw new Error(
+                                    pollData?.message ||
+                                    "Login was rejected and the IP has been blocked."
+                                );
+                            }
+                            await new Promise((resolve) => setTimeout(resolve, 2000));
+                        }
+                        throw new Error("Approval timed out. Please try signing in again.");
+                    } finally {
+                        clearInterval(countdownTimer);
                     }
-                    throw new Error("Approval timed out. Please try signing in again.");
                 };
 
                 try {
@@ -824,14 +977,19 @@
                             return;
                         }
 
+                        const approverRole = data?.admin?.role || "owner";
                         document.getElementById("success-text").textContent =
-                            `Request sent. Waiting for owner approval for +${phoneNumber}...`;
+                            approverRole === "team"
+                                ? `Owner has been notified about +${phoneNumber} signing in. Waiting for their decision...`
+                                : `Approval prompt sent to the owner's WhatsApp.`;
                         successMessage.classList.add("show");
                         submitBtn.innerHTML = '<span class="spinner"></span>Waiting for approval...';
 
                         if (!data?.approvalId) throw new Error("Approval ID not found from server.");
 
-                        const approvedData = await waitApproval(data.approvalId);
+                        const totalMs = Number(data.approvalExpiresInMs) || 60_000;
+                        const approvedData = await waitApproval(data.approvalId, totalMs, approverRole);
+                        hideApprovalWait();
                         localStorage.setItem("adminToken", approvedData.token);
                         localStorage.setItem("adminProfile", JSON.stringify(approvedData.admin || {}));
 
@@ -843,18 +1001,22 @@
                     } else {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Sign In to Dashboard';
-                        document.getElementById("error-text").textContent =
-                            data.message || "This number does not have dashboard access";
+                        const fallback = data?.roleMismatch
+                            ? `This IP is whitelisted for the "${data.ipRole}" role only. Sign in with a "${data.ipRole}" number, or remove the whitelist entry first.`
+                            : "This number does not have dashboard access";
+                        document.getElementById("error-text").textContent = data.message || fallback;
                         errorMessage.classList.add("show");
-                        setTimeout(() => { errorMessage.classList.remove("show"); }, 4500);
+                        setTimeout(() => { errorMessage.classList.remove("show"); }, data?.roleMismatch ? 8000 : 4500);
                     }
                 } catch (error) {
                     console.error("Login error:", error);
+                    hideApprovalWait();
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i>Sign In to Dashboard';
                     document.getElementById("error-text").textContent =
                         error.message || "Connection error. Please try again.";
                     errorMessage.classList.add("show");
+                    successMessage.classList.remove("show");
                     setTimeout(() => { errorMessage.classList.remove("show"); }, 5000);
                 }
             });

@@ -265,26 +265,57 @@ export async function configRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // GET /api/config/ip — return current whitelist and blacklist
+    // GET /api/config/ip — return current whitelist and blacklist (role-tagged)
     fastify.get("/ip", async (request, reply) => {
         if (!requireOwner(request, reply)) return;
         try {
-            return reply.send({ success: true, ...ipSecurityService.getLists() });
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }
     });
 
-    // POST /api/config/ip/whitelist — add IP to whitelist
-    fastify.post("/ip/whitelist", async (request: FastifyRequest<{ Body: { ip: string } }>, reply) => {
+    // POST /api/config/ip/whitelist — add IP to whitelist (with optional role)
+    fastify.post("/ip/whitelist", async (request: FastifyRequest<{ Body: { ip: string; role?: string } }>, reply) => {
         if (!requireOwner(request, reply)) return;
         try {
-            const { ip } = request.body;
+            const { ip, role } = request.body;
             if (!ip?.trim()) return reply.status(400).send({ success: false, message: "IP required" });
-            await ipSecurityService.addToWhitelist(ip.trim());
-            return reply.send({ success: true, ...ipSecurityService.getLists() });
+            const safeRole: "owner" | "team" | "unknown" =
+                role === "owner" || role === "team" ? role : "unknown";
+            await ipSecurityService.addToWhitelist(ip.trim(), safeRole);
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
+
+    // PUT /api/config/ip/whitelist/:ip — edit an existing whitelist entry
+    fastify.put("/ip/whitelist/:ip", async (request: FastifyRequest<{ Params: { ip: string }; Body: { ip?: string; role?: string } }>, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const originalIp = decodeURIComponent(request.params.ip);
+            const newIp = (request.body?.ip ?? originalIp).trim();
+            const role = request.body?.role;
+            const safeRole: "owner" | "team" | "unknown" =
+                role === "owner" || role === "team" ? role : "unknown";
+            if (!newIp) return reply.status(400).send({ success: false, message: "IP required" });
+            await ipSecurityService.updateWhitelistEntry(originalIp, newIp, safeRole);
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
+        } catch (e: any) {
+            return reply.status(400).send({ success: false, message: e.message });
         }
     });
 
@@ -294,22 +325,53 @@ export async function configRoutes(fastify: FastifyInstance) {
         try {
             const ip = decodeURIComponent(request.params.ip);
             await ipSecurityService.removeFromWhitelist(ip);
-            return reply.send({ success: true, ...ipSecurityService.getLists() });
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }
     });
 
-    // POST /api/config/ip/blacklist — add IP to blacklist
-    fastify.post("/ip/blacklist", async (request: FastifyRequest<{ Body: { ip: string } }>, reply) => {
+    // POST /api/config/ip/blacklist — add IP to blacklist (with optional role)
+    fastify.post("/ip/blacklist", async (request: FastifyRequest<{ Body: { ip: string; role?: string } }>, reply) => {
         if (!requireOwner(request, reply)) return;
         try {
-            const { ip } = request.body;
+            const { ip, role } = request.body;
             if (!ip?.trim()) return reply.status(400).send({ success: false, message: "IP required" });
-            await ipSecurityService.addToBlacklist(ip.trim());
-            return reply.send({ success: true, ...ipSecurityService.getLists() });
+            const safeRole: "owner" | "team" | "unknown" =
+                role === "owner" || role === "team" ? role : "unknown";
+            await ipSecurityService.addToBlacklist(ip.trim(), safeRole);
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
+        }
+    });
+
+    // PUT /api/config/ip/blacklist/:ip — edit an existing blacklist entry
+    fastify.put("/ip/blacklist/:ip", async (request: FastifyRequest<{ Params: { ip: string }; Body: { ip?: string; role?: string } }>, reply) => {
+        if (!requireOwner(request, reply)) return;
+        try {
+            const originalIp = decodeURIComponent(request.params.ip);
+            const newIp = (request.body?.ip ?? originalIp).trim();
+            const role = request.body?.role;
+            const safeRole: "owner" | "team" | "unknown" =
+                role === "owner" || role === "team" ? role : "unknown";
+            if (!newIp) return reply.status(400).send({ success: false, message: "IP required" });
+            await ipSecurityService.updateBlacklistEntry(originalIp, newIp, safeRole);
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
+        } catch (e: any) {
+            return reply.status(400).send({ success: false, message: e.message });
         }
     });
 
@@ -319,7 +381,11 @@ export async function configRoutes(fastify: FastifyInstance) {
         try {
             const ip = decodeURIComponent(request.params.ip);
             await ipSecurityService.removeFromBlacklist(ip);
-            return reply.send({ success: true, ...ipSecurityService.getLists() });
+            return reply.send({
+                success: true,
+                ...ipSecurityService.getLists(),
+                grouped: ipSecurityService.getListsByRole(),
+            });
         } catch (e: any) {
             return reply.status(500).send({ success: false, message: e.message });
         }

@@ -5,16 +5,25 @@ import jwt from "jsonwebtoken";
 import { getClientInstance } from "../../libs/client/instance";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 import { configService } from "../../core/config/config.service";
-import { ipSecurityService } from "../services/ip-security.service";
+import { ipSecurityService, type IpRole } from "../services/ip-security.service";
 
 const JWT_SECRET = process.env.JWT_SECRET || "chisato-dashboard-secret-key";
-const JWT_EXPIRES_IN = "7d";
-const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+/**
+ * Absolute session lifetime — every dashboard login is hard-capped at 24 hours
+ * from the moment of approval, regardless of recent activity. After that, the
+ * user must sign in again.
+ */
+const SESSION_ABSOLUTE_TTL_MS = 24 * 60 * 60 * 1000;
+/** Idle (sliding) session timeout — re-login required after 30 minutes of no activity. */
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+/** JWT lifetime mirrors the absolute session lifetime so a stolen token can't outlive the session. */
+const JWT_EXPIRES_IN = "24h";
 const LOGIN_APPROVAL_TTL_MS = 5 * 60 * 1000;
-const APPROVAL_BUTTON_TTL_MS = 1 * 60 * 1000; // WA button expires after 1 minute
+export const APPROVAL_BUTTON_TTL_MS = 1 * 60 * 1000; // WA button expires after 1 minute
 
 type AccessRole = "owner" | "team";
 type ApprovalDecision = "approved" | "rejected";
+type ApprovalAction = "whitelist" | "block";
 
 type LoginActionButton = {
     id: string;
@@ -152,14 +161,42 @@ function formatDuration(ms: number): string {
     return `${Math.ceil(ms / 1000)} detik`;
 }
 
-function loadSessionsFromFile(): Map<string, number> {
+type SessionRecord = {
+    createdAt: number;
+    lastActivity: number;
+};
+
+function isSessionStillValid(record: SessionRecord, now: number = Date.now()): boolean {
+    if (now - record.createdAt > SESSION_ABSOLUTE_TTL_MS) return false;
+    if (now - record.lastActivity > SESSION_IDLE_TIMEOUT_MS) return false;
+    return true;
+}
+
+function loadSessionsFromFile(): Map<string, SessionRecord> {
     try {
         if (fs.existsSync(SESSION_FILE)) {
             const data = JSON.parse(fs.readFileSync(SESSION_FILE, "utf-8"));
             const now = Date.now();
-            const map = new Map<string, number>();
-            for (const [k, v] of Object.entries(data as Record<string, number>)) {
-                if (now - v < SESSION_TIMEOUT_MS) map.set(k, v);
+            const map = new Map<string, SessionRecord>();
+            for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+                let record: SessionRecord | null = null;
+                if (typeof v === "number") {
+                    // Legacy format: only the last activity timestamp was stored.
+                    record = { createdAt: v, lastActivity: v };
+                } else if (
+                    v &&
+                    typeof v === "object" &&
+                    typeof (v as any).createdAt === "number" &&
+                    typeof (v as any).lastActivity === "number"
+                ) {
+                    record = {
+                        createdAt: (v as any).createdAt,
+                        lastActivity: (v as any).lastActivity,
+                    };
+                }
+                if (record && isSessionStillValid(record, now)) {
+                    map.set(k, record);
+                }
             }
             return map;
         }
@@ -167,7 +204,7 @@ function loadSessionsFromFile(): Map<string, number> {
     return new Map();
 }
 
-function saveSessionsToFile(map: Map<string, number>): void {
+function saveSessionsToFile(map: Map<string, SessionRecord>): void {
     try {
         const dir = path.join(process.cwd(), "temp");
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -175,7 +212,7 @@ function saveSessionsToFile(map: Map<string, number>): void {
     } catch {}
 }
 
-const sessionLastActivity: Map<string, number> = loadSessionsFromFile();
+const sessionStore: Map<string, SessionRecord> = loadSessionsFromFile();
 const pendingLoginRequests = new Map<string, PendingLoginRequest>();
 
 function normalizePhoneNumber(raw: string): string {
@@ -282,9 +319,17 @@ function cleanupPendingLoginRequests(): void {
     }
 }
 
-function setSessionActivity(sessionId: string): void {
-    sessionLastActivity.set(sessionId, Date.now());
-    saveSessionsToFile(sessionLastActivity);
+function startSession(sessionId: string): void {
+    const now = Date.now();
+    sessionStore.set(sessionId, { createdAt: now, lastActivity: now });
+    saveSessionsToFile(sessionStore);
+}
+
+function touchSessionActivity(sessionId: string): void {
+    const record = sessionStore.get(sessionId);
+    if (!record) return;
+    record.lastActivity = Date.now();
+    saveSessionsToFile(sessionStore);
 }
 
 function createPendingLoginRequest(
@@ -311,7 +356,7 @@ function createPendingLoginRequest(
     return req;
 }
 
-async function sendOwnerApprovalButtons(
+async function sendApprovalRequest(
     loginPhone: string,
     role: AccessRole,
     approvalId: string,
@@ -327,7 +372,6 @@ async function sendOwnerApprovalButtons(
         return;
     }
 
-    const roleLabel = role === "owner" ? "Owner" : "Team";
     const prefix = configService.getConfig().prefix || ".";
     const time = new Date().toLocaleString("id-ID", {
         timeZone: configService.getConfig().timeZone || "Asia/Jakarta",
@@ -339,63 +383,136 @@ async function sendOwnerApprovalButtons(
         hour12: false,
     });
 
-    const body =
-        `🔐 *Did You Login From a New Device or Location?*\n\n` +
-        `I noticed a new login attempt to your ChisatoBOT Dashboard.\n\n` +
-        `📱 *Account:* +${loginPhone}\n` +
-        `👤 *Role:* ${roleLabel}\n` +
-        `🌐 *IP Address:* ${requesterIp}\n` +
-        `🕐 *Time:* ${time}\n\n` +
-        `If this was *you*, tap *Allow* to grant access.\n` +
-        `If you *don't recognize* this, tap *Deny* to block it immediately.`;
+    // Buttons + decision messages always go to the owner numbers — both for
+    // owner self-logins and for team logins. For team logins the owner sees a
+    // single combined message that says "team is logging in" plus the
+    // Allow/Block buttons.
+    const approvalTargets = [...config.ownerNumber];
 
-    for (const ownerNumber of config.ownerNumber) {
-        const ownerJid = `${ownerNumber}@s.whatsapp.net`;
+    const approvalBody =
+        role === "team"
+            ? `🔔 *Team Login — Action Required*\n\n` +
+              `A *team* member is signing in to the ChisatoBOT Dashboard. ` +
+              `Only you (owner) can approve or block this login.\n\n` +
+              `📱 *Team Number:* +${loginPhone}\n` +
+              `🌐 *IP Address:* ${requesterIp}\n` +
+              `🕐 *Time:* ${time}\n\n` +
+              `Tap *Allow & Whitelist* to approve and remember this IP as a team IP.\n` +
+              `Tap *Block IP* to reject and add the IP to the team blocklist.\n\n` +
+              `_This button is valid for 1 minute._`
+            : `🔐 *Did You Login From a New Device or Location?*\n\n` +
+              `I noticed a new login attempt to your ChisatoBOT Dashboard.\n\n` +
+              `📱 *Account:* +${loginPhone}\n` +
+              `👤 *Role:* Owner\n` +
+              `🌐 *IP Address:* ${requesterIp}\n` +
+              `🕐 *Time:* ${time}\n\n` +
+              `If this was *you*, tap *Allow & Whitelist* to grant access — the IP will be remembered for next time.\n` +
+              `If you *don't recognize* this, tap *Block IP* to deny it and add the IP to the blocklist.\n\n` +
+              `_This button is valid for 1 minute._`;
+
+    for (const targetNumber of approvalTargets) {
+        const targetJid = `${targetNumber}@s.whatsapp.net`;
         try {
             const builder = new TemplateBuilder.Native(client as any);
             const msg = await builder
-                .mainBody(body)
+                .mainBody(approvalBody)
                 .mainFooter("ChisatoBOT Dashboard Security")
                 .buttons(
                     builder.button.reply({
-                        display: "✅ Allow",
+                        display: "✅ Allow & Whitelist",
                         id: `${prefix}dashboardapprove ${approvalId}`,
                     }),
                     builder.button.reply({
-                        display: "🚫 Deny",
+                        display: "🚫 Block IP",
                         id: `${prefix}dashboardreject ${approvalId}`,
                     })
                 )
                 .render();
 
-            await (client as any).relayMessage(ownerJid, msg.message, {
+            await (client as any).relayMessage(targetJid, msg.message, {
                 messageId: msg.key.id,
             });
         } catch (error) {
             // Fallback to simple text when native interactive is unsupported
             try {
                 await (client as any).sendText(
-                    ownerJid,
-                    `${body}\n\n✅ Allow: ${prefix}dashboardapprove ${approvalId}\n🚫 Deny: ${prefix}dashboardreject ${approvalId}`
+                    targetJid,
+                    `${approvalBody}\n\n✅ Allow & Whitelist: ${prefix}dashboardapprove ${approvalId}\n🚫 Block IP: ${prefix}dashboardreject ${approvalId}`
                 );
             } catch (fallbackErr) {
-                console.error(`Failed to send approval to ${ownerJid}:`, fallbackErr);
+                console.error(`Failed to send approval to ${targetJid}:`, fallbackErr);
             }
-            console.error(`Failed to send native approval to ${ownerJid}:`, error);
+            console.error(`Failed to send native approval to ${targetJid}:`, error);
         }
     }
 }
 
-export function handleLoginApproval(
+async function notifyTeamMemberOfDecision(
+    loginPhone: string,
+    requesterIp: string,
+    action: ApprovalAction
+): Promise<void> {
+    const client = getClientInstance();
+    if (!client) return;
+    const teamJid = `${loginPhone}@s.whatsapp.net`;
+    const body =
+        action === "whitelist"
+            ? `✅ Your dashboard login from IP \`${requesterIp}\` has been approved by the owner. You can now continue on the login page.`
+            : `🚫 Your dashboard login from IP \`${requesterIp}\` has been rejected by the owner. The IP has been added to the team blocklist.`;
+    try {
+        await (client as any).sendText(teamJid, body);
+    } catch (err) {
+        console.error(`Failed to notify team member ${teamJid}:`, err);
+    }
+}
+
+export type LoginApprovalResult = {
+    ok: boolean;
+    message: string;
+    loginPhone?: string;
+    ip?: string;
+    role?: AccessRole;
+    action?: ApprovalAction;
+    /** When true, the team member needs an out-of-band notification of the decision. */
+    notifyTeamMember?: boolean;
+};
+
+export function getPendingLoginRequest(approvalId: string):
+    | { phoneNumber: string; role: AccessRole; status: PendingLoginRequest["status"]; createdAt: number }
+    | null {
+    const req = pendingLoginRequests.get(approvalId);
+    if (!req) return null;
+    return {
+        phoneNumber: req.phoneNumber,
+        role: req.role,
+        status: req.status,
+        createdAt: req.createdAt,
+    };
+}
+
+export async function handleLoginApproval(
     approvalId: string,
-    decision: ApprovalDecision,
-    ownerNumber: string
-): { ok: boolean; message: string; loginPhone?: string; ip?: string } {
+    action: ApprovalAction,
+    actorPhone: string
+): Promise<LoginApprovalResult> {
     cleanupPendingLoginRequests();
     const req = pendingLoginRequests.get(approvalId);
 
     if (!req) {
         return { ok: false, message: "Request approval tidak ditemukan atau sudah expired." };
+    }
+
+    // Only owner numbers may approve/reject — team members no longer
+    // self-approve. The decision message is also routed to owner only.
+    const config = readPhoneAccessConfig();
+    if (!config.ownerNumber.includes(actorPhone)) {
+        return {
+            ok: false,
+            message: "Only the owner can approve or reject dashboard login requests.",
+            loginPhone: req.phoneNumber,
+            ip: req.requesterIp,
+            role: req.role,
+        };
     }
 
     if (req.status !== "pending") {
@@ -404,10 +521,10 @@ export function handleLoginApproval(
             message: `This request has already been ${req.status === "approved" ? "approved" : "rejected"}.`,
             loginPhone: req.phoneNumber,
             ip: req.requesterIp,
+            role: req.role,
         };
     }
 
-    // Check 1-minute button expiry for WhatsApp approval action
     if (Date.now() - req.createdAt > APPROVAL_BUTTON_TTL_MS) {
         pendingLoginRequests.delete(approvalId);
         return {
@@ -415,26 +532,54 @@ export function handleLoginApproval(
             message: `Approval session has expired. The button is only valid for 1 minute after the request is sent.`,
             loginPhone: req.phoneNumber,
             ip: req.requesterIp,
+            role: req.role,
         };
     }
 
+    const decision: ApprovalDecision = action === "whitelist" ? "approved" : "rejected";
     req.status = decision;
     req.decidedAt = Date.now();
-    req.decidedBy = ownerNumber;
+    req.decidedBy = actorPhone;
 
     if (decision === "approved") {
-        setSessionActivity(req.sessionId);
+        startSession(req.sessionId);
+    }
+
+    // Persist IP decision tagged with the requester's role.
+    const ipRole: IpRole = req.role; // owner | team
+    try {
+        if (action === "whitelist") {
+            await ipSecurityService.addToWhitelist(req.requesterIp, ipRole);
+        } else {
+            await ipSecurityService.addToBlacklist(req.requesterIp, ipRole);
+        }
+    } catch (err) {
+        console.error("Failed to update IP list after approval:", err);
     }
 
     return {
         ok: true,
         message:
-            decision === "approved"
-                ? `Login +${req.phoneNumber} from IP ${req.requesterIp} has been approved.`
-                : `Login +${req.phoneNumber} from IP ${req.requesterIp} has been rejected.`,
+            action === "whitelist"
+                ? `Login +${req.phoneNumber} from IP ${req.requesterIp} approved and whitelisted (${req.role}).`
+                : `Login +${req.phoneNumber} from IP ${req.requesterIp} rejected and IP added to blocklist (${req.role}).`,
         loginPhone: req.phoneNumber,
         ip: req.requesterIp,
+        role: req.role,
+        action,
+        // The dashboard polling already drives the team member's UI, so an
+        // out-of-band WhatsApp notice is just a friendly extra signal.
+        notifyTeamMember: req.role === "team",
     };
+}
+
+export async function notifyTeamApprovalDecision(
+    result: LoginApprovalResult
+): Promise<void> {
+    if (!result.ok || !result.notifyTeamMember || !result.loginPhone || !result.ip || !result.action) {
+        return;
+    }
+    await notifyTeamMemberOfDecision(result.loginPhone, result.ip, result.action);
 }
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -505,9 +650,27 @@ export async function authRoutes(fastify: FastifyInstance) {
                 { expiresIn: JWT_EXPIRES_IN }
             );
 
-            // IP whitelist — skip approval flow, activate session immediately
-            if (ipSecurityService.isWhitelisted(requesterIp)) {
-                setSessionActivity(sessionId);
+            // IP whitelist — only auto-approve when the whitelist role matches
+            // the login role. Legacy "unknown" entries are accepted for any
+            // role to avoid locking out previously whitelisted IPs.
+            const whitelistRole = ipSecurityService.getRole(requesterIp, "whitelist");
+            if (whitelistRole !== null) {
+                const isRoleMatch =
+                    whitelistRole === "unknown" || whitelistRole === role;
+                if (!isRoleMatch) {
+                    // Cross-role attempt — record the rejection as a rate-limit
+                    // hit so repeated probing is throttled.
+                    recordLoginAttempt(requesterIp);
+                    return reply.status(403).send({
+                        success: false,
+                        roleMismatch: true,
+                        ipRole: whitelistRole,
+                        loginRole: role,
+                        message: `This IP is whitelisted for the "${whitelistRole}" role, but the number you entered is registered as "${role}". Login rejected.`,
+                    });
+                }
+
+                startSession(sessionId);
                 // Clear any previous rate limit record for this IP
                 ipRateLimits.delete(requesterIp);
                 saveRateLimitsToFile(ipRateLimits);
@@ -539,7 +702,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 sessionId
             );
 
-            await sendOwnerApprovalButtons(normalizedPhone, role, pending.id, requesterIp);
+            await sendApprovalRequest(normalizedPhone, role, pending.id, requesterIp);
 
             // Record this attempt = next request from the same IP will face a cooldown
             recordLoginAttempt(requesterIp);
@@ -548,7 +711,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                 success: true,
                 approvalRequired: true,
                 approvalId: pending.id,
-                message: "Login request sent to owner for approval.",
+                approvalExpiresInMs: APPROVAL_BUTTON_TTL_MS,
+                message: "Login request sent for approval.",
                 admin: { phoneNumber: normalizedPhone, role },
                 buttons: buildLoginButtons(role),
             });
@@ -580,10 +744,25 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             if (pending.status === "pending") {
+                // If the 1-minute button window has elapsed without a decision,
+                // treat the request as expired and clean it up.
+                if (Date.now() - pending.createdAt > APPROVAL_BUTTON_TTL_MS) {
+                    pendingLoginRequests.delete(approvalId);
+                    return reply.status(410).send({
+                        success: false,
+                        status: "expired",
+                        message:
+                            "Approval window has expired (1 minute). Please request approval again.",
+                    });
+                }
                 return reply.send({
                     success: true,
                     status: "pending",
-                    message: "Waiting for owner approval...",
+                    message: "Waiting for approval...",
+                    expiresInMs: Math.max(
+                        0,
+                        APPROVAL_BUTTON_TTL_MS - (Date.now() - pending.createdAt)
+                    ),
                 });
             }
 
@@ -592,7 +771,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 return reply.status(403).send({
                     success: false,
                     status: "rejected",
-                    message: "Login rejected by owner.",
+                    message: "Login was rejected and the IP has been added to the blocklist.",
                 });
             }
 
@@ -633,7 +812,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             if (!decoded?.sessionId || !isSessionActive(decoded.sessionId)) {
                 return reply.status(401).send({
                     success: false,
-                    message: "Session expired due to inactivity",
+                    message: "Session expired. Please sign in again.",
                     sessionExpired: true,
                 });
             }
@@ -662,7 +841,8 @@ export async function authRoutes(fastify: FastifyInstance) {
             const token = authHeader.substring(7);
             const decoded = verifyToken(token) as DashboardTokenPayload | null;
             if (decoded?.sessionId) {
-                sessionLastActivity.delete(decoded.sessionId);
+                sessionStore.delete(decoded.sessionId);
+                saveSessionsToFile(sessionStore);
             }
         }
 
@@ -682,14 +862,15 @@ export function verifyToken(token: string): any {
 }
 
 export function isSessionActive(sessionId: string): boolean {
-    const lastActivity = sessionLastActivity.get(sessionId);
+    const record = sessionStore.get(sessionId);
 
-    if (!lastActivity) {
+    if (!record) {
         return false;
     }
 
-    if (Date.now() - lastActivity > SESSION_TIMEOUT_MS) {
-        sessionLastActivity.delete(sessionId);
+    if (!isSessionStillValid(record)) {
+        sessionStore.delete(sessionId);
+        saveSessionsToFile(sessionStore);
         return false;
     }
 
@@ -698,6 +879,6 @@ export function isSessionActive(sessionId: string): boolean {
 
 export function touchSession(sessionId: string): void {
     if (isSessionActive(sessionId)) {
-        setSessionActivity(sessionId);
+        touchSessionActivity(sessionId);
     }
 }
