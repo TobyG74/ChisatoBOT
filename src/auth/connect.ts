@@ -2,17 +2,36 @@ import "dotenv/config";
 import Pino from "pino";
 import util from "util";
 
-// Suppress verbose libsignal noise on stdout.
+// Suppress verbose libsignal noise on stdout/stderr.
 const _origInfo = console.info.bind(console);
+const _origWarn = console.warn.bind(console);
+const _origError = console.error.bind(console);
+
+const LIBSIGNAL_NOISE_PREFIXES = [
+    "Closing session",
+    "Closing open session",
+    "Removing old closed session",
+    "Decrypted message with closed session",
+    "Failed to decrypt message with closed session",
+    "Failed to decrypt message with any known session",
+    "Session error:",
+];
+
+const isLibsignalNoise = (args: unknown[]): boolean =>
+    typeof args[0] === "string" &&
+    LIBSIGNAL_NOISE_PREFIXES.some((p) => (args[0] as string).startsWith(p));
+
 console.info = (...args: unknown[]) => {
-    if (typeof args[0] === "string" && (
-        args[0].startsWith("Closing session") ||
-        args[0].startsWith("Decrypted message with closed session") ||
-        args[0].startsWith("Failed to decrypt message with closed session") ||
-        args[0].startsWith("Removing old closed session") ||
-        args[0].startsWith("Closing open session")
-    )) return;
+    if (isLibsignalNoise(args)) return;
     _origInfo(...args);
+};
+console.warn = (...args: unknown[]) => {
+    if (isLibsignalNoise(args)) return;
+    _origWarn(...args);
+};
+console.error = (...args: unknown[]) => {
+    if (isLibsignalNoise(args)) return;
+    _origError(...args);
 };
 
 import { Client } from "../libs/client/client";
