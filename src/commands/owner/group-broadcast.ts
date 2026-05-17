@@ -61,7 +61,6 @@ export default {
         );
 
         const bodyText =
-            `*「 GROUP BROADCAST 」*\n\n` +
             `${query}\n\n` +
             `_Broadcast by ${message.pushName}_`;
 
