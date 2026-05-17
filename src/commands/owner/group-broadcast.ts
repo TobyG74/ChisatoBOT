@@ -73,7 +73,7 @@ export default {
                     const builder = new TemplateBuilder.Native(Chisato);
                     builder
                         .mainBody(bodyText)
-                        .mainFooter(`Broadcast • ${message.pushName}`);
+                        .mainFooter(`ChisatoBOT - ${new Date().toLocaleDateString()}`);
 
                     if (isImage && buffer) {
                         builder.mainHeader("*「 GROUP BROADCAST 」*", buffer);
