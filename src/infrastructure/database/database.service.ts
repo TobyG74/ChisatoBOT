@@ -348,15 +348,15 @@ class DatabaseService {
         return group;
     }
 
-    public async deleteGroup(groupId: string): Promise<PrismaGroup> {
+    public async deleteGroup(groupId: string): Promise<{ count: number }> {
         const cacheKey = `group:${groupId}`;
 
-        const group = await this.prisma.group.delete({
+        const result = await this.prisma.group.deleteMany({
             where: { groupId },
         });
 
         cacheService.delete(cacheKey);
-        return group;
+        return result;
     }
 
     public async getGroupCount(): Promise<number> {

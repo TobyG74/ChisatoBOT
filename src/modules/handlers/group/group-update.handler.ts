@@ -117,6 +117,53 @@ export class GroupUpdateHandler {
         Group: new GroupDatabase(),
     };
 
+    /**
+     * Resolve the user-part of every JID identifier we know for the bot
+     * (PN-form `id` and LID-form `lid`). A participant entry is considered
+     * "the bot" if any of its identifiers (`id`, `phoneNumber`, `lid`) shares
+     * a user-part with one of these.
+     */
+    private async getBotIdentifiers(Chisato: Client): Promise<Set<string>> {
+        const out = new Set<string>();
+        const push = (jid: string | null | undefined) => {
+            if (!jid) return;
+            const user = jid.split("@")[0]?.split(":")[0];
+            if (user) out.add(user);
+        };
+
+        push(await Chisato.decodeJid(Chisato.user?.id));
+        push(((Chisato.user as any)?.lid ?? "") as string);
+        return out;
+    }
+
+    /**
+     * Does any identifier in this participant entry belong to the bot?
+     */
+    private entryBelongsToBot(
+        entry: ParticipantsUpdate["participants"][number],
+        botUserParts: Set<string>
+    ): boolean {
+        if (botUserParts.size === 0) return false;
+
+        const candidates: Array<string | undefined | null> =
+            typeof entry === "string"
+                ? [entry]
+                : entry
+                ? [
+                      entry.id,
+                      (entry as any).phoneNumber,
+                      (entry as any).lid,
+                  ]
+                : [];
+
+        for (const c of candidates) {
+            if (typeof c !== "string" || !c) continue;
+            const user = c.split("@")[0]?.split(":")[0];
+            if (user && botUserParts.has(user)) return true;
+        }
+        return false;
+    }
+
     async handleParticipantsUpdate(
         Chisato: Client,
         update: ParticipantsUpdate
@@ -135,8 +182,35 @@ export class GroupUpdateHandler {
             );
 
             const { Group } = this.Database;
+            const botUserParts = await this.getBotIdentifiers(Chisato);
             const botNumber = await Chisato.decodeJid(Chisato.user.id);
             const actor = author ? await Chisato.decodeJid(author) : botNumber;
+
+            // Bot was removed/left → drop the group from DB immediately,
+            // BEFORE attempting to fetch metadata (which would fail since the
+            // bot no longer has access). Without this early branch, the
+            // upsert below throws and the handler `return`s without cleanup,
+            // leaving an orphaned row for `syncdatabase` to clean up later.
+            const botLeft =
+                action === "remove" &&
+                update.participants.some((p) =>
+                    this.entryBelongsToBot(p, botUserParts)
+                );
+            if (botLeft) {
+                logger.info(
+                    `[participants.update] bot was removed from ${from} — cleaning up DB`
+                );
+                try {
+                    await Group.delete(from);
+                } catch (err) {
+                    logger.error(
+                        `Failed to delete group ${from} after bot removal: ${
+                            err instanceof Error ? err.message : String(err)
+                        }`
+                    );
+                }
+                return;
+            }
 
             // Fetch group metadata + settings in parallel
             let [groupMetadata, groupSettings] = await Promise.all([
@@ -773,8 +847,6 @@ export class GroupUpdateHandler {
         groupSettings: any,
         isLeave: boolean
     ): Promise<void> {
-        const { Group } = this.Database;
-
         if (isLeave) {
             const groupName = groupMetadata.subject;
             const memberCount = groupMetadata.participants?.length ?? 0;
@@ -856,15 +928,10 @@ export class GroupUpdateHandler {
             }
         }
 
-        // If the bot itself was removed, clean up the group from DB
-        const botLeft = participants.some(
-            (jid) => jid.split("@")[0] === botNumber.split("@")[0]
-        );
-        if (botLeft) {
-            await Group.delete(from);
-        } else {
-            await this.updateGroupMetadata(Chisato, from);
-        }
+        // Bot-was-removed cleanup is handled at the top of
+        // `handleParticipantsUpdate` (before metadata fetch). At this point we
+        // know the bot is still in the group, so just refresh metadata.
+        await this.updateGroupMetadata(Chisato, from);
     }
 
     /**

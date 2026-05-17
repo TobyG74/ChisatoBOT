@@ -14,9 +14,7 @@ export default {
 
         try {
             // Get user info
-            const sender = message.key.remoteJid?.includes("@g.us") 
-                ? message.key.participant 
-                : message.key.remoteJid;
+            const sender = message.sender
             
             if (!sender) {
                 return Chisato.sendText(from, "❌ Cannot get sender information", message);
