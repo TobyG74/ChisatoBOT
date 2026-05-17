@@ -12,11 +12,19 @@ const REPO_URL: string = (() => {
             const home = typeof pkg?.homepage === "string"
                 ? pkg.homepage.trim()
                 : "";
-            if (home) return home.replace(/#.*$/, "");  
+            if (home) return home.replace(/#.*$/, "");
         }
     } catch {  }
     return "https://github.com/TobyG74/ChisatoBOT";
 })();
+
+// How many groups between progress updates sent to the owner.
+const PROGRESS_INTERVAL = 25;
+
+// Light delay between sends. Baileys' per-bot signal-store mutex already
+// serialises every outgoing message, so this is just an extra cushion against
+// WhatsApp's anti-flood, not the primary throttle.
+const PER_SEND_DELAY_MS = 350;
 
 export default {
     name: "groupbc",
@@ -34,14 +42,21 @@ export default {
 
 💡 *Example:*
 {prefix}{command.name} Hello everyone! This is a group broadcast message!`,
-    async run({ Chisato, query, from, message, prefix }) {
-        const groups = Object.entries(
-            await Chisato.groupFetchAllParticipating() as Record<string, any>
+    async run({ Chisato, query, command, from, message, prefix }) {
+        const groupIds = Object.values(
+            (await Chisato.groupFetchAllParticipating()) as Record<string, any>
         )
-            .slice(0)
-            .map((entry) => entry[1])
             .filter((v) => !v.isCommunity && !v.isCommunityAnnounce)
             .map((v) => v.id);
+
+        if (!groupIds.length) {
+            await Chisato.sendText(
+                from,
+                "❌ Bot is not currently in any group.",
+                message
+            );
+            return;
+        }
 
         const isImage =
             message?.type === "imageMessage" ||
@@ -49,62 +64,159 @@ export default {
 
         let buffer: Buffer | null = null;
         if (isImage) {
-            buffer = message.quoted !== null
-                ? await message.quoted.download()
-                : await message.download();
+            buffer =
+                message.quoted !== null
+                    ? await message.quoted.download()
+                    : await message.download();
+        }
+
+        const bodyText = `${query}\n\n_Broadcast by ${message.pushName}_`;
+        const ownerCmd = `${prefix ?? "."}owner`;
+
+        // Build the message ONCE. The same content is sent to every group;
+        // only the recipient JID and the per-message ID change. Building
+        // inside the loop (as the original did) re-uploaded the image and
+        // re-rendered the template for every recipient — both go through
+        // Baileys' keys.transaction mutex, multiplying broadcast time.
+        let renderedContent: any;
+        try {
+            const builder = new TemplateBuilder.Native(Chisato);
+            builder
+                .mainBody(bodyText)
+                .mainFooter(
+                    `ChisatoBOT - ${new Date().toLocaleDateString()}`
+                );
+
+            if (isImage && buffer) {
+                builder.mainHeader("*「 GROUP BROADCAST 」*", buffer);
+            } else {
+                builder.mainHeader("*「 GROUP BROADCAST 」*");
+            }
+
+            builder.buttons(
+                builder.button.url({
+                    display: "🌐 GitHub Repository",
+                    url: REPO_URL,
+                }),
+                builder.button.reply({
+                    display: "👤 Contact Owner",
+                    id: ownerCmd,
+                })
+            );
+
+            const rendered = await builder.render();
+            renderedContent = rendered.message;
+        } catch (err) {
+            Chisato.logger.error(
+                command.name,
+                `Failed to prepare broadcast template: ${
+                    err instanceof Error ? err.message : String(err)
+                }`
+            );
+            await Chisato.sendText(
+                from,
+                `❌ Failed to prepare broadcast template:\n${
+                    err instanceof Error ? err.message : String(err)
+                }`,
+                message
+            );
+            return;
         }
 
         await Chisato.sendText(
             from,
-            `Sending Broadcast to ${groups.length} Group!`,
+            `📡 Sending broadcast to ${groupIds.length} group(s)...`,
             message
         );
 
-        const bodyText =
-            `${query}\n\n` +
-            `_Broadcast by ${message.pushName}_`;
-
-        const ownerCmd = `${prefix ?? "."}owner`;
-
         (async () => {
-            for (const group of groups) {
-                await FileUtils.sleep(1000);
+            const startedAt = Date.now();
+            let success = 0;
+            let failed = 0;
+
+            for (let i = 0; i < groupIds.length; i++) {
+                const groupId = groupIds[i];
                 try {
-                    const builder = new TemplateBuilder.Native(Chisato);
-                    builder
-                        .mainBody(bodyText)
-                        .mainFooter(`ChisatoBOT - ${new Date().toLocaleDateString()}`);
-
-                    if (isImage && buffer) {
-                        builder.mainHeader("*「 GROUP BROADCAST 」*", buffer);
-                    } else {
-                        builder.mainHeader("*「 GROUP BROADCAST 」*");
-                    }
-
-                    builder.buttons(
-                        builder.button.url({
-                            display: "🌐 GitHub Repository",
-                            url: REPO_URL,
-                        }),
-                        builder.button.reply({
-                            display: "👤 Contact Owner",
-                            id: ownerCmd,
-                        })
+                    await Chisato.relayMessage(groupId, renderedContent, {});
+                    success++;
+                } catch (err) {
+                    failed++;
+                    Chisato.logger.error(
+                        command.name,
+                        `Failed to send to ${groupId}: ${
+                            err instanceof Error ? err.message : String(err)
+                        }`
                     );
+                }
 
-                    const msg = await builder.render();
-                    await Chisato.relayMessage(group, msg.message, {
-                        messageId: msg.key.id,
-                    });
-                } catch {
-                    // skip groups that fail (banned, left, missing templates, etc.)
+                if (i + 1 < groupIds.length) {
+                    await FileUtils.sleep(PER_SEND_DELAY_MS);
+                }
+
+                if (
+                    (i + 1) % PROGRESS_INTERVAL === 0 &&
+                    i + 1 < groupIds.length
+                ) {
+                    Chisato.sendText(
+                        from,
+                        `📡 Progress: ${i + 1}/${groupIds.length} ` +
+                            `(✅ ${success} / ❌ ${failed})`,
+                        message
+                    ).catch((err) =>
+                        Chisato.logger.error(
+                            command.name,
+                            `Failed to send progress update: ${
+                                err instanceof Error
+                                    ? err.message
+                                    : String(err)
+                            }`
+                        )
+                    );
                 }
             }
-            await Chisato.sendText(
-                from,
-                `Successfully Sending Broadcast to ${groups.length} Group!`,
-                message
+
+            const elapsed = Math.round((Date.now() - startedAt) / 1000);
+            const summary =
+                `✅ *Group Broadcast Done!*\n\n` +
+                `• Total   : ${groupIds.length}\n` +
+                `• Success : ${success}\n` +
+                `• Failed  : ${failed}\n` +
+                `• Elapsed : ${elapsed}s`;
+
+            try {
+                await Chisato.sendText(from, summary, message);
+            } catch (err) {
+                Chisato.logger.error(
+                    command.name,
+                    `Failed to send completion message: ${
+                        err instanceof Error ? err.message : String(err)
+                    }`
+                );
+                try {
+                    await Chisato.sendText(from, summary);
+                } catch (err2) {
+                    Chisato.logger.error(
+                        command.name,
+                        `Retry of completion message also failed: ${
+                            err2 instanceof Error ? err2.message : String(err2)
+                        }`
+                    );
+                }
+            }
+        })().catch((err) => {
+            Chisato.logger.error(
+                command.name,
+                `Broadcast loop crashed: ${
+                    err instanceof Error ? err.message : String(err)
+                }`
             );
-        })().catch(() => {});
+            Chisato.sendText(
+                from,
+                `❌ Broadcast crashed: ${
+                    err instanceof Error ? err.message : String(err)
+                }`,
+                message
+            ).catch(() => {});
+        });
     },
 } satisfies ConfigCommands;
