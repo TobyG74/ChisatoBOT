@@ -13,18 +13,18 @@ const URL_API_DOWNLOAD_ARTWORKS = (input: string) =>
     `https://www.pixiv.net/ajax/illust/${input}`;
 const URL_API_CONTENT_NOVEL = (input: string) =>
     `https://www.pixiv.net/ajax/novel/${input}`;
-const URL_API_SEARCH_MANGA = (keyword: string) =>
+const URL_API_SEARCH_MANGA = (keyword: string, page: number) =>
     `https://www.pixiv.net/ajax/search/manga/${encodeURIComponent(keyword)}?word=${encodeURIComponent(
         keyword
-    )}&order=date_d&mode=safe&p=1&s_mode=s_tag&type=manga&work_lang=en&lang=en`;
-const URL_API_SEARCH_NOVEL = (keyword: string) =>
+    )}&order=date_d&mode=safe&p=${page}&s_mode=s_tag&type=manga&work_lang=en&lang=en`;
+const URL_API_SEARCH_NOVEL = (keyword: string, page: number) =>
     `https://www.pixiv.net/ajax/search/novels/${encodeURIComponent(keyword)}?word=${encodeURIComponent(
         keyword
-    )}&order=date_d&mode=all&p=1&s_mode=s_tag&gs=0&lang=en`;
-const URL_API_SEARCH_ARTWORKS = (keyword: string) =>
+    )}&order=date_d&mode=all&p=${page}&s_mode=s_tag&gs=0&lang=en`;
+const URL_API_SEARCH_ARTWORKS = (keyword: string, page: number) =>
     `https://www.pixiv.net/ajax/search/artworks/${encodeURIComponent(keyword)}?word=${encodeURIComponent(
         keyword
-    )}&order=date_d&mode=all&p=1&s_mode=s_tag&type=all&lang=en`;
+    )}&order=date_d&mode=all&p=${page}&s_mode=s_tag&type=all&lang=en`;
 
 const DEFAULT_HEADERS = {
     "user-agent":
@@ -38,8 +38,10 @@ export class PixivScraper {
         return response.json() as Promise<T>;
     }
 
-    async searchArtwork(keyword: string): Promise<PixivSearchResult[]> {
-        const { body } = await this.fetchJSON<any>(URL_API_SEARCH_ARTWORKS(keyword));
+    async searchArtwork(keyword: string, page = 1): Promise<PixivSearchResult[]> {
+        const { body } = await this.fetchJSON<any>(
+            URL_API_SEARCH_ARTWORKS(keyword, page)
+        );
 
         if (!body?.illustManga?.data?.length) {
             throw new Error("No art found with this keyword.");
@@ -56,8 +58,10 @@ export class PixivScraper {
         );
     }
 
-    async searchManga(keyword: string): Promise<PixivSearchResult[]> {
-        const { body } = await this.fetchJSON<any>(URL_API_SEARCH_MANGA(keyword));
+    async searchManga(keyword: string, page = 1): Promise<PixivSearchResult[]> {
+        const { body } = await this.fetchJSON<any>(
+            URL_API_SEARCH_MANGA(keyword, page)
+        );
 
         if (!body?.manga?.data?.length) {
             throw new Error("No manga found with this keyword.");
@@ -72,8 +76,10 @@ export class PixivScraper {
         }));
     }
 
-    async searchNovel(keyword: string): Promise<PixivSearchResult[]> {
-        const { body } = await this.fetchJSON<any>(URL_API_SEARCH_NOVEL(keyword));
+    async searchNovel(keyword: string, page = 1): Promise<PixivSearchResult[]> {
+        const { body } = await this.fetchJSON<any>(
+            URL_API_SEARCH_NOVEL(keyword, page)
+        );
 
         if (!body?.novel?.data?.length) {
             throw new Error("No novel found with this keyword.");

@@ -1,9 +1,12 @@
 import type { ConfigCommands } from "../../types/structure/commands";
 import { PixivScraper } from "../../utils/scrapers/search";
 import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
+import axios from "axios";
 
 const MAX_LIST_ITEMS = 10;
 const MAX_CONTENT_LENGTH = 1500;
+const MAX_CAROUSEL_ITEMS = 10;
+const DEFAULT_PAGE = 1;
 
 const buildListRows = (items: any[], prefix: string, commandName: string, type: string) =>
     items.slice(0, MAX_LIST_ITEMS).map((item, index) => ({
@@ -63,6 +66,8 @@ export default {
             await Chisato.sendReaction(from, "⏳", message.key);
 
             if (mode === "art" || mode === "manga" || mode === "novel") {
+                const lastArg = args[args.length - 1];
+                const pageNum = lastArg && !Number.isNaN(Number(lastArg)) ? Number(args.pop()) : DEFAULT_PAGE;
                 const keyword = args.join(" ");
                 if (!keyword) {
                     return Chisato.sendText(
@@ -74,36 +79,159 @@ export default {
 
                 const results =
                     mode === "art"
-                        ? await scraper.searchArtwork(keyword)
+                        ? await scraper.searchArtwork(keyword, pageNum)
                         : mode === "manga"
-                        ? await scraper.searchManga(keyword)
-                        : await scraper.searchNovel(keyword);
+                        ? await scraper.searchManga(keyword, pageNum)
+                        : await scraper.searchNovel(keyword, pageNum);
 
                 if (!results.length) {
                     await Chisato.sendReaction(from, "❌", message.key);
                     return Chisato.sendText(from, "❌ No results found.", message);
                 }
 
-                const builder = new TemplateBuilder.Native(Chisato);
-                const rows = buildListRows(results, prefix, command.name, mode);
+                if (mode === "novel") {
+                    const builder = new TemplateBuilder.Native(Chisato);
+                    const rows = buildListRows(results, prefix, command.name, mode);
 
-                builder
-                    .mainBody(`*「 PIXIV ${mode.toUpperCase()} 」*\n\n🔍 *Query:* ${keyword}\n📊 *Results:* ${results.length}\n\nPilih item untuk melihat detail:`)
-                    .mainFooter("pixiv.net")
-                    .buttons(
-                        builder.button.list({
-                            display: `📚 ${mode.toUpperCase()} Results`,
-                            sections: [
-                                {
-                                    title: `Top ${Math.min(results.length, MAX_LIST_ITEMS)} Results`,
-                                    rows,
-                                },
+                    builder
+                        .mainBody(`*「 PIXIV ${mode.toUpperCase()} 」*\n\n🔍 *Query:* ${keyword}\n📊 *Results:* ${results.length}\n\nPilih item untuk melihat detail:`)
+                        .mainFooter("pixiv.net")
+                        .buttons(
+                            builder.button.list({
+                                display: `📚 ${mode.toUpperCase()} Results`,
+                                sections: [
+                                    {
+                                        title: `Top ${Math.min(results.length, MAX_LIST_ITEMS)} Results`,
+                                        rows,
+                                    },
+                                ],
+                            })
+                        );
+
+                    const msg = await builder.render();
+                    await Chisato.relayMessage(from, msg.message, { messageId: msg.key.id });
+                    if (pageNum > 1 || results.length > 0) {
+                        const navBuilder = new TemplateBuilder.Native(Chisato);
+                        const navButtons = [];
+                        if (pageNum > 1) {
+                            navButtons.push(
+                                navBuilder.button.reply({
+                                    display: "⬅️ Previous Page",
+                                    id: `${prefix}${command.name} novel ${keyword} ${pageNum - 1}`,
+                                })
+                            );
+                        }
+                        if (results.length > 0) {
+                            navButtons.push(
+                                navBuilder.button.reply({
+                                    display: "➡️ Next Page",
+                                    id: `${prefix}${command.name} novel ${keyword} ${pageNum + 1}`,
+                                })
+                            );
+                        }
+                        if (navButtons.length > 0) {
+                            const navMsg = await navBuilder
+                                .mainBody(`📄 Page ${pageNum}`)
+                                .mainFooter("Use buttons to navigate")
+                                .buttons(...navButtons)
+                                .render();
+                            await Chisato.relayMessage(from, navMsg.message, { messageId: navMsg.key.id });
+                        }
+                    }
+                    await Chisato.sendReaction(from, "✅", message.key);
+                    return;
+                }
+
+                const builder = new TemplateBuilder.Carousel(Chisato);
+                const cards: any[] = [];
+                const maxItems = Math.min(results.length, MAX_CAROUSEL_ITEMS);
+
+                for (let i = 0; i < maxItems; i += 1) {
+                    const item = results[i];
+                    const pixivUrl = `https://www.pixiv.net/en/artworks/${item.id}`;
+
+                    try {
+                        const download = await scraper.downloadArtworks(item.id);
+                        const imageUrl = download.url.original[0] || download.url.sd[0];
+                        if (!imageUrl) {
+                            continue;
+                        }
+
+                        const res = await axios.get(imageUrl, {
+                            responseType: "arraybuffer",
+                            timeout: 15000,
+                            headers: {
+                                Referer: "https://www.pixiv.net/",
+                                "User-Agent":
+                                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                            },
+                        });
+
+                        cards.push({
+                            header: Buffer.from(res.data),
+                            title: item.title?.slice(0, 60) || `Result ${i + 1}`,
+                            body: `👤 ${item.userName} (ID ${item.userId})\n🆔 ${item.id}`,
+                            footer: `Result ${i + 1} of ${maxItems}`,
+                            buttons: [
+                                builder.button.url({ display: "🔗 Open Pixiv", url: pixivUrl }),
+                                builder.button.copy({ display: "📋 Copy URL", code: imageUrl }),
                             ],
-                        })
-                    );
+                        });
+                    } catch {
+                        // Skip failed image
+                    }
+                }
 
-                const msg = await builder.render();
+                if (!cards.length) {
+                    await Chisato.sendReaction(from, "❌", message.key);
+                    return Chisato.sendText(
+                        from,
+                        "❌ Failed to load images. Try again later.",
+                        message
+                    );
+                }
+
+                const msg = await builder
+                    .mainHeader(`*「 PIXIV ${mode.toUpperCase()} 」*`)
+                    .mainBody(
+                        `🔍 *Query:* ${keyword}\n` +
+                        `📊 *Showing:* ${cards.length} items\n` +
+                        `📄 *Page:* ${pageNum}\n` +
+                        `Swipe to see more results! 👉`
+                    )
+                    .mainFooter("pixiv.net")
+                    .cards(cards)
+                    .render();
+
                 await Chisato.relayMessage(from, msg.message, { messageId: msg.key.id });
+                if (pageNum > 1 || results.length > 0) {
+                    const navBuilder = new TemplateBuilder.Native(Chisato);
+                    const navButtons = [];
+                    if (pageNum > 1) {
+                        navButtons.push(
+                            navBuilder.button.reply({
+                                display: "⬅️ Previous Page",
+                                id: `${prefix}${command.name} ${mode} ${keyword} ${pageNum - 1}`,
+                            })
+                        );
+                    }
+                    if (results.length > 0) {
+                        navButtons.push(
+                            navBuilder.button.reply({
+                                display: "➡️ Next Page",
+                                id: `${prefix}${command.name} ${mode} ${keyword} ${pageNum + 1}`,
+                            })
+                        );
+                    }
+                    if (navButtons.length > 0) {
+                        const navMsg = await navBuilder
+                            .mainBody(`📄 Page ${pageNum}`)
+                            .mainFooter("Use buttons to navigate")
+                            .buttons(...navButtons)
+                            .render();
+                        await Chisato.relayMessage(from, navMsg.message, { messageId: navMsg.key.id });
+                    }
+                }
                 await Chisato.sendReaction(from, "✅", message.key);
                 return;
             }
