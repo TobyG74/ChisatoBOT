@@ -1,12 +1,12 @@
 export interface BingImageResult {
     url: string;
+    thumbnail: string;
     width: number;
     height: number;
+    title: string;
+    source: string;
 }
 
 export interface BingImagesSearchOptions {
-    searchTerm: string;
-    queryStringAddition?: string;
-    filterOutDomains?: string[];
-    userAgent?: string;
+    perPage?: number;
 }

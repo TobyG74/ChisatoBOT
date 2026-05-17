@@ -1,22 +1,34 @@
 import axios from "axios";
+import type {
+    BingImageResult,
+    BingImagesSearchOptions,
+} from "../../../types/search/bing-images";
 
-export interface BingImageResult {
-    url: string;
-    thumbnail: string;
-    width: number;
-    height: number;
-    title: string;
-    source: string;
-}
-
-export interface BingImagesSearchOptions {
-    perPage?: number;
-}
+const BING_SEARCH_PAGE_URL = "https://www.bing.com/images/search";
+const BING_IMAGE_SEARCH_URL = "https://www.bing.com/images/async";
+const BING_IMAGE_UA =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 export class BingImagesScraper {
-    private readonly UA =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+    private buildParams(query: string, count: number) {
+        return {
+            q: query,
+            first: 1,
+            count,
+            mkt: "en-US",
+            adlt: "Off",
+            qft: "",
+        };
+    }
+
+    private buildHeaders(query: string) {
+        return {
+            "User-Agent": BING_IMAGE_UA,
+            "Referer": `${BING_SEARCH_PAGE_URL}?q=` + encodeURIComponent(query),
+            "Accept-Language": "en-US,en;q=0.9",
+        };
+    }
 
     async search(
         searchTerm: string,
@@ -24,22 +36,9 @@ export class BingImagesScraper {
     ): Promise<BingImageResult[]> {
         const count = options.perPage ?? 60;
 
-        const response = await axios.get("https://www.bing.com/images/async", {
-            params: {
-                q: searchTerm,
-                first: 1,
-                count,
-                mkt: "en-US",
-                adlt: "Off",
-                qft: "",
-            },
-            headers: {
-                "User-Agent": this.UA,
-                "Referer":
-                    "https://www.bing.com/images/search?q=" +
-                    encodeURIComponent(searchTerm),
-                "Accept-Language": "en-US,en;q=0.9",
-            },
+        const response = await axios.get(BING_IMAGE_SEARCH_URL, {
+            params: this.buildParams(searchTerm, count),
+            headers: this.buildHeaders(searchTerm),
             timeout: 15000,
             decompress: true,
         });
