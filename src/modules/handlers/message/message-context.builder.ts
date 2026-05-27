@@ -169,8 +169,8 @@ export class MessageContextBuilder {
             const botName = Chisato.user.name;
 
             const prefix =
-                body && /^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?@#$%^&.©^]/gi.test(body)
-                    ? body.match(/^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?@#$%^&.©^]/gi)![0]
+                body && /^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?#$%^&.©^]/gi.test(body)
+                    ? body.match(/^[°•π÷×¶∆£¢€¥®™+✓/_=|~!?#$%^&.©^]/gi)![0]
                     : config.prefix;
 
             const isCmd = body ? body.startsWith(prefix) : false;
