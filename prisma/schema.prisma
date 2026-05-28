@@ -41,8 +41,9 @@ type Settings {
   leave               Boolean     @default(true)
   leaveMessage        String?
   mute                Boolean     @default(false)
-  antilink            Antilink    
+  antilink            Antilink
   antibot             Boolean     @default(false)
+  antidelete          Boolean     @default(false)
   banned              String[]
 }
 

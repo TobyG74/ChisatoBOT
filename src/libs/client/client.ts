@@ -67,6 +67,14 @@ type Events = {
         participants: string[];
         action: "add" | "remove" | "promote" | "demote" | "modify";
     }) => void;
+    "messages.revoke": (revoke: {
+        key: proto.IMessageKey;
+        update: {
+            message?: proto.IMessage | null;
+            messageStubType?: number;
+            key?: proto.IMessageKey;
+        };
+    }) => void;
     call: (call: WACallEvent) => void;
 };
 
@@ -459,6 +467,30 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             }
         });
 
+        /**
+         * Message Revoke Event (delete-for-everyone).
+         *
+         * `messages.update` is a high-frequency channel — it fires for status
+         * receipts (sent/delivered/read), edits, reactions, poll updates, and
+         * error acks in addition to revokes. We fast-fail every non-revoke
+         * update so the hot path stays cheap (a single property compare for
+         * the typical receipt case).
+         *
+         * REVOKE is signalled by `messageStubType === 1`
+         * (proto.WebMessageInfo.StubType.REVOKE) plus `update.message` being
+         * null/undefined. We re-emit a dedicated `messages.revoke` event so
+         * downstream handlers don't need to know the filter.
+         */
+        Chisato.ev?.on("messages.update", (updates: any[]) => {
+            if (!updates?.length) return;
+            for (let i = 0; i < updates.length; i++) {
+                const u = updates[i];
+                if (u?.update?.messageStubType !== 1) continue;
+                if (u.update.message != null) continue;
+                this.emit("messages.revoke", u);
+            }
+        });
+
         /** Group Participants Update (real-time welcome/leave/promote/demote) */
         Chisato.ev?.on("group-participants.update", (update: any) => {
             this.logger.info(
@@ -495,7 +527,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             "contacts.upsert",
             "contacts.update",
             "messages.delete",
-            "messages.update",
+            // 'messages.update',  // kept — anti-delete listens to REVOKE here
             "messages.media-update",
             // 'messages.upsert',
             "messages.reaction",

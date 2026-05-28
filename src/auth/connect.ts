@@ -39,7 +39,7 @@ import { setClientInstance } from "../libs/client/instance";
 import * as serialize from "../libs/serialize";
 import { MessageHandler } from "../modules/handlers/message";
 import { GroupUpdateHandler } from "../modules/handlers/group";
-import { AntiCallHandler } from "../modules/handlers/settings";
+import { AntiCallHandler, AntiDeleteHandler, antiDeleteCache } from "../modules/handlers/settings";
 import { logger } from "../core/logger";
 import { configService } from "../core/config";
 import { databaseService } from "../infrastructure/database";
@@ -82,6 +82,7 @@ logger.connect("Connecting to database...");
         const messageHandler = new MessageHandler();
         const groupUpdateHandler = new GroupUpdateHandler();
         const antiCallHandler = new AntiCallHandler();
+        const antiDeleteHandler = new AntiDeleteHandler();
 
         // Initialize client
         const Chisato = new Client({
@@ -98,9 +99,6 @@ logger.connect("Connecting to database...");
         await Chisato.connect();
 
         // Pre-warm Genshin/Enka supplement bundle in the background.
-        // This downloads & parses the LodaHoyoView JS bundle (~3.4 MB) ONCE
-        // at startup and writes a disk cache, so the first user lookup
-        // doesn't pay that cost. Errors are non-fatal (offline-friendly).
         warmupGiSupplement()
             .then(() => logger.connect("Enka supplement cache ready"))
             .catch((err) =>
@@ -116,6 +114,21 @@ logger.connect("Connecting to database...");
             try {
                 if (!message?.message) return;
                 if (message.key.remoteJid === "status@broadcast") return;
+
+                // Populate the anti-delete cache for group messages that aren't
+                if (
+                    message.key.remoteJid?.endsWith("@g.us") &&
+                    !message.key.fromMe &&
+                    !message.messageStubType &&
+                    !message.message.protocolMessage &&
+                    !message.message.reactionMessage &&
+                    !message.message.pollUpdateMessage &&
+                    !message.message.senderKeyDistributionMessage
+                ) {
+                    const msg = message;
+                    queueMicrotask(() => antiDeleteCache.put(msg));
+                }
+
                 const serialized = await serialize.message(
                     Chisato,
                     message as any
@@ -164,6 +177,19 @@ logger.connect("Connecting to database...");
             } catch (error) {
                 logger.error(
                     `Call handler error: ${
+                        error instanceof Error ? util.inspect(error) : String(error)
+                    }`
+                );
+            }
+        });
+
+        // Handle delete-for-everyone (anti-delete)
+        Chisato.on("messages.revoke", async (revoke) => {
+            try {
+                await antiDeleteHandler.handle(Chisato, revoke);
+            } catch (error) {
+                logger.error(
+                    `Anti-delete handler error: ${
                         error instanceof Error ? util.inspect(error) : String(error)
                     }`
                 );
