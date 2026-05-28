@@ -26,6 +26,7 @@ export default {
             `「 ${groupMetadata?.["joinApprovalMode"] ? "✅" : "❌"} 」 Approve New Members\n\n` +
             `*「 GROUP PRIVACY SETTINGS 」*\n\n` +
             `「 ${settings.antibot ? "✅" : "❌"} 」 Anti Bot\n` +
+            `「 ${settings.antidelete ? "✅" : "❌"} 」 Anti Delete\n` +
             `「 ${settings.antilink?.status ? "✅" : "❌"} 」 Anti Link\n` +
             `   └「 ${settings.antilink?.mode || "kick"} 」 Mode\n` +
             `   └「 ${settings.antilink?.list?.join(", ") || "none"} 」 List\n` +

@@ -210,6 +210,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                     antilink: groups.filter((g) => g.settings.antilink?.status)
                         .length,
                     antibot: groups.filter((g) => g.settings.antibot).length,
+                    antidelete: groups.filter((g) => (g.settings as any).antidelete).length,
                     welcome: groups.filter((g) => g.settings.welcome).length,
                     leave: groups.filter((g) => g.settings.leave).length,
                     notify: groups.filter((g) => g.settings.notify).length,
@@ -230,6 +231,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
             const {
                 antilinkStatus,
                 antibot,
+                antidelete,
                 welcome,
                 leave,
                 notify,
@@ -237,6 +239,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
             } = request.body as {
                 antilinkStatus?: boolean;
                 antibot?: boolean;
+                antidelete?: boolean;
                 welcome?: boolean;
                 leave?: boolean;
                 notify?: boolean;
@@ -251,7 +254,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 return reply.status(404).send({ error: "Group not found" });
             }
 
-            const settings = { ...existingGroup.settings };
+            const settings: any = { ...existingGroup.settings };
             if (antilinkStatus !== undefined) {
                 settings.antilink = {
                     ...settings.antilink,
@@ -259,6 +262,7 @@ export async function groupsRoutes(fastify: FastifyInstance) {
                 };
             }
             if (antibot !== undefined) settings.antibot = antibot;
+            if (antidelete !== undefined) settings.antidelete = antidelete;
             if (welcome !== undefined) settings.welcome = welcome;
             if (leave !== undefined) settings.leave = leave;
             if (notify !== undefined) settings.notify = notify;

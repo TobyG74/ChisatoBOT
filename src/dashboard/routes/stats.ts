@@ -80,6 +80,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
             const settingsStats = {
                 antilink: 0,
                 antibot: 0,
+                antidelete: 0,
                 welcome: 0,
                 leave: 0,
                 notify: 0,
@@ -89,6 +90,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
             groups.forEach((group) => {
                 if (group.settings.antilink?.status) settingsStats.antilink++;
                 if (group.settings.antibot) settingsStats.antibot++;
+                if ((group.settings as any).antidelete) settingsStats.antidelete++;
                 if (group.settings.welcome) settingsStats.welcome++;
                 if (group.settings.leave) settingsStats.leave++;
                 if (group.settings.notify) settingsStats.notify++;

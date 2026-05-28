@@ -585,9 +585,10 @@ function updateGroupSettingsChart(data) {
     container.innerHTML = '';
 
     const GS_CONFIG = {
-        antilink: { icon: 'fa-link-slash',    color: '#818cf8', bg: 'rgba(99,102,241,0.15)',  label: 'Anti-Link' },
-        antibot:  { icon: 'fa-robot',          color: '#f87171', bg: 'rgba(239,68,68,0.15)',   label: 'Anti-Bot'  },
-        welcome:  { icon: 'fa-door-open',      color: '#34d399', bg: 'rgba(16,185,129,0.15)',  label: 'Welcome'   },
+        antilink:   { icon: 'fa-link-slash',     color: '#818cf8', bg: 'rgba(99,102,241,0.15)',  label: 'Anti-Link'   },
+        antibot:    { icon: 'fa-robot',          color: '#f87171', bg: 'rgba(239,68,68,0.15)',   label: 'Anti-Bot'    },
+        antidelete: { icon: 'fa-trash-arrow-up', color: '#22d3ee', bg: 'rgba(34,211,238,0.15)',  label: 'Anti-Delete' },
+        welcome:    { icon: 'fa-door-open',      color: '#34d399', bg: 'rgba(16,185,129,0.15)',  label: 'Welcome'     },
         leave:    { icon: 'fa-door-closed',    color: '#fb7185', bg: 'rgba(244,63,94,0.15)',   label: 'Leave'     },
         notify:   { icon: 'fa-bell',           color: '#fbbf24', bg: 'rgba(245,158,11,0.15)',  label: 'Notify'    },
         mute:     { icon: 'fa-microphone-slash',color: '#fb7185', bg: 'rgba(244,63,94,0.15)',  label: 'Mute'      },
@@ -635,9 +636,10 @@ async function loadGroups(page = 1) {
         }
 
         const GS_ICONS = [
-            { key: 'antilink', check: s => s.antilink?.status, icon: 'fa-link-slash',      color: '#818cf8', label: 'Anti-Link' },
-            { key: 'antibot',  check: s => s.antibot,          icon: 'fa-robot',            color: '#f87171', label: 'Anti-Bot'  },
-            { key: 'welcome',  check: s => s.welcome,          icon: 'fa-door-open',        color: '#34d399', label: 'Welcome'   },
+            { key: 'antilink',   check: s => s.antilink?.status, icon: 'fa-link-slash',      color: '#818cf8', label: 'Anti-Link'   },
+            { key: 'antibot',    check: s => s.antibot,          icon: 'fa-robot',            color: '#f87171', label: 'Anti-Bot'    },
+            { key: 'antidelete', check: s => s.antidelete,       icon: 'fa-trash-arrow-up',   color: '#22d3ee', label: 'Anti-Delete' },
+            { key: 'welcome',    check: s => s.welcome,          icon: 'fa-door-open',        color: '#34d399', label: 'Welcome'     },
             { key: 'leave',    check: s => s.leave,            icon: 'fa-door-closed',      color: '#fb7185', label: 'Leave'     },
             { key: 'notify',   check: s => s.notify,           icon: 'fa-bell',             color: '#fbbf24', label: 'Notify'    },
             { key: 'mute',     check: s => s.mute,             icon: 'fa-microphone-slash', color: '#fb7185', label: 'Mute'      },
@@ -1098,6 +1100,8 @@ function openGroupModal(groupData) {
         groupData.settings.antilink?.status || false;
     document.getElementById("group-antibot").checked =
         groupData.settings.antibot || false;
+    document.getElementById("group-antidelete").checked =
+        groupData.settings.antidelete || false;
     document.getElementById("group-welcome").checked =
         groupData.settings.welcome || false;
     document.getElementById("group-leave").checked =
@@ -1316,6 +1320,7 @@ document.getElementById("group-form")?.addEventListener("submit", (e) => {
     const settings = {
         antilinkStatus: document.getElementById("group-antilink").checked,
         antibot: document.getElementById("group-antibot").checked,
+        antidelete: document.getElementById("group-antidelete").checked,
         welcome: document.getElementById("group-welcome").checked,
         leave: document.getElementById("group-leave").checked,
         notify: document.getElementById("group-notify").checked,
