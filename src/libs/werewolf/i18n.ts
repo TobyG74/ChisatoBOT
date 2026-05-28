@@ -6,7 +6,8 @@ const M = {
     en: {
         // General
         onlyGroup: "❌ This command can only be used in a group!",
-        invalidTarget: "❌ Invalid target. Use a number or @mention a player.",
+        invalidTarget:
+            "❌ Invalid target. Use the player's list index (e.g. *1*), phone number (e.g. *6281xxxxxxxx*), or @mention.",
         noActiveGame: "❌ No active game.",
         noLobby: "❌ No active lobby.",
         notHost: "❌ Only the host or owner can do that!",
@@ -170,7 +171,8 @@ const M = {
     id: {
         // General
         onlyGroup: "❌ Perintah ini hanya bisa digunakan di grup!",
-        invalidTarget: "❌ Target tidak valid. Gunakan nomor atau @mention pemain.",
+        invalidTarget:
+            "❌ Target tidak valid. Gunakan nomor urut pemain (mis. *1*), nomor HP (mis. *6281xxxxxxxx*), atau @mention.",
         noActiveGame: "❌ Tidak ada game aktif.",
         noLobby: "❌ Tidak ada lobby aktif.",
         notHost: "❌ Hanya host atau owner yang bisa melakukan ini!",

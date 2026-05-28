@@ -264,7 +264,18 @@ export function getRoleImageBuffer(role: Role): Buffer | null {
     }
 }
 
-/** Resolve a player target from a number arg or a mention jid array */
+/**
+ * Resolve a player target from one of three forms:
+ *   1. an @mention from the message context
+ *   2. a phone number (`628xxxxxxx`, with or without `+`/spaces/dashes) — used
+ *      in private chats where @mentions aren't available
+ *   3. a small 1-based index into the alive-players list (1, 2, 3, …)
+ *
+ * Phone numbers and list indices are distinguished by digit length: anything
+ * with 7+ digits is treated as a phone number, otherwise as an index. This
+ * matters because `parseInt("6281311850715")` otherwise produces a huge index
+ * that always misses the list.
+ */
 export function resolveTarget(
     game: Game,
     arg: string | undefined,
@@ -274,11 +285,34 @@ export function resolveTarget(
         const p = game.players.get(mentions[0]);
         return p?.isAlive ? p : null;
     }
-    const num = parseInt(arg ?? "");
+
+    const raw = (arg ?? "").trim();
+    if (!raw) return null;
+
+    const digits = raw.replace(/\D/g, "");
+
+    // Phone-number form (long digit string). Try the canonical PN JID first,
+    // then scan as a fallback so we still match if the player was stored on a
+    // non-`@s.whatsapp.net` server.
+    if (digits.length >= 7) {
+        const phoneJid = `${digits}@s.whatsapp.net`;
+        const direct = game.players.get(phoneJid);
+        if (direct?.isAlive) return direct;
+        for (const player of game.players.values()) {
+            if (player.isAlive && player.jid.split("@")[0] === digits) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    // Short numeric input → 1-based index into the alive list.
+    const num = parseInt(raw, 10);
     if (!isNaN(num) && num > 0) {
         const alive = alivePlayers(game);
         return alive[num - 1] ?? null;
     }
+
     return null;
 }
 
