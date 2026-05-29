@@ -9,6 +9,7 @@ import {
 } from "../index";
 import { messages } from "../i18n";
 import { fmt, triggerHunterShot, afterDayElimination } from "./flow";
+import { resolveToPnJidSync } from "../../../utils/jid-resolver";
 
 type Ctx = Parameters<ConfigCommands["run"]>[0];
 
@@ -238,7 +239,7 @@ export async function handleShoot(ctx: Ctx): Promise<void> {
         game.groupId,
         m.hunterShot(fmt(sender), fmt(target.jid), roleInfo.emoji, roleInfo.title),
         null,
-        { mentions: [sender, target.jid] }
+        { mentions: [resolveToPnJidSync(sender), resolveToPnJidSync(target.jid)] }
     );
 
     await afterDayElimination(ctx, game);

@@ -12,12 +12,14 @@ import {
 } from "../index";
 import type { Game, Player } from "../index";
 import { messages } from "../i18n";
+import { resolveAllToPnJids, resolveToPnJidSync } from "../../../utils/jid-resolver";
 
 type Ctx = Parameters<ConfigCommands["run"]>[0];
 
 // Formatting helpers
 export function fmt(jid: string): string {
-    return `@${jid.split("@")[0]}`;
+    const pn = resolveToPnJidSync(jid);
+    return `@${(pn || jid).split("@")[0]}`;
 }
 
 // Win announcement
@@ -36,11 +38,14 @@ export async function announceWin(
 
     const header = winner === "village" ? m.winVillage : m.winWolf;
 
+    const playerJids = [...game.players.keys()];
+    const playerPnJids = await resolveAllToPnJids(ctx.Chisato, playerJids);
+
     await ctx.Chisato.sendText(
         game.groupId,
         `${header}${m.roleRevealHeader}${roleReveal}${m.thankYou}`,
         null,
-        { mentions: [...game.players.keys()] }
+        { mentions: playerPnJids }
     );
 
     endGame(game.groupId);
@@ -55,78 +60,97 @@ export async function startNightPhase(ctx: Ctx, game: Game): Promise<void> {
     const m = messages(game.lang);
     const alive = alivePlayers(game);
     const wolves = aliveWolves(game);
-    const aliveList = alive.map((p, i) => `${i + 1}. ${fmt(p.jid)}`).join("\n");
+
+    const alivePnJids = await resolveAllToPnJids(
+        ctx.Chisato,
+        alive.map((p) => p.jid)
+    );
+    const aliveList = alive
+        .map((_, i) => `${i + 1}. @${alivePnJids[i].split("@")[0]}`)
+        .join("\n");
 
     await ctx.Chisato.sendText(
         game.groupId,
         m.nightStart(game.round + 1, alive.length, aliveList),
         null,
-        { mentions: alive.map((p) => p.jid) }
+        { mentions: alivePnJids }
     );
 
-    // Notify werewolves
+    const dmTarget = (p: Player): string => {
+        const idx = alive.indexOf(p);
+        return idx >= 0 ? alivePnJids[idx] : p.jid;
+    };
+
+    // Notify werewolves — DM each wolf privately so the group can't see roles.
     for (const wolf of wolves) {
         const teammates = wolves.filter((w) => w.jid !== wolf.jid);
         const teamStr =
             teammates.length > 0
-                ? m.wolfTeammatesInline(teammates.map((w) => fmt(w.jid)).join(", "))
+                ? m.wolfTeammatesInline(
+                      teammates.map((w) => `@${dmTarget(w).split("@")[0]}`).join(", ")
+                  )
                 : "\n";
-        await ctx.Chisato.sendText(
-            game.groupId,
-            m.wolfInstruction(teamStr, aliveList),
-            null,
-            { mentions: [wolf.jid] }
-        );
+        const teammateMentions = teammates.map((w) => dmTarget(w));
+        await ctx.Chisato
+            .sendText(
+                dmTarget(wolf),
+                m.wolfInstruction(teamStr, aliveList),
+                null,
+                { mentions: [...teammateMentions, ...alivePnJids] }
+            )
+            .catch(() => {});
     }
 
-    // Notify seer
+    // Notify seer (DM)
     const seer = alive.find((p) => p.role === "seer");
     if (seer) {
-        await ctx.Chisato.sendText(
-            game.groupId,
-            m.seerInstruction(aliveList),
-            null,
-            { mentions: [seer.jid] }
-        );
+        await ctx.Chisato
+            .sendText(dmTarget(seer), m.seerInstruction(aliveList), null, {
+                mentions: alivePnJids,
+            })
+            .catch(() => {});
     }
 
-    // Notify doctor
+    // Notify doctor (DM)
     const doctor = alive.find((p) => p.role === "doctor");
     if (doctor) {
         const selfNote = game.lastDoctorSave !== doctor.jid ? m.doctorSelfNote : "";
-        await ctx.Chisato.sendText(
-            game.groupId,
-            m.doctorInstruction(selfNote, aliveList),
-            null,
-            { mentions: [doctor.jid] }
-        );
+        await ctx.Chisato
+            .sendText(
+                dmTarget(doctor),
+                m.doctorInstruction(selfNote, aliveList),
+                null,
+                { mentions: alivePnJids }
+            )
+            .catch(() => {});
     }
 
-    // Notify witch
+    // Notify witch (DM)
     const witch = alive.find((p) => p.role === "witch");
     if (witch) {
         const potions: string[] = [];
         if (!witch.witchHealUsed) potions.push(m.witchHealPotion);
         if (!witch.witchPoisonUsed) potions.push(m.witchPoisonPotion);
         if (potions.length > 0) {
-            await ctx.Chisato.sendText(
-                game.groupId,
-                m.witchInstruction(potions.join("\n"), aliveList),
-                null,
-                { mentions: [witch.jid] }
-            );
+            await ctx.Chisato
+                .sendText(
+                    dmTarget(witch),
+                    m.witchInstruction(potions.join("\n"), aliveList),
+                    null,
+                    { mentions: alivePnJids }
+                )
+                .catch(() => {});
         }
     }
 
-    // Notify bodyguard
+    // Notify bodyguard (DM)
     const bg = alive.find((p) => p.role === "bodyguard" && !p.hasUsedShield);
     if (bg) {
-        await ctx.Chisato.sendText(
-            game.groupId,
-            m.bodyguardInstruction(aliveList),
-            null,
-            { mentions: [bg.jid] }
-        );
+        await ctx.Chisato
+            .sendText(dmTarget(bg), m.bodyguardInstruction(aliveList), null, {
+                mentions: alivePnJids,
+            })
+            .catch(() => {});
     }
 
     // Auto-resolve after 90s
@@ -144,16 +168,17 @@ async function resolveNightPhase(ctx: Ctx, game: Game): Promise<void> {
     let msg = "";
     const mentions: string[] = [];
 
+    const killedPn = killed ? resolveToPnJidSync(killed.jid) : "";
+
     if (!killed && !wasProtected) {
         msg = m.dawnSafe;
     } else if (wasProtected) {
         msg = m.dawnProtected;
     } else if (killed && killedBy === "bodyguard_trade") {
-        mentions.push(killed.jid);
+        mentions.push(killedPn);
         msg = m.dawnBodyguardTrade(fmt(killed.jid), ROLE_INFO[killed.role].emoji, ROLE_INFO[killed.role].title);
     } else if (killed) {
-        mentions.push(killed.jid);
-        // Check if cursed transformed instead of dying
+        mentions.push(killedPn);
         if (!killed.isAlive) {
             msg = m.dawnKilled(fmt(killed.jid), ROLE_INFO[killed.role].emoji, ROLE_INFO[killed.role].title);
         } else {
@@ -182,13 +207,20 @@ export async function triggerHunterShot(
     game.pendingHunterShot = hunter.jid;
 
     const alive = alivePlayers(game);
-    const list = alive.map((p, i) => `${i + 1}. ${fmt(p.jid)}`).join("\n");
+    const alivePnJids = await resolveAllToPnJids(
+        ctx.Chisato,
+        alive.map((p) => p.jid)
+    );
+    const list = alive
+        .map((_, i) => `${i + 1}. @${alivePnJids[i].split("@")[0]}`)
+        .join("\n");
+    const hunterPn = resolveToPnJidSync(hunter.jid);
 
     await ctx.Chisato.sendText(
         game.groupId,
         m.hunterPrompt(fmt(hunter.jid), list),
         null,
-        { mentions: [hunter.jid] }
+        { mentions: [hunterPn, ...alivePnJids] }
     );
 
     if (game.timer) clearTimeout(game.timer);
@@ -216,13 +248,19 @@ async function startDayPhase(ctx: Ctx, game: Game): Promise<void> {
 
     const m = messages(game.lang);
     const alive = alivePlayers(game);
-    const list = alive.map((p, i) => `${i + 1}. ${fmt(p.jid)}`).join("\n");
+    const alivePnJids = await resolveAllToPnJids(
+        ctx.Chisato,
+        alive.map((p) => p.jid)
+    );
+    const list = alive
+        .map((_, i) => `${i + 1}. @${alivePnJids[i].split("@")[0]}`)
+        .join("\n");
 
     await ctx.Chisato.sendText(
         game.groupId,
         m.dayStart(game.round, alive.length, list),
         null,
-        { mentions: alive.map((p) => p.jid) }
+        { mentions: alivePnJids }
     );
 
     if (game.voteTimer) clearTimeout(game.voteTimer);
@@ -246,12 +284,13 @@ export async function resolveVotePhase(ctx: Ctx, game: Game): Promise<void> {
         .sort((a, b) => b[1] - a[1])
         .map(([jid, v]) => `• ${fmt(jid)}: ${v}`)
         .join("\n");
+    const tallyPnJids = await resolveAllToPnJids(ctx.Chisato, [...tally.keys()]);
 
     await ctx.Chisato.sendText(
         game.groupId,
         `${m.voteResultHeader}${tallyStr}`,
         null,
-        { mentions: [...tally.keys()] }
+        { mentions: tallyPnJids }
     );
 
     const eliminated = resolveVote(game);
@@ -263,6 +302,7 @@ export async function resolveVotePhase(ctx: Ctx, game: Game): Promise<void> {
     }
 
     const roleInfo = ROLE_INFO[eliminated.role];
+    const eliminatedPn = resolveToPnJidSync(eliminated.jid);
 
     // Kid rule: village loses immediately if kid voted out
     if (eliminated.role === "kid") {
@@ -270,7 +310,7 @@ export async function resolveVotePhase(ctx: Ctx, game: Game): Promise<void> {
             game.groupId,
             m.kidEliminated(fmt(eliminated.jid)),
             null,
-            { mentions: [eliminated.jid] }
+            { mentions: [eliminatedPn] }
         );
         await announceWin(ctx, game, "werewolf");
         return;
@@ -280,7 +320,7 @@ export async function resolveVotePhase(ctx: Ctx, game: Game): Promise<void> {
         game.groupId,
         m.eliminated(fmt(eliminated.jid), roleInfo.emoji, roleInfo.title),
         null,
-        { mentions: [eliminated.jid] }
+        { mentions: [eliminatedPn] }
     );
 
     // Hunter on vote-elimination
