@@ -262,6 +262,9 @@ function setupEventListeners() {
     document
         .getElementById("refresh-groups")
         ?.addEventListener("click", () => loadGroups());
+    document
+        .getElementById("sync-groups")
+        ?.addEventListener("click", () => syncGroups());
     document.getElementById("search-groups")?.addEventListener(
         "input",
         debounce(() => loadGroups(), 500)
@@ -1244,6 +1247,36 @@ async function deleteGroup(groupId, groupName) {
 
 function closeJoinGroupModal() {
     document.getElementById("join-group-modal").classList.remove("show");
+}
+
+async function syncGroups() {
+    const btn = document.getElementById("sync-groups");
+    if (!btn || btn.disabled) return;
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span><span class="hidden sm:inline">Syncing...</span>';
+
+    try {
+        const res = await authFetch(`${API_BASE}/groups/sync`, {
+            method: "POST",
+        }).then(r => r.json());
+
+        if (res.success) {
+            const { total = 0, updated = 0, removed = 0, failed = 0 } = res.stats || {};
+            showToast(
+                `Sync done — ${total} total · ${updated} updated · ${removed} removed${failed ? ` · ${failed} failed` : ""}`,
+                failed ? "error" : "success"
+            );
+            loadGroups();
+        } else {
+            showToast(res.error || "Sync failed", "error");
+        }
+    } catch {
+        showToast("Connection error during sync", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
 }
 
 async function joinGroup() {

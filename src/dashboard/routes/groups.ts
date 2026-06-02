@@ -285,6 +285,81 @@ export async function groupsRoutes(fastify: FastifyInstance) {
         }
     });
 
+    // Sync database with live WhatsApp groups
+    fastify.post("/sync", async (_request, reply) => {
+        const client = getClientInstance();
+        if (!client) {
+            return reply.status(503).send({
+                success: false,
+                error: "Bot client is not connected",
+            });
+        }
+
+        try {
+            const groupDatabase = await Database.group.findMany({
+                select: { groupId: true },
+            });
+            const groupDatabaseIDs = groupDatabase.map((g) => g.groupId);
+            const groupFetch = await client.groupFetchAllParticipating();
+            const groupFetchIDs = Object.keys(groupFetch);
+
+            let updated = 0;
+            let removed = 0;
+            let failed = 0;
+
+            for (const groupId of groupDatabaseIDs) {
+                try {
+                    if (groupFetchIDs.includes(groupId)) {
+                        const groupMetadata: any = { ...groupFetch[groupId] };
+                        delete groupMetadata.id;
+                        delete groupMetadata.subjectOwner;
+                        delete groupMetadata.subjectTime;
+                        delete groupMetadata.descId;
+                        groupMetadata.ephemeralDuration =
+                            groupMetadata.ephemeralDuration || 0;
+
+                        try {
+                            await Database.group.update({
+                                where: { groupId },
+                                data: groupMetadata,
+                            });
+                        } catch {
+                            await Database.group.deleteMany({ where: { groupId } });
+                            await Database.group.create({
+                                data: { groupId, ...groupMetadata },
+                            });
+                        }
+                        updated++;
+                    } else {
+                        await Database.group.deleteMany({ where: { groupId } });
+                        removed++;
+                    }
+                } catch (err) {
+                    failed++;
+                    logger.error(
+                        `Dashboard syncdb: failed to process ${groupId}: ${
+                            err instanceof Error ? err.message : String(err)
+                        }`
+                    );
+                }
+            }
+
+            const total = await Database.group.count();
+
+            return reply.send({
+                success: true,
+                message: "Sync database completed",
+                stats: { total, updated, removed, failed },
+            });
+        } catch (error) {
+            logger.error("Dashboard syncdb error:", error);
+            return reply.status(500).send({
+                success: false,
+                error: "Failed to sync groups",
+            });
+        }
+    });
+
     // Join group via invite link
     fastify.post("/join", async (request, reply) => {
         try {
