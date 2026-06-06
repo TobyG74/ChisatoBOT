@@ -215,7 +215,7 @@ function saveSessionsToFile(map: Map<string, SessionRecord>): void {
 const sessionStore: Map<string, SessionRecord> = loadSessionsFromFile();
 const pendingLoginRequests = new Map<string, PendingLoginRequest>();
 
-function normalizePhoneNumber(raw: string): string {
+export function normalizePhoneNumber(raw: string): string {
     const clean = String(raw || "").replace(/[^0-9]/g, "");
     if (!clean) {
         return "";
@@ -295,7 +295,7 @@ function buildLoginButtons(role: AccessRole): LoginActionButton[] {
     ];
 }
 
-function getRequesterIp(request: FastifyRequest): string {
+export function getRequesterIp(request: FastifyRequest): string {
     const fwd = request.headers["x-forwarded-for"];
     const realIp = request.headers["x-real-ip"];
 
@@ -319,9 +319,23 @@ function cleanupPendingLoginRequests(): void {
     }
 }
 
-function startSession(sessionId: string): void {
+export function startSession(sessionId: string): void {
     const now = Date.now();
     sessionStore.set(sessionId, { createdAt: now, lastActivity: now });
+    saveSessionsToFile(sessionStore);
+}
+
+/**
+ * Sign a dashboard session JWT. Shared by the owner/team login flow and the
+ * group-admin OTP flow so every token is verifiable by the same middleware.
+ */
+export function signSessionToken(payload: Record<string, unknown>): string {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+}
+
+/** Remove a session (used on explicit logout from any flow). */
+export function endSession(sessionId: string): void {
+    sessionStore.delete(sessionId);
     saveSessionsToFile(sessionStore);
 }
 

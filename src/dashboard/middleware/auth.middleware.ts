@@ -16,24 +16,27 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
     }
 
     const publicPaths = [
-        "/login.html", 
-        "/api/auth/login", 
+        "/login.html",
+        "/group-admin.html",
+        "/api/auth/login",
         "/api/auth/approval-status",
         "/api/auth/logout",
+        "/api/group-auth/request-otp",
+        "/api/group-auth/verify-otp",
         "/api/health",
         "/api/changelog"
     ];
-    
+
     const staticPaths = ["/js/", "/css/", "/images/", "/favicon.ico"];
-    
+
     if (publicPaths.some(path => request.url === path || request.url.startsWith(path))) {
         return;
     }
-    
+
     if (staticPaths.some(path => request.url.startsWith(path))) {
         return;
     }
-    
+
     if (request.url === "/" || request.url === "/index.html" || !request.url.startsWith("/api/")) {
         return;
     }
@@ -64,6 +67,23 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
             message: "Session expired due to inactivity",
             sessionExpired: true,
         });
+    }
+
+    // Role-based scoping: group admins are confined to the group-admin API
+    // surface. They must never reach owner/team endpoints (users, config,
+    // security, full group control, …).
+    if (decoded.role === "groupadmin") {
+        const allowedForGroupAdmin =
+            request.url.startsWith("/api/group-admin/") ||
+            request.url.startsWith("/api/group-auth/") ||
+            request.url === "/api/auth/logout" ||
+            request.url.startsWith("/api/changelog");
+        if (!allowedForGroupAdmin) {
+            return reply.status(403).send({
+                success: false,
+                message: "Forbidden - group admins cannot access this resource.",
+            });
+        }
     }
 
     touchSession(decoded.sessionId);

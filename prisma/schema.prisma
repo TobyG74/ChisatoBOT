@@ -45,6 +45,10 @@ type Settings {
   antibot             Boolean     @default(false)
   antidelete          Boolean     @default(false)
   banned              String[]
+  // Per-group welcome image layout customization (drag-and-drop builder). null = default template.
+  welcomeConfig       Json?
+  // Per-group leave image layout customization. null = default template.
+  leaveConfig         Json?
 }
 
 type Participant {
@@ -139,4 +143,20 @@ model DashboardConfig {
   ipWhitelist String[]
   ipBlacklist String[]
   updatedAt   DateTime @updatedAt
+}
+
+// Per-group audit trail for actions performed by group admins through the
+// dashboard (rename, kick, settings changes, …). Lets other admins see who
+// did what in their group.
+model GroupAuditLog {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  groupId   String
+  actorPn   String
+  actorName String?
+  action    String
+  detail    String?
+  target    String?
+  createdAt Float
+
+  @@index([groupId, createdAt])
 }

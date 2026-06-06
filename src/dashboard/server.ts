@@ -7,6 +7,8 @@ import { groupsRoutes } from "./routes/groups";
 import { usersRoutes } from "./routes/users";
 import { logsRoutes, addLog } from "./routes/logs";
 import { authRoutes } from "./routes/auth";
+import { groupAuthRoutes } from "./routes/group-auth";
+import { groupAdminRoutes } from "./routes/group-admin";
 import { configRoutes } from "./routes/config";
 import { changelogRoutes } from "./routes/changelog";
 import { authMiddleware } from "./middleware/auth.middleware";
@@ -74,6 +76,8 @@ export class DashboardServer {
 
         // Register API routes
         this.fastify.register(authRoutes, { prefix: "/api/auth" });
+        this.fastify.register(groupAuthRoutes, { prefix: "/api/group-auth" });
+        this.fastify.register(groupAdminRoutes, { prefix: "/api/group-admin" });
         this.fastify.register(statsRoutes, { prefix: "/api/stats" });
         this.fastify.register(groupsRoutes, { prefix: "/api/groups" });
         this.fastify.register(usersRoutes, { prefix: "/api/users" });

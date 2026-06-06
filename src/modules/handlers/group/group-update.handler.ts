@@ -814,7 +814,8 @@ export class GroupUpdateHandler {
                     profilePicUrl,
                     username,
                     groupName,
-                    memberCount
+                    memberCount,
+                    groupSettings?.welcomeConfig
                 );
 
                 await Chisato.sendImage(from, welcomeBuffer, caption, null, {
@@ -902,7 +903,8 @@ export class GroupUpdateHandler {
                         profilePicUrl,
                         username,
                         groupName,
-                        memberCount
+                        memberCount,
+                        groupSettings?.leaveConfig
                     );
 
                     await Chisato.sendImage(from, leaveBuffer, caption, null, {
