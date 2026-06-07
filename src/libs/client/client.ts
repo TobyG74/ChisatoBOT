@@ -80,6 +80,9 @@ type Events = {
 
 let tryConnect = 0;
 
+const RECONNECT_BASE_DELAY_MS = 2_000;
+const RECONNECT_MAX_DELAY_MS = 60_000;
+
 let baileysModule: any = null;
 
 async function getBaileys() {
@@ -97,6 +100,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     private time: string;
     private socketConfig: SocketConfig;
     public logger = logger;
+    private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     constructor(socketConfig: SocketConfig) {
         super();
         this.package = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
@@ -207,6 +211,26 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             });
         }
 
+        const scheduleReconnect = (label: string, opts?: { backoff?: boolean }): void => {
+            if (this.reconnectTimer) return;
+            const delay =
+                opts?.backoff === false
+                    ? RECONNECT_BASE_DELAY_MS
+                    : Math.min(
+                          RECONNECT_MAX_DELAY_MS,
+                          RECONNECT_BASE_DELAY_MS * 2 ** tryConnect
+                      ) + Math.floor(Math.random() * 1000);
+            tryConnect++;
+            this.logger.status(
+                label,
+                `Reconnecting in ${Math.round(delay / 1000)}s (attempt ${tryConnect})...`
+            );
+            this.reconnectTimer = setTimeout(() => {
+                this.reconnectTimer = null;
+                this.connect();
+            }, delay);
+        };
+
         /** Connection Update */
         Chisato.ev?.on("connection.update", async (connections) => {
             const { lastDisconnect, connection, qr } = connections;
@@ -229,128 +253,68 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                     ?.statusCode;
                 switch (reason) {
                     case DisconnectReason.restartRequired:
-                        {
-                            this.logger.status(
-                                `${reason}`,
-                                "Restart required, reconnecting in 2s..."
-                            );
-                            setTimeout(() => this.connect(), 2000);
-                        }
+                        // Normal post-pairing restart — reconnect fast, no backoff.
+                        scheduleReconnect(`${reason}`, { backoff: false });
                         break;
-                    case DisconnectReason.connectionLost:
-                        {
-                            this.logger.status(
-                                `${reason}`,
-                                "Connection Lost! Reconnecting in 1s..."
-                            );
-                            setTimeout(() => this.connect(), 1000);
-                        }
-                        break;
-                    case DisconnectReason.connectionClosed:
-                        {
-                            this.logger.status(
-                                `${reason}`,
-                                "Connection Closed! Reconnecting in 1s..."
-                            );
-                            setTimeout(() => this.connect(), 1000);
-                        }
-                        break;
+
                     case DisconnectReason.connectionReplaced:
-                        {
-                            this.logger.status(
-                                `${reason}`,
-                                "Connection Replaced! Another device connected."
-                            );
-                        }
+                        this.logger.status(
+                            `${reason}`,
+                            "Connection Replaced! Another session is using this number. Auto-reconnect stopped to avoid a session conflict."
+                        );
                         break;
-                    case DisconnectReason.timedOut:
-                        {
-                            this.logger.status(
-                                `${reason}`,
-                                "Timed Out! Reconnecting in 2s..."
-                            );
-                            setTimeout(() => this.connect(), 2000);
-                        }
-                        break;
+
                     case DisconnectReason.loggedOut:
-                        {
-                            this.logger.status(
-                                `${reason}`,
-                                "Session has been Logged Out! Clearing session and reconnecting..."
-                            );
-                            await clearState();
-                            setTimeout(() => this.connect(), 2000);
-                        }
+                        this.logger.status(
+                            `${reason}`,
+                            "Session Logged Out! Clearing session — re-login (QR/pairing) required."
+                        );
+                        await clearState();
+                        tryConnect = 0;
+                        scheduleReconnect(`${reason}`, { backoff: false });
                         break;
+
                     case DisconnectReason.forbidden:
-                        if (tryConnect < 2) {
-                            tryConnect++;
-                            this.logger.status(
-                                `${reason}`,
-                                `Forbidden! Retry attempt ${tryConnect}/2 in 3s...`
-                            );
-                            setTimeout(() => this.connect(), 3000);
+                        this.logger.status(
+                            `${reason}`,
+                            "FORBIDDEN (403) — the account appears blocked/banned by WhatsApp."
+                        );
+                        this.logger.status(
+                            `${reason}`,
+                            "Auto-reconnect STOPPED to avoid deepening the block. Check the number on a phone, wait it out, then restart the bot manually."
+                        );
+                        break;
+
+                    case DisconnectReason.unavailableService:
+                        if (tryConnect < 5) {
+                            scheduleReconnect(`${reason}`);
                         } else {
                             this.logger.status(
                                 `${reason}`,
-                                "Forbidden! Max retries reached. Please re-scan QR!"
+                                "Service still unavailable after several attempts. Auto-reconnect paused — restart manually if it persists."
+                            );
+                        }
+                        break;
+
+                    case DisconnectReason.multideviceMismatch:
+                    case DisconnectReason.badSession:
+                        if (tryConnect < 2) {
+                            scheduleReconnect(`${reason}`);
+                        } else {
+                            this.logger.status(
+                                `${reason}`,
+                                "Session unrecoverable — clearing session. Re-scan QR / re-pair required."
                             );
                             await clearState();
+                            tryConnect = 0;
+                            scheduleReconnect(`${reason}`, { backoff: false });
                         }
                         break;
-                    case DisconnectReason.unavailableService:
-                        {
-                            if (tryConnect < 2) {
-                                tryConnect++;
-                                this.logger.status(
-                                    `${reason}`,
-                                    `Unavailable Service! Retry attempt ${tryConnect}/2 in 3s...`
-                                );
-                                setTimeout(() => this.connect(), 3000);
-                            } else {
-                                this.logger.status(
-                                    `${reason}`,
-                                    "Unavailable Service! Max retries reached. Please re-scan QR!"
-                                );
-                                await clearState();
-                            }
-                        }
-                        break;
-                    case DisconnectReason.multideviceMismatch:
-                        {
-                            if (tryConnect < 2) {
-                                tryConnect++;
-                                this.logger.status(
-                                    `${reason}`,
-                                    `Multidevice Mismatch! Retry attempt ${tryConnect}/2 in 3s...`
-                                );
-                                setTimeout(() => this.connect(), 3000);
-                            } else {
-                                this.logger.status(
-                                    `${reason}`,
-                                    "Multidevice Mismatch! Max retries reached. Please re-scan QR!"
-                                );
-                                await clearState();
-                            }
-                        }
-                        break;
-                    case DisconnectReason.badSession:
-                        {
-                            if (tryConnect < 2) {
-                                tryConnect++;
-                                this.logger.status(
-                                    `${reason}`,
-                                    `Bad Session! Retry attempt ${tryConnect}/2 in 3s...`
-                                );
-                                setTimeout(() => this.connect(), 3000);
-                            } else {
-                                this.logger.status(
-                                    `${reason}`,
-                                    "Bad Session! Max retries reached. Please re-scan QR!"
-                                );
-                                await clearState();
-                            }
-                        }
+
+                    case DisconnectReason.connectionLost:
+                    case DisconnectReason.connectionClosed:
+                    case DisconnectReason.timedOut:
+                        scheduleReconnect(`${reason}`);
                         break;
                     default:
                         {

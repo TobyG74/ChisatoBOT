@@ -53,6 +53,18 @@ const PROFILE_PIC_TIMEOUT_MS = 800;
 const PROFILE_PIC_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 const DEFAULT_PROFILE_PIC = path.join(process.cwd(), "media", "noprofile.png");
 
+const MAX_EVENT_MEDIA = 3;
+const EVENT_SEND_GAP_MS = 1500;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isSocketReady(Chisato: Client): boolean {
+    const ws: any = (Chisato as any).ws;
+    if (ws && typeof ws.isOpen === "boolean") return ws.isOpen;
+    const rs = ws?.readyState ?? ws?.socket?.readyState;
+    return rs === undefined || rs === 1; // 1 = OPEN; unknown → assume ok
+}
+
 /** user-part (e.g. "628xxxx" or "12345" for LID) → resolved URL/path. */
 const profilePicCache = new Map<string, { url: string; expiresAt: number }>();
 
@@ -765,12 +777,42 @@ export class GroupUpdateHandler {
 
         if (!isWelcome) return;
 
+        if (!isSocketReady(Chisato)) {
+            logger.warn(
+                `Skipping welcome for ${from}: socket not ready (avoiding flood into a closing connection).`
+            );
+            return;
+        }
+
         const memberCount = groupMetadata.participants?.length ?? 0;
         const groupName = groupMetadata.subject;
         const groupOwner = groupMetadata.owner || "";
         const customMessage = groupSettings?.welcomeMessage;
 
-        for (const userNumber of participants) {
+        if (participants.length > MAX_EVENT_MEDIA) {
+            const mentions = [...participants];
+            const names = participants
+                .map((u) => `@${u.split("@")[0]}`)
+                .join(", ");
+            const caption =
+                `👋 Welcome to *${groupName}*!\n\n${names}\n\n` +
+                `You're now part of the group — enjoy! (${memberCount} members)`;
+            try {
+                await Chisato.sendText(from, caption, null, { mentions });
+            } catch (error) {
+                logger.error(
+                    `Failed to send combined welcome for ${from}: ${
+                        error instanceof Error ? error.message : String(error)
+                    }`
+                );
+            }
+            return;
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            const userNumber = participants[i];
+            if (i > 0) await sleep(EVENT_SEND_GAP_MS);
+            if (!isSocketReady(Chisato)) return;
             try {
                 const profilePicUrl = await resolveProfilePic(
                     Chisato,
@@ -834,7 +876,7 @@ export class GroupUpdateHandler {
                     `「 *GROUP WELCOME* 」\n\nHello @${username} — welcome to the ${groupName}`,
                     null,
                     { mentions: [userNumber] }
-                );
+                ).catch(() => {});
             }
         }
     }
@@ -848,13 +890,37 @@ export class GroupUpdateHandler {
         groupSettings: any,
         isLeave: boolean
     ): Promise<void> {
-        if (isLeave) {
+        if (isLeave && isSocketReady(Chisato)) {
             const groupName = groupMetadata.subject;
             const memberCount = groupMetadata.participants?.length ?? 0;
             const groupOwner = groupMetadata.owner || "";
             const customMessage = groupSettings?.leaveMessage;
 
-            for (const userNumber of participants) {
+            if (participants.length > MAX_EVENT_MEDIA) {
+                const mentions = [...participants];
+                const names = participants
+                    .map((u) => `@${u.split("@")[0]}`)
+                    .join(", ");
+                await Chisato.sendText(
+                    from,
+                    `👋 ${names} left *${groupName}*. Remaining members: ${memberCount}`,
+                    null,
+                    { mentions }
+                ).catch((error) =>
+                    logger.error(
+                        `Failed to send combined leave for ${from}: ${
+                            error instanceof Error ? error.message : String(error)
+                        }`
+                    )
+                );
+                await this.updateGroupMetadata(Chisato, from);
+                return;
+            }
+
+            for (let i = 0; i < participants.length; i++) {
+                const userNumber = participants[i];
+                if (i > 0) await sleep(EVENT_SEND_GAP_MS);
+                if (!isSocketReady(Chisato)) break;
                 try {
                     const profilePicUrl = await resolveProfilePic(
                         Chisato,
@@ -925,14 +991,11 @@ export class GroupUpdateHandler {
                         `「 *GROUP LEAVE* 」\n\nByee @${username} — goodbye and see you again`,
                         null,
                         { mentions: [userNumber] }
-                    );
+                    ).catch(() => {});
                 }
             }
         }
 
-        // Bot-was-removed cleanup is handled at the top of
-        // `handleParticipantsUpdate` (before metadata fetch). At this point we
-        // know the bot is still in the group, so just refresh metadata.
         await this.updateGroupMetadata(Chisato, from);
     }
 
