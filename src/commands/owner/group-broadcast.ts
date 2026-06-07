@@ -44,10 +44,8 @@ export default {
 {prefix}{command.name} Hello everyone! This is a group broadcast message!`,
     async run({ Chisato, query, command, from, message, prefix }) {
         const groupIds = Object.values(
-            (await Chisato.groupFetchAllParticipating()) as Record<string, any>
-        )
-            .filter((v) => !v.isCommunity && !v.isCommunityAnnounce)
-            .map((v) => v.id);
+            (await Chisato.groupFetchAllParticipating())
+        ).filter((v: any) => !v.isCommunity && !v.isCommunityAnnouncement).map((v: any) => v.id);
 
         if (!groupIds.length) {
             await Chisato.sendText(
@@ -73,11 +71,6 @@ export default {
         const bodyText = `${query}\n\n_Broadcast by ${message.pushName}_`;
         const ownerCmd = `${prefix ?? "."}owner`;
 
-        // Build the message ONCE. The same content is sent to every group;
-        // only the recipient JID and the per-message ID change. Building
-        // inside the loop (as the original did) re-uploaded the image and
-        // re-rendered the template for every recipient — both go through
-        // Baileys' keys.transaction mutex, multiplying broadcast time.
         let renderedContent: any;
         try {
             const builder = new TemplateBuilder.Native(Chisato);
