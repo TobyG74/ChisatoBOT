@@ -22,7 +22,7 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
         "/api/auth/approval-status",
         "/api/auth/logout",
         "/api/group-auth/request-otp",
-        "/api/group-auth/verify-otp",
+        "/api/group-auth/otp-status",
         "/api/health",
         "/api/changelog"
     ];

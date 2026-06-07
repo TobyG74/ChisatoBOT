@@ -100,16 +100,25 @@
                 </p>
             </div>
 
-            <!-- step 2: otp -->
+            <!-- step 2: send code to bot (reverse OTP) -->
             <div id="step-otp" class="hidden">
-                <label class="label" for="ga-otp">Enter the 6-digit code</label>
-                <input class="input text-center tracking-[0.5em] text-lg font-bold" id="ga-otp" inputmode="numeric" maxlength="6" placeholder="••••••" />
-                <button class="btn btn-primary w-full justify-center mt-4" id="ga-verify-btn" onclick="verifyOtp()">
-                    <i class="fas fa-arrow-right-to-bracket"></i> Verify & Continue
-                </button>
-                <div class="flex items-center justify-between mt-3">
+                <div class="text-[.82rem] text-[color:var(--muted)] mb-2">Send this code <b class="text-[color:var(--text)]">from your own WhatsApp</b> (+<span id="ga-shown-phone"></span>) to the bot's chat:</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:10px;background:#0a1326;border:1px dashed var(--accent);border-radius:14px;padding:16px;margin-bottom:14px">
+                    <span id="ga-code" class="text-[2rem] font-extrabold tracking-[0.3em] text-[color:var(--accent)]">······</span>
+                    <button class="btn btn-sm" onclick="copyCode()" title="Copy code"><i class="fas fa-copy"></i></button>
+                </div>
+                <a id="ga-wa-link" href="#" target="_blank" class="btn btn-primary w-full justify-center">
+                    <i class="fab fa-whatsapp"></i> Open WhatsApp & send code
+                </a>
+                <div class="flex items-center justify-center gap-2 mt-4 text-[.82rem] text-[color:var(--muted)]" id="ga-wait">
+                    <i class="fas fa-spinner spin"></i> Waiting for your message to the bot…
+                </div>
+                <div class="text-[.72rem] text-[color:var(--subtle)] text-center mt-2">
+                    The bot validates that the message comes from <b>+<span id="ga-shown-phone2"></span></b> and the code matches. Expires in <span id="ga-otp-expiry">5:00</span>.
+                </div>
+                <div class="flex items-center justify-between mt-4">
                     <button class="btn btn-sm" onclick="backToPhone()"><i class="fas fa-arrow-left"></i> Change number</button>
-                    <button class="btn btn-sm" id="ga-resend-btn" onclick="requestOtp(true)">Resend code</button>
+                    <button class="btn btn-sm" id="ga-resend-btn" onclick="requestOtp()">Generate new code</button>
                 </div>
             </div>
 
@@ -272,7 +281,7 @@ let currentGroupId = null, currentGroup = null, currentAccess = null;
 let participants = [], settingsCache = null;
 let variant = 'welcome', config = null, previewTimer = null;
 let logsPage = 1;
-let resendCooldown = 0, resendTimer = null;
+let otpRequestId = null, otpPollTimer = null, otpExpiryTimer = null;
 
 function toast(msg, type){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+(type||''); clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast '+(type||''),2600); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -289,55 +298,68 @@ async function apiJson(path, opts){ const r = await api(path, opts); let d={}; t
 
 // ====================== auth / login ======================
 function showLoginMsg(msg, type){ const el=document.getElementById('ga-login-msg'); el.textContent=msg; el.className='mt-4 text-[.8rem] font-medium rounded-xl px-3 py-2.5 '+(type==='err'?'text-[#fca5a5]':'text-[#6ee7b7]'); el.style.background= type==='err'?'rgba(239,68,68,.1)':'rgba(16,185,129,.1)'; el.classList.remove('hidden'); }
-function backToPhone(){ document.getElementById('step-otp').classList.add('hidden'); document.getElementById('step-phone').classList.remove('hidden'); document.getElementById('ga-login-msg').classList.add('hidden'); }
+function backToPhone(){ stopOtpPolling(); document.getElementById('step-otp').classList.add('hidden'); document.getElementById('step-phone').classList.remove('hidden'); document.getElementById('ga-login-msg').classList.add('hidden'); }
 
-function startResendCooldown(ms){
-    resendCooldown = Math.ceil(ms/1000);
-    const btn = document.getElementById('ga-resend-btn');
-    clearInterval(resendTimer);
-    const tick=()=>{ if(resendCooldown<=0){ btn.disabled=false; btn.textContent='Resend code'; clearInterval(resendTimer); return; } btn.disabled=true; btn.textContent='Resend in '+resendCooldown+'s'; resendCooldown--; };
-    tick(); resendTimer=setInterval(tick,1000);
+function stopOtpPolling(){ clearInterval(otpPollTimer); otpPollTimer=null; clearInterval(otpExpiryTimer); otpExpiryTimer=null; }
+
+function startOtpExpiry(ms){
+    let remain=Math.ceil(ms/1000);
+    const el=document.getElementById('ga-otp-expiry');
+    clearInterval(otpExpiryTimer);
+    const tick=()=>{ if(remain<=0){ clearInterval(otpExpiryTimer); el.textContent='expired'; stopOtpPolling(); showLoginMsg('Code expired. Generate a new one.','err'); return; } const m=Math.floor(remain/60), s=remain%60; el.textContent=m+':'+String(s).padStart(2,'0'); remain--; };
+    tick(); otpExpiryTimer=setInterval(tick,1000);
 }
 
-async function requestOtp(isResend){
+// Step 1: ask the server to generate a code, then show it for the admin to
+// send to the bot. We then poll until the bot confirms the DM.
+async function requestOtp(){
     const phone = document.getElementById('ga-phone').value.trim();
     if(!phone){ showLoginMsg('Please enter your WhatsApp number.','err'); return; }
-    const btn = document.getElementById(isResend?'ga-resend-btn':'ga-send-btn');
-    const orig = btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner spin"></i> Sending…';
+    const btn = document.getElementById('ga-send-btn');
+    const orig = btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner spin"></i> Generating…';
+    const resendBtn=document.getElementById('ga-resend-btn'); resendBtn.disabled=true;
     try{
         const r = await fetch('/api/group-auth/request-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phoneNumber:phone})});
         const d = await r.json();
-        if(!r.ok){
-            if(d.retryAfterMs){ startResendCooldown(d.retryAfterMs); }
-            showLoginMsg(d.message||'Failed to send OTP.','err');
-            return;
-        }
+        if(!r.ok){ showLoginMsg(d.message||'Failed to generate code.','err'); return; }
+        otpRequestId = d.requestId;
+        document.getElementById('ga-code').textContent = d.code;
+        document.getElementById('ga-wa-link').href = d.waLink || '#';
+        document.getElementById('ga-shown-phone').textContent = phone.replace(/^0/,'62');
+        document.getElementById('ga-shown-phone2').textContent = phone.replace(/^0/,'62');
         document.getElementById('step-phone').classList.add('hidden');
         document.getElementById('step-otp').classList.remove('hidden');
-        document.getElementById('ga-otp').focus();
-        showLoginMsg('Code sent to your WhatsApp. You are admin of '+d.groupCount+' group(s).','ok');
-        startResendCooldown(d.resendCooldownMs||60000);
+        document.getElementById('ga-login-msg').classList.add('hidden');
+        startOtpExpiry(d.expiresInMs||300000);
+        startOtpPolling();
     }catch(e){ showLoginMsg('Network error. Try again.','err'); }
-    finally{ if(!isResend){ btn.disabled=false; btn.innerHTML=orig; } }
+    finally{ btn.disabled=false; btn.innerHTML=orig; resendBtn.disabled=false; }
 }
 
-async function verifyOtp(){
-    const phone = document.getElementById('ga-phone').value.trim();
-    const code = document.getElementById('ga-otp').value.trim();
-    if(code.length<4){ showLoginMsg('Enter the code from WhatsApp.','err'); return; }
-    const btn=document.getElementById('ga-verify-btn'); const orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner spin"></i> Verifying…';
-    try{
-        const r=await fetch('/api/group-auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phoneNumber:phone,code})});
-        const d=await r.json();
-        if(!r.ok){ showLoginMsg(d.message||'Invalid code.','err'); if(d.expired) backToPhone(); return; }
-        TOKEN=d.token; PROFILE=d.admin;
-        localStorage.setItem('gaToken',TOKEN); localStorage.setItem('gaProfile',JSON.stringify(PROFILE));
-        enterDashboard();
-    }catch(e){ showLoginMsg('Network error. Try again.','err'); }
-    finally{ btn.disabled=false; btn.innerHTML=orig; }
+function startOtpPolling(){
+    clearInterval(otpPollTimer);
+    otpPollTimer = setInterval(async ()=>{
+        if(!otpRequestId) return;
+        try{
+            const r = await fetch('/api/group-auth/otp-status/'+otpRequestId);
+            const d = await r.json();
+            if(d.status==='verified' && d.token){
+                stopOtpPolling();
+                TOKEN=d.token; PROFILE=d.admin;
+                localStorage.setItem('gaToken',TOKEN); localStorage.setItem('gaProfile',JSON.stringify(PROFILE));
+                enterDashboard();
+            } else if(d.status==='expired'){
+                stopOtpPolling();
+                showLoginMsg('Code expired. Generate a new one.','err');
+            }
+        }catch(e){ /* transient; keep polling */ }
+    }, 2500);
 }
+
+function copyCode(){ const v=document.getElementById('ga-code').textContent; if(!v)return; navigator.clipboard.writeText(v); toast('Code copied','ok'); }
 
 function logout(){
+    stopOtpPolling();
     try{ if(TOKEN) fetch('/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN}}); }catch{}
     localStorage.removeItem('gaToken'); localStorage.removeItem('gaProfile');
     TOKEN=null; PROFILE=null;
@@ -606,7 +628,6 @@ async function loadLogs(page){
 
 // ====================== boot ======================
 (async function boot(){
-    document.getElementById('ga-otp')?.addEventListener('keydown',e=>{ if(e.key==='Enter') verifyOtp(); });
     document.getElementById('ga-phone')?.addEventListener('keydown',e=>{ if(e.key==='Enter') requestOtp(); });
     if(TOKEN){
         try{ const r=await fetch('/api/group-admin/my-groups',{headers:{'Authorization':'Bearer '+TOKEN}}); if(r.ok){ enterDashboard(); return; } }catch{}

@@ -9,37 +9,67 @@ import {
     signSessionToken,
     isIpBlocked,
 } from "./auth";
-import { findAdminGroupsFromDb } from "../services/group-access.service";
+import {
+    findAdminGroupsFromDb,
+    getBotPhoneNumber,
+} from "../services/group-access.service";
+
+/**
+ * Reverse-OTP group-admin login.
+ */
 
 const OTP_TTL_MS = 5 * 60 * 1000; // code valid for 5 minutes
-const OTP_MAX_ATTEMPTS = 5; // wrong-code attempts before the code is burned
-const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // min gap between two OTP sends
 const OTP_RATE_WINDOW_MS = 15 * 60 * 1000; // sliding window for per-IP throttle
-const OTP_RATE_MAX = 5; // max OTP requests per IP per window
+const OTP_RATE_MAX = 6; // max OTP requests per IP per window
 
 type PendingOtp = {
-    phoneNumber: string;
+    requestId: string;
+    phoneNumber: string; // bare number expected as the DM sender
     code: string;
     createdAt: number;
-    lastSentAt: number;
-    attempts: number;
+    status: "pending" | "verified";
     groupCount: number;
     requesterIp: string;
+    token?: string;
+    admin?: { phoneNumber: string; role: "groupadmin"; groupCount: number };
 };
 
-// phoneNumber -> pending OTP. In-memory only; OTPs are short-lived by design.
-const pendingOtps = new Map<string, PendingOtp>();
-// ip -> recent request timestamps (sliding window).
+// requestId -> pending (the web polls this)
+const pendingByRequest = new Map<string, PendingOtp>();
+// phoneNumber -> set of requestIds (fast lookup when a DM arrives)
+const phoneToRequests = new Map<string, Set<string>>();
+// ip -> recent request timestamps (sliding window)
 const ipOtpRequests = new Map<string, number[]>();
 
 function generateCode(): string {
     return crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
+function indexPhone(phone: string, requestId: string): void {
+    let set = phoneToRequests.get(phone);
+    if (!set) {
+        set = new Set();
+        phoneToRequests.set(phone, set);
+    }
+    set.add(requestId);
+}
+
+function unindexPhone(phone: string, requestId: string): void {
+    const set = phoneToRequests.get(phone);
+    if (!set) return;
+    set.delete(requestId);
+    if (!set.size) phoneToRequests.delete(phone);
+}
+
+function dropRequest(req: PendingOtp): void {
+    pendingByRequest.delete(req.requestId);
+    unindexPhone(req.phoneNumber, req.requestId);
+}
+
 function cleanupExpiredOtps(): void {
     const now = Date.now();
-    for (const [phone, otp] of pendingOtps.entries()) {
-        if (now - otp.createdAt > OTP_TTL_MS) pendingOtps.delete(phone);
+    for (const req of [...pendingByRequest.values()]) {
+        if (now - req.createdAt > OTP_TTL_MS) dropRequest(req);
     }
 }
 
@@ -50,8 +80,7 @@ function checkIpRate(ip: string): { limited: boolean; retryAfterMs: number } {
     );
     ipOtpRequests.set(ip, arr);
     if (arr.length >= OTP_RATE_MAX) {
-        const oldest = arr[0];
-        return { limited: true, retryAfterMs: OTP_RATE_WINDOW_MS - (now - oldest) };
+        return { limited: true, retryAfterMs: OTP_RATE_WINDOW_MS - (now - arr[0]) };
     }
     return { limited: false, retryAfterMs: 0 };
 }
@@ -62,16 +91,56 @@ function recordIpRequest(ip: string): void {
     ipOtpRequests.set(ip, arr);
 }
 
+export function tryConsumeLoginOtp(
+    senderPhone: string,
+    text: string
+): { matched: boolean } {
+    const code = String(text || "").trim();
+    if (!/^\d{4,8}$/.test(code)) return { matched: false };
+
+    cleanupExpiredOtps();
+
+    const ids = phoneToRequests.get(senderPhone);
+    if (!ids || !ids.size) return { matched: false };
+
+    for (const id of [...ids]) {
+        const req = pendingByRequest.get(id);
+        if (!req || req.status !== "pending") continue;
+        if (Date.now() - req.createdAt > OTP_TTL_MS) {
+            dropRequest(req);
+            continue;
+        }
+        if (req.code !== code) continue;
+
+        // Match — verify and mint the session/token.
+        const sessionId = `ga:${req.phoneNumber}:${Date.now()}:${crypto
+            .randomBytes(4)
+            .toString("hex")}`;
+        startSession(sessionId);
+        const token = signSessionToken({
+            sessionId,
+            phoneNumber: req.phoneNumber,
+            role: "groupadmin",
+        });
+        req.status = "verified";
+        req.token = token;
+        req.admin = {
+            phoneNumber: req.phoneNumber,
+            role: "groupadmin",
+            groupCount: req.groupCount,
+        };
+        unindexPhone(req.phoneNumber, req.requestId);
+        return { matched: true };
+    }
+
+    return { matched: false };
+}
+
 interface OtpRequestBody {
     phoneNumber: string;
 }
-interface OtpVerifyBody {
-    phoneNumber: string;
-    code: string;
-}
 
 export async function groupAuthRoutes(fastify: FastifyInstance) {
-    // Step 1: request an OTP. Only sent if the number is an admin somewhere.
     fastify.post(
         "/request-otp",
         async (request: FastifyRequest<{ Body: OtpRequestBody }>, reply: FastifyReply) => {
@@ -111,19 +180,15 @@ export async function groupAuthRoutes(fastify: FastifyInstance) {
                 });
             }
 
-            // Resend cooldown — reuse the existing code if still fresh.
-            const existing = pendingOtps.get(phoneNumber);
-            const now = Date.now();
-            if (existing && now - existing.lastSentAt < OTP_RESEND_COOLDOWN_MS) {
-                return reply.status(429).send({
+            const botNumber = getBotPhoneNumber(client);
+            if (!botNumber) {
+                return reply.status(503).send({
                     success: false,
-                    rateLimited: true,
-                    retryAfterMs: OTP_RESEND_COOLDOWN_MS - (now - existing.lastSentAt),
-                    message: "An OTP was just sent. Please wait before requesting another.",
+                    message: "Bot number is unavailable. Please try again shortly.",
                 });
             }
 
-            let adminGroups;
+            let adminGroups: Awaited<ReturnType<typeof findAdminGroupsFromDb>>;
             try {
                 adminGroups = await findAdminGroupsFromDb(phoneNumber, client);
             } catch (err) {
@@ -135,7 +200,6 @@ export async function groupAuthRoutes(fastify: FastifyInstance) {
             }
 
             if (!adminGroups.length) {
-                // Count this as a request to deter enumeration.
                 recordIpRequest(requesterIp);
                 return reply.status(403).send({
                     success: false,
@@ -144,125 +208,74 @@ export async function groupAuthRoutes(fastify: FastifyInstance) {
                 });
             }
 
-            const code = existing && now - existing.createdAt < OTP_TTL_MS
-                ? existing.code
-                : generateCode();
+            const requestId = crypto.randomBytes(16).toString("hex");
+            const code = generateCode();
 
-            pendingOtps.set(phoneNumber, {
+            const pending: PendingOtp = {
+                requestId,
                 phoneNumber,
                 code,
-                createdAt: existing && now - existing.createdAt < OTP_TTL_MS ? existing.createdAt : now,
-                lastSentAt: now,
-                attempts: existing?.attempts ?? 0,
+                createdAt: Date.now(),
+                status: "pending",
                 groupCount: adminGroups.length,
                 requesterIp,
-            });
-
-            const message =
-                `🔐 *ChisatoBOT Group Dashboard*\n\n` +
-                `Your one-time login code is:\n\n*${code}*\n\n` +
-                `You are an admin of *${adminGroups.length}* group${adminGroups.length === 1 ? "" : "s"}.\n` +
-                `This code is valid for 5 minutes. Do not share it with anyone.\n\n` +
-                `🌐 IP: ${requesterIp}\n` +
-                `_If you didn't request this, ignore this message._`;
-
-            try {
-                await (client as any).sendText(`${phoneNumber}@s.whatsapp.net`, message);
-            } catch (err) {
-                logger.error("group-auth: failed to send OTP:", err);
-                return reply.status(500).send({
-                    success: false,
-                    message: "Failed to send the OTP via WhatsApp.",
-                });
-            }
-
+            };
+            pendingByRequest.set(requestId, pending);
+            indexPhone(phoneNumber, requestId);
             recordIpRequest(requesterIp);
 
             return reply.send({
                 success: true,
-                message: "OTP sent to your WhatsApp.",
+                requestId,
+                code,
+                botNumber,
+                waLink: `https://wa.me/${botNumber}?text=${encodeURIComponent(code)}`,
                 expiresInMs: OTP_TTL_MS,
-                resendCooldownMs: OTP_RESEND_COOLDOWN_MS,
                 groupCount: adminGroups.length,
+                message:
+                    "Send this code from your own WhatsApp to the bot's chat to verify.",
             });
         }
     );
 
-    // Step 2: verify the OTP and issue a group-admin session token.
-    fastify.post(
-        "/verify-otp",
-        async (request: FastifyRequest<{ Body: OtpVerifyBody }>, reply: FastifyReply) => {
+    fastify.get(
+        "/otp-status/:requestId",
+        async (
+            request: FastifyRequest<{ Params: { requestId: string } }>,
+            reply: FastifyReply
+        ) => {
             cleanupExpiredOtps();
+            const { requestId } = request.params;
+            const req = pendingByRequest.get(requestId);
 
-            const requesterIp = getRequesterIp(request);
-            if (isIpBlocked(requesterIp)) {
-                return reply.status(403).send({
+            if (!req) {
+                return reply.status(404).send({
                     success: false,
-                    message: "Access from this IP is blocked.",
+                    status: "expired",
+                    message: "Request not found or expired. Please start again.",
                 });
             }
 
-            const phoneNumber = normalizePhoneNumber(request.body?.phoneNumber || "");
-            const code = String(request.body?.code || "").replace(/[^0-9]/g, "");
-
-            const pending = pendingOtps.get(phoneNumber);
-            if (!pending) {
-                return reply.status(400).send({
+            if (Date.now() - req.createdAt > OTP_TTL_MS) {
+                dropRequest(req);
+                return reply.status(410).send({
                     success: false,
-                    message: "No active OTP. Please request a new code.",
+                    status: "expired",
+                    message: "Code expired. Please generate a new one.",
                 });
             }
 
-            if (Date.now() - pending.createdAt > OTP_TTL_MS) {
-                pendingOtps.delete(phoneNumber);
-                return reply.status(400).send({
-                    success: false,
-                    expired: true,
-                    message: "OTP has expired. Please request a new code.",
-                });
+            if (req.status === "verified") {
+                const token = req.token!;
+                const admin = req.admin!;
+                dropRequest(req);
+                return reply.send({ success: true, status: "verified", token, admin });
             }
-
-            pending.attempts += 1;
-            if (pending.attempts > OTP_MAX_ATTEMPTS) {
-                pendingOtps.delete(phoneNumber);
-                return reply.status(429).send({
-                    success: false,
-                    message: "Too many incorrect attempts. Please request a new code.",
-                });
-            }
-
-            if (!code || code !== pending.code) {
-                const remaining = OTP_MAX_ATTEMPTS - pending.attempts + 1;
-                return reply.status(401).send({
-                    success: false,
-                    message: `Incorrect code. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`,
-                    attemptsRemaining: Math.max(0, remaining),
-                });
-            }
-
-            // Success — burn the OTP, open a session, issue a token.
-            pendingOtps.delete(phoneNumber);
-
-            const sessionId = `ga:${phoneNumber}:${Date.now()}:${crypto
-                .randomBytes(4)
-                .toString("hex")}`;
-            startSession(sessionId);
-
-            const token = signSessionToken({
-                sessionId,
-                phoneNumber,
-                role: "groupadmin",
-            });
 
             return reply.send({
                 success: true,
-                message: "Login successful.",
-                token,
-                admin: {
-                    phoneNumber,
-                    role: "groupadmin",
-                    groupCount: pending.groupCount,
-                },
+                status: "pending",
+                expiresInMs: Math.max(0, OTP_TTL_MS - (Date.now() - req.createdAt)),
             });
         }
     );

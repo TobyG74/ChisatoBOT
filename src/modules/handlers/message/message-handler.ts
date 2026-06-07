@@ -17,6 +17,7 @@ import {
 import { AntiLinkHandler, AntiBotMessageHandler } from "../settings";
 import { StringUtils } from "../../../utils/core/string-utils";
 import { formatExample } from "../../../utils";
+import { tryConsumeLoginOtp } from "../../../dashboard/routes/group-auth";
 
 export class MessageHandler {
     private Database = {
@@ -61,6 +62,22 @@ export class MessageHandler {
 
             // Get command if exists — O(1) direct + O(1) alias lookup
             if (!context) return;
+
+            if (!message.fromMe && !context.isGroup && message.body) {
+                const senderPhone = String(context.sender || "")
+                    .split("@")[0]
+                    .split(":")[0];
+                const otp = tryConsumeLoginOtp(senderPhone, message.body);
+                if (otp.matched) {
+                    await Chisato.sendText(
+                        context.from,
+                        "✅ *Login verified!*\n\nYou can return to the dashboard — it will continue automatically.",
+                        message
+                    ).catch(() => {});
+                    return;
+                }
+            }
+
             const command = context.cmd
                 ? (commands.get(context.cmd) ?? aliasIndex.get(context.cmd) ?? null)
                 : null;
