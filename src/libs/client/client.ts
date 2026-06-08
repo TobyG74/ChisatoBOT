@@ -101,6 +101,7 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
     private socketConfig: SocketConfig;
     public logger = logger;
     private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    public readyAt = 0;
     constructor(socketConfig: SocketConfig) {
         super();
         this.package = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
@@ -337,6 +338,11 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 }
             } else if (connection === "open") {
                 tryConnect = 0;
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                    this.reconnectTimer = null;
+                }
+                this.readyAt = Date.now();
 
                 /** Logger */
                 const userName = this.user?.name || "WhatsApp BOT";

@@ -55,8 +55,14 @@ const DEFAULT_PROFILE_PIC = path.join(process.cwd(), "media", "noprofile.png");
 
 const MAX_EVENT_MEDIA = 3;
 const EVENT_SEND_GAP_MS = 1500;
+const STARTUP_GRACE_MS = 25_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isWithinStartupGrace(Chisato: Client): boolean {
+    const readyAt = (Chisato as any).readyAt || 0;
+    return readyAt === 0 || Date.now() - readyAt < STARTUP_GRACE_MS;
+}
 
 function isSocketReady(Chisato: Client): boolean {
     const ws: any = (Chisato as any).ws;
@@ -784,6 +790,14 @@ export class GroupUpdateHandler {
             return;
         }
 
+        // Suppress greetings for the reconnect backlog (see STARTUP_GRACE_MS).
+        if (isWithinStartupGrace(Chisato)) {
+            logger.warn(
+                `Skipping welcome for ${from}: within startup grace window (backlog event).`
+            );
+            return;
+        }
+
         const memberCount = groupMetadata.participants?.length ?? 0;
         const groupName = groupMetadata.subject;
         const groupOwner = groupMetadata.owner || "";
@@ -890,7 +904,7 @@ export class GroupUpdateHandler {
         groupSettings: any,
         isLeave: boolean
     ): Promise<void> {
-        if (isLeave && isSocketReady(Chisato)) {
+        if (isLeave && isSocketReady(Chisato) && !isWithinStartupGrace(Chisato)) {
             const groupName = groupMetadata.subject;
             const memberCount = groupMetadata.participants?.length ?? 0;
             const groupOwner = groupMetadata.owner || "";
