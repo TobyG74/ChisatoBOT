@@ -18,6 +18,7 @@ import { AntiLinkHandler, AntiBotMessageHandler } from "../settings";
 import { StringUtils } from "../../../utils/core/string-utils";
 import { formatExample } from "../../../utils";
 import { tryConsumeLoginOtp } from "../../../dashboard/routes/group-auth";
+import { resolveToPnJid } from "../../../utils/jid-resolver";
 
 export class MessageHandler {
     private Database = {
@@ -60,14 +61,28 @@ export class MessageHandler {
                 this.Database
             );
 
-            // Get command if exists — O(1) direct + O(1) alias lookup
+            // Get command if exists 
             if (!context) return;
 
-            if (!message.fromMe && !context.isGroup && message.body) {
-                const senderPhone = String(context.sender || "")
-                    .split("@")[0]
-                    .split(":")[0];
-                const otp = tryConsumeLoginOtp(senderPhone, message.body);
+            if (
+                !message.fromMe &&
+                !context.isGroup &&
+                message.body &&
+                /^\s*\d{4,8}\s*$/.test(message.body)
+            ) {
+                const candidates = new Set<string>();
+                for (const j of [context.sender, message.sender, message.from]) {
+                    if (j) candidates.add(String(j));
+                }
+                try {
+                    const [pnSender, pnFrom] = await Promise.all([
+                        resolveToPnJid(Chisato, message.sender),
+                        resolveToPnJid(Chisato, message.from),
+                    ]);
+                    if (pnSender) candidates.add(pnSender);
+                    if (pnFrom) candidates.add(pnFrom);
+                } catch {}
+                const otp = tryConsumeLoginOtp([...candidates], message.body);
                 if (otp.matched) {
                     await Chisato.sendText(
                         context.from,

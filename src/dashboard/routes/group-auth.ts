@@ -92,7 +92,7 @@ function recordIpRequest(ip: string): void {
 }
 
 export function tryConsumeLoginOtp(
-    senderPhone: string,
+    senderPhones: string | string[],
     text: string
 ): { matched: boolean } {
     const code = String(text || "").trim();
@@ -100,39 +100,54 @@ export function tryConsumeLoginOtp(
 
     cleanupExpiredOtps();
 
-    const ids = phoneToRequests.get(senderPhone);
-    if (!ids || !ids.size) return { matched: false };
+    const candidates = (
+        Array.isArray(senderPhones) ? senderPhones : [senderPhones]
+    )
+        .map((p) => String(p || "").split("@")[0].split(":")[0])
+        .filter(Boolean);
 
-    for (const id of [...ids]) {
-        const req = pendingByRequest.get(id);
-        if (!req || req.status !== "pending") continue;
-        if (Date.now() - req.createdAt > OTP_TTL_MS) {
-            dropRequest(req);
-            continue;
+    for (const phone of candidates) {
+        const ids = phoneToRequests.get(phone);
+        if (!ids || !ids.size) continue;
+
+        for (const id of [...ids]) {
+            const req = pendingByRequest.get(id);
+            if (!req || req.status !== "pending") continue;
+            if (Date.now() - req.createdAt > OTP_TTL_MS) {
+                dropRequest(req);
+                continue;
+            }
+            if (req.code !== code) continue;
+
+            // Match for verification and mint the session/token.
+            const sessionId = `ga:${req.phoneNumber}:${Date.now()}:${crypto
+                .randomBytes(4)
+                .toString("hex")}`;
+            startSession(sessionId);
+            const token = signSessionToken({
+                sessionId,
+                phoneNumber: req.phoneNumber,
+                role: "groupadmin",
+            });
+            req.status = "verified";
+            req.token = token;
+            req.admin = {
+                phoneNumber: req.phoneNumber,
+                role: "groupadmin",
+                groupCount: req.groupCount,
+            };
+            unindexPhone(req.phoneNumber, req.requestId);
+            logger.info(
+                `[group-otp] verified login for +${req.phoneNumber} (matched via ${phone})`
+            );
+            return { matched: true };
         }
-        if (req.code !== code) continue;
-
-        // Match — verify and mint the session/token.
-        const sessionId = `ga:${req.phoneNumber}:${Date.now()}:${crypto
-            .randomBytes(4)
-            .toString("hex")}`;
-        startSession(sessionId);
-        const token = signSessionToken({
-            sessionId,
-            phoneNumber: req.phoneNumber,
-            role: "groupadmin",
-        });
-        req.status = "verified";
-        req.token = token;
-        req.admin = {
-            phoneNumber: req.phoneNumber,
-            role: "groupadmin",
-            groupCount: req.groupCount,
-        };
-        unindexPhone(req.phoneNumber, req.requestId);
-        return { matched: true };
     }
 
+    logger.info(
+        `[group-otp] no match for code from [${candidates.join(", ")}] — ` +
+            `awaiting numbers: ${[...phoneToRequests.keys()].join(", ") || "none"}`
+    );
     return { matched: false };
 }
 
