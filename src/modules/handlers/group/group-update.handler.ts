@@ -3,6 +3,7 @@ import { Group as GroupDatabase } from "../../../libs/database";
 import { Client } from "../../../libs";
 import { logger } from "../../../core/logger";
 import { createWelcomeImage, createLeaveImage } from "../../../utils/converter";
+import { resolveToPnJid } from "../../../utils/jid-resolver";
 import path from "path";
 import util from "util";
 
@@ -56,8 +57,26 @@ const DEFAULT_PROFILE_PIC = path.join(process.cwd(), "media", "noprofile.png");
 const MAX_EVENT_MEDIA = 3;
 const EVENT_SEND_GAP_MS = 1500;
 const STARTUP_GRACE_MS = 25_000;
+const EVENT_SETTLE_MIN_MS = 1200;
+const EVENT_SETTLE_JITTER_MS = 1500;
+const EVENT_MEDIA_WINDOW_MS = 60_000;
+const EVENT_MEDIA_MAX_PER_WINDOW = 6;
+let eventMediaTimestamps: number[] = [];
+
+/** Returns true (and records the send) if an event-media upload is allowed now. */
+function allowEventMedia(): boolean {
+    const now = Date.now();
+    eventMediaTimestamps = eventMediaTimestamps.filter(
+        (t) => now - t < EVENT_MEDIA_WINDOW_MS
+    );
+    if (eventMediaTimestamps.length >= EVENT_MEDIA_MAX_PER_WINDOW) return false;
+    eventMediaTimestamps.push(now);
+    return true;
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const settleDelay = () =>
+    sleep(EVENT_SETTLE_MIN_MS + Math.floor(Math.random() * EVENT_SETTLE_JITTER_MS));
 
 function isWithinStartupGrace(Chisato: Client): boolean {
     const readyAt = (Chisato as any).readyAt || 0;
@@ -182,6 +201,52 @@ export class GroupUpdateHandler {
         return false;
     }
 
+    /**
+     * Robustly decide whether the bot itself is among a set of participants.
+     *
+     * The fast path compares raw identity forms (id/phoneNumber/lid) against
+     * the bot's known identifiers. Because a kick event can deliver the bot's
+     * participant as an *unmapped* LID — in which case the fast path misses and
+     * the bot would otherwise try to send a leave image to a group it's no
+     * longer in (a top ban trigger) — we also resolve each JID to its PN and
+     * compare against the bot's number.
+     */
+    private async listIncludesBot(
+        Chisato: Client,
+        participants: ParticipantsUpdate["participants"],
+        botUserParts: Set<string>,
+        botPn: string
+    ): Promise<boolean> {
+        if (participants.some((p) => this.entryBelongsToBot(p, botUserParts))) {
+            return true;
+        }
+        for (const p of participants) {
+            const jid = extractJid(p);
+            if (!jid) continue;
+            try {
+                const pn = (await resolveToPnJid(Chisato, jid))
+                    .split("@")[0]
+                    ?.split(":")[0];
+                if (pn && (pn === botPn || botUserParts.has(pn))) return true;
+            } catch {
+                /* resolution failure → fall through */
+            }
+        }
+        return false;
+    }
+
+    /** Drop any entry that belongs to the bot from a recipient JID list. */
+    private filterOutBot(
+        participants: string[],
+        botUserParts: Set<string>,
+        botPn: string
+    ): string[] {
+        return participants.filter((jid) => {
+            const user = jid.split("@")[0]?.split(":")[0];
+            return !!user && user !== botPn && !botUserParts.has(user);
+        });
+    }
+
     async handleParticipantsUpdate(
         Chisato: Client,
         update: ParticipantsUpdate
@@ -202,6 +267,7 @@ export class GroupUpdateHandler {
             const { Group } = this.Database;
             const botUserParts = await this.getBotIdentifiers(Chisato);
             const botNumber = await Chisato.decodeJid(Chisato.user.id);
+            const botPn = botNumber.split("@")[0]?.split(":")[0] || "";
             const actor = author ? await Chisato.decodeJid(author) : botNumber;
 
             // Bot was removed/left → drop the group from DB immediately,
@@ -209,11 +275,16 @@ export class GroupUpdateHandler {
             // bot no longer has access). Without this early branch, the
             // upsert below throws and the handler `return`s without cleanup,
             // leaving an orphaned row for `syncdatabase` to clean up later.
+            // Detection is robust (resolves LIDs to PN) so the bot never tries
+            // to send a leave image to a group that just kicked it.
             const botLeft =
                 action === "remove" &&
-                update.participants.some((p) =>
-                    this.entryBelongsToBot(p, botUserParts)
-                );
+                (await this.listIncludesBot(
+                    Chisato,
+                    update.participants,
+                    botUserParts,
+                    botPn
+                ));
             if (botLeft) {
                 logger.info(
                     `[participants.update] bot was removed from ${from} — cleaning up DB`
@@ -266,6 +337,11 @@ export class GroupUpdateHandler {
                 groupSettings?.banned?.includes(jid)
             );
 
+            // Recipients for welcome/leave notices, with the bot itself removed
+            // (defense-in-depth: never render/send a notice whose subject is
+            // the bot — e.g. when the bot is part of a remove/add event).
+            const recipients = this.filterOutBot(participantJids, botUserParts, botPn);
+
             switch (action) {
                 case "add":
                     await this.handleAntiBotKick(
@@ -275,28 +351,35 @@ export class GroupUpdateHandler {
                         groupSettings?.antibot ?? false,
                         isBotAdmin
                     );
-                    await this.handleParticipantAdd(
-                        Chisato,
-                        from,
-                        participantJids,
-                        groupMetadata,
-                        groupSettings,
-                        isBanned,
-                        isWelcome
-                    );
+                    if (recipients.length) {
+                        await this.handleParticipantAdd(
+                            Chisato,
+                            from,
+                            recipients,
+                            groupMetadata,
+                            groupSettings,
+                            isBanned,
+                            isWelcome
+                        );
+                    }
                     await this.updateGroupMetadata(Chisato, from);
                     break;
 
                 case "remove":
-                    await this.handleParticipantLeave(
-                        Chisato,
-                        from,
-                        participantJids,
-                        botNumber,
-                        groupMetadata,
-                        groupSettings,
-                        isLeave
-                    );
+                    if (recipients.length) {
+                        await this.handleParticipantLeave(
+                            Chisato,
+                            from,
+                            recipients,
+                            botNumber,
+                            groupMetadata,
+                            groupSettings,
+                            isLeave
+                        );
+                    } else {
+                        // Nothing to notify (e.g. only the bot was in the event).
+                        await this.updateGroupMetadata(Chisato, from);
+                    }
                     break;
 
                 case "promote":
@@ -803,6 +886,10 @@ export class GroupUpdateHandler {
         const groupOwner = groupMetadata.owner || "";
         const customMessage = groupSettings?.welcomeMessage;
 
+        // Let the membership change settle; don't react in the same instant.
+        await settleDelay();
+        if (!isSocketReady(Chisato)) return;
+
         if (participants.length > MAX_EVENT_MEDIA) {
             const mentions = [...participants];
             const names = participants
@@ -866,17 +953,23 @@ export class GroupUpdateHandler {
                     caption = `👋 Welcome to *${groupName}*!\n\n@${username}\n\nYou are member #${memberCount}`;
                 }
 
-                const welcomeBuffer = await createWelcomeImage(
-                    profilePicUrl,
-                    username,
-                    groupName,
-                    memberCount,
-                    groupSettings?.welcomeConfig
-                );
-
-                await Chisato.sendImage(from, welcomeBuffer, caption, null, {
-                    mentions,
-                });
+                if (!isSocketReady(Chisato)) return;
+                if (allowEventMedia()) {
+                    const welcomeBuffer = await createWelcomeImage(
+                        profilePicUrl,
+                        username,
+                        groupName,
+                        memberCount,
+                        groupSettings?.welcomeConfig
+                    );
+                    await Chisato.sendImage(from, welcomeBuffer, caption, null, {
+                        mentions,
+                    });
+                } else {
+                    // Over the media budget — degrade to text to stay under
+                    // WhatsApp's anti-flood radar.
+                    await Chisato.sendText(from, caption, null, { mentions });
+                }
             } catch (error) {
                 logger.error(
                     `Failed to send welcome image for ${userNumber}: ${
@@ -909,6 +1002,13 @@ export class GroupUpdateHandler {
             const memberCount = groupMetadata.participants?.length ?? 0;
             const groupOwner = groupMetadata.owner || "";
             const customMessage = groupSettings?.leaveMessage;
+
+            // Let the membership change settle; don't react in the same instant.
+            await settleDelay();
+            if (!isSocketReady(Chisato)) {
+                await this.updateGroupMetadata(Chisato, from);
+                return;
+            }
 
             if (participants.length > MAX_EVENT_MEDIA) {
                 const mentions = [...participants];
@@ -979,17 +1079,22 @@ export class GroupUpdateHandler {
                         caption = `👋 Goodbye *@${username}*!\n\nThanks for being part of *${groupName}*\n\nRemaining members: ${memberCount}`;
                     }
 
-                    const leaveBuffer = await createLeaveImage(
-                        profilePicUrl,
-                        username,
-                        groupName,
-                        memberCount,
-                        groupSettings?.leaveConfig
-                    );
-
-                    await Chisato.sendImage(from, leaveBuffer, caption, null, {
-                        mentions,
-                    });
+                    if (!isSocketReady(Chisato)) break;
+                    if (allowEventMedia()) {
+                        const leaveBuffer = await createLeaveImage(
+                            profilePicUrl,
+                            username,
+                            groupName,
+                            memberCount,
+                            groupSettings?.leaveConfig
+                        );
+                        await Chisato.sendImage(from, leaveBuffer, caption, null, {
+                            mentions,
+                        });
+                    } else {
+                        // Over the media budget — degrade to text.
+                        await Chisato.sendText(from, caption, null, { mentions });
+                    }
                 } catch (error) {
                     logger.error(
                         `Failed to send leave image for ${userNumber}: ${
@@ -1068,6 +1173,10 @@ export class GroupUpdateHandler {
         Chisato: Client,
         from: string
     ): Promise<void> {
+        // Skip the metadata fetch when the socket is closing — hammering
+        // groupMetadata on a dead connection just produces "Connection Closed"
+        // errors and can pile onto an in-progress disconnect.
+        if (!isSocketReady(Chisato)) return;
         try {
             const metadata = await Chisato.groupMetadata(from);
             if (metadata) {
