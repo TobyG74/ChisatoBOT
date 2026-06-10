@@ -2,6 +2,24 @@
 
 All notable changes to ChisatoBOT are documented in this file.
 
+## 2026-06-10
+
+- feat: Add group-admin dashboard so group admins can log in and manage groups they administer
+- feat: Implement reverse-OTP group-admin login — the website generates a code, the admin sends it to the bot, and the bot validates both the sender number and the code
+- feat: Add group-admin controls — change name/description, kick/promote/demote members, get/revoke invite link, update group picture
+- feat: Add per-group bot settings and WhatsApp settings (announce, restrict, join approval) from the dashboard
+- feat: Add drag-and-drop welcome/leave image builder with live preview, custom background, colors, and element positions
+- feat: Make welcome/leave images config-driven per group (defaults preserve the original design)
+- feat: Add a per-group audit log of admin actions (who renamed, kicked, toggled settings)
+- feat: Notify the group when an admin toggles a bot/WhatsApp feature from the dashboard
+- feat: Redesign the group-admin login to match the owner/team login (animated background, particles, glass card)
+- feat: Add success popups for group name/description, picture, and layout changes
+- fix: Prevent reconnect storms with exponential backoff + jitter and a single pending reconnect
+- fix: Halt auto-reconnect on 403 Forbidden (account block) instead of hammering the connection and clearing the session
+- fix: Robustly detect when the bot itself is removed so it never sends a leave image to a group that kicked it (a primary ban cause)
+- fix: Throttle and batch welcome/leave sends, skip them when the socket is closing, and cap event-media uploads
+- fix: Skip group metadata refresh when the connection is closing
+
 ## 2026-05-16
 
 - feat: Add leave message configuration and update related dashboard settings
