@@ -6,11 +6,11 @@
     import Toaster from "./components/Toaster.svelte";
 </script>
 
-{#if route.path === "/group-admin"}
-    <GroupAdmin />
+{#if route.path === "/login"}
+    <Login />
 {:else if route.path.startsWith("/dashboard")}
     <Dashboard />
 {:else}
-    <Login />
+    <GroupAdmin />
 {/if}
 <Toaster />
