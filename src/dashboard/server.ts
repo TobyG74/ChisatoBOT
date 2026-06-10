@@ -84,6 +84,17 @@ export class DashboardServer {
         this.fastify.register(logsRoutes, { prefix: "/api/logs" });
         this.fastify.register(configRoutes, { prefix: "/api/config" });
         this.fastify.register(changelogRoutes, { prefix: "/api/changelog" });
+
+        // SPA fallback: the Svelte app uses clean history-mode URLs
+        // (/login, /dashboard, /group-admin). Any non-API GET that doesn't map
+        // to a real static file returns index.html so deep links and page
+        // refreshes load the app instead of 404ing.
+        this.fastify.setNotFoundHandler((request: any, reply: any) => {
+            if (request.method === "GET" && !request.url.startsWith("/api/")) {
+                return reply.sendFile("index.html");
+            }
+            return reply.status(404).send({ success: false, message: "Not found" });
+        });
     }
 
     public async start() {

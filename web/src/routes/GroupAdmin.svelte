@@ -215,7 +215,7 @@
 
             <div class="foot">
                 <span><span class="dot"></span> Server Online</span>
-                <a href="#/login" class="link"><i class="fas fa-crown"></i> Owner / Team</a>
+                <a href="/login" class="link"><i class="fas fa-crown"></i> Owner / Team</a>
             </div>
         </div>
     </div>

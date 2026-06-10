@@ -1,6 +1,6 @@
 <script>
     import { onMount, onDestroy } from "svelte";
-    import { push } from "svelte-spa-router";
+    import { navigate } from "../lib/router.svelte.js";
     import { token, profile, setSession } from "../lib/api.js";
     import { get } from "svelte/store";
 
@@ -15,7 +15,6 @@
     let tickTimer = null;
 
     onMount(async () => {
-        // Already signed in as owner/team → go straight to the dashboard.
         const t = get(token);
         if (t) {
             try {
@@ -23,7 +22,7 @@
                 const d = await r.json();
                 if (r.ok && d.admin && d.admin.role !== "groupadmin") {
                     setSession(t, d.admin);
-                    push("/");
+                    navigate("/dashboard");
                 }
             } catch {
                 /* ignore */
@@ -59,7 +58,7 @@
             }
             if (d.whitelisted && d.token) {
                 setSession(d.token, d.admin);
-                push("/");
+                navigate("/dashboard");
                 return;
             }
             if (d.approvalRequired) {
@@ -92,7 +91,7 @@
                 if (d.status === "approved" && d.token) {
                     stopWaiting();
                     setSession(d.token, d.admin);
-                    push("/");
+                    navigate("/dashboard");
                 } else if (d.status === "rejected" || d.status === "expired") {
                     stopWaiting();
                     step = "form";
@@ -152,7 +151,7 @@
 
         <div class="foot">
             <span><span class="dot"></span> Server Online</span>
-            <a href="#/group-admin" class="link"><i class="fas fa-users-gear"></i> Group Admin</a>
+            <a href="/group-admin" class="link"><i class="fas fa-users-gear"></i> Group Admin</a>
         </div>
     </div>
 </div>

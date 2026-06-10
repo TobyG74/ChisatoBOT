@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
     import { get } from "svelte/store";
-    import { push } from "svelte-spa-router";
+    import { navigate } from "../lib/router.svelte.js";
     import { token, profile, setSession, clearSession, logoutRequest } from "../lib/api.js";
 
     import Overview from "./dashboard/Overview.svelte";
@@ -33,7 +33,7 @@
     onMount(async () => {
         const t = get(token);
         if (!t) {
-            push("/login");
+            navigate("/login");
             return;
         }
         try {
@@ -41,7 +41,7 @@
             const d = await r.json();
             if (!r.ok || !d.admin) throw new Error("invalid");
             if (d.admin.role === "groupadmin") {
-                push("/group-admin");
+                navigate("/group-admin");
                 return;
             }
             setSession(t, d.admin);
@@ -49,7 +49,7 @@
             ready = true;
         } catch {
             clearSession();
-            push("/login");
+            navigate("/login");
         }
     });
 
@@ -59,7 +59,7 @@
     }
     async function doLogout() {
         await logoutRequest();
-        push("/login");
+        navigate("/login");
     }
 </script>
 

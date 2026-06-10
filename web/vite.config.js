@@ -8,7 +8,16 @@ const here = import.meta.dirname;
 export default defineConfig({
     root: here,
     base: "/",
-    plugins: [svelte(), tailwindcss()],
+    plugins: [
+        svelte({
+            onwarn(warning, defaultHandler) {
+                const code = warning.code || "";
+                if (code.startsWith("a11y") || code === "state_referenced_locally") return;
+                defaultHandler(warning);
+            },
+        }),
+        tailwindcss(),
+    ],
     build: {
         outDir: path.resolve(here, "..", "public"),
         emptyOutDir: false,
