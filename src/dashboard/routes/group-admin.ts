@@ -61,6 +61,32 @@ async function notifyGroupChange(
     }
 }
 
+/** Announce a promote/demote back to the group, mentioning actor + target. */
+async function notifyGroupMemberAction(
+    groupId: string,
+    actorPn: string,
+    targetPn: string,
+    op: "promote" | "demote"
+): Promise<void> {
+    const client = getClientInstance();
+    if (!client) return;
+    const body =
+        op === "promote"
+            ? `⬆️ @${actorPn} promoted @${targetPn} to *admin*.`
+            : `⬇️ @${actorPn} removed @${targetPn} from *admin*.`;
+    try {
+        await (client as any).sendText(groupId, body, null, {
+            mentions: [`${actorPn}@s.whatsapp.net`, `${targetPn}@s.whatsapp.net`],
+        });
+    } catch (err) {
+        logger.warn(
+            `Failed to notify group ${groupId} of member action: ${
+                err instanceof Error ? err.message : String(err)
+            }`
+        );
+    }
+}
+
 /**
  * Resolve `request.admin` + verify live access to `groupId`. On failure it
  * sends the reply and returns null, so callers just `if (!access) return;`.
@@ -246,6 +272,16 @@ export async function groupAdminRoutes(fastify: FastifyInstance) {
             return reply.status(400).send({ success: false, message: "You can't demote yourself." });
         }
 
+        // The group owner (superadmin) can never be kicked or demoted by an
+        // admin acting through the dashboard.
+        const targetInfo = mapParticipants(access.meta).find((p) => p.phoneNumber === targetRaw);
+        if (targetInfo?.admin === "superadmin" && (op === "remove" || op === "demote")) {
+            return reply.status(403).send({
+                success: false,
+                message: "You can't kick or demote the group owner.",
+            });
+        }
+
         const targetJid = resolveMemberJid(access.meta, targetRaw) || `${targetRaw}@s.whatsapp.net`;
 
         try {
@@ -256,6 +292,23 @@ export async function groupAdminRoutes(fastify: FastifyInstance) {
                 action: op === "remove" ? "kick" : op,
                 target: targetRaw,
             });
+            // Announce promotions/demotions to the group (the kicked member is
+            // gone, so a kick is logged but not announced). Skip when the
+            // group's `notify` setting is on — the participant-update event
+            // handler already posts its own announcement, so this avoids a
+            // duplicate message.
+            if (op === "promote" || op === "demote") {
+                let notifyOn = false;
+                try {
+                    const g = await Database.group.findUnique({ where: { groupId }, select: { settings: true } });
+                    notifyOn = !!(g?.settings as any)?.notify;
+                } catch {
+                    /* default to sending */
+                }
+                if (!notifyOn) {
+                    await notifyGroupMemberAction(groupId, admin.phoneNumber, targetRaw, op);
+                }
+            }
             return reply.send({ success: true, action, target: targetRaw });
         } catch (err) {
             logger.error(`group-admin member ${action} error:`, err);

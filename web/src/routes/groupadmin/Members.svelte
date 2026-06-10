@@ -72,6 +72,8 @@
                     {#if p.isBot}
                         <span class="chip botok">Bot</span>
                         <span class="text-[.72rem] text-subtle">protected</span>
+                    {:else if isSuper}
+                        <span class="text-[.72rem] text-subtle">protected</span>
                     {:else}
                         {#if isAdmin}
                             <button class="btn btn-sm" onclick={() => act("demote", num)}><i class="fas fa-arrow-down"></i> Demote</button>
