@@ -4,6 +4,11 @@ All notable changes to ChisatoBOT are documented in this file.
 
 ## 2026-06-10
 
+- refactor: Rebuild the entire dashboard as a Svelte 5 + Tailwind v4 SPA (Vite), replacing the hand-written HTML/JS pages
+- refactor: Source lives in web/ and builds into public/ via `npm run web:build`; Fastify still serves it (hash-based routing, no SPA fallback needed)
+- feat: Unified design system (Toggle/Modal/Toaster components, shared api/auth/ui/format libs) and a single session store for owner/team and group admins
+- feat: Reusable success/error popup + toast notifications across all dashboard actions
+- chore: Add web:dev (Vite dev server proxying /api to :3000) and fold web:build into the main build script
 - feat: Add group-admin dashboard so group admins can log in and manage groups they administer
 - feat: Implement reverse-OTP group-admin login — the website generates a code, the admin sends it to the bot, and the bot validates both the sender number and the code
 - feat: Add group-admin controls — change name/description, kick/promote/demote members, get/revoke invite link, update group picture

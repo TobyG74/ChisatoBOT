@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ── Design tokens (exposed to Tailwind v4 as color utilities) ─────────── */
+@theme {
+    --color-bg: #070b16;
+    --color-panel: #0d1424;
+    --color-panel2: #111a2e;
+    --color-edge: #1e2a44;
+    --color-ink: #e6ebf5;
+    --color-muted: #94a3b8;
+    --color-subtle: #64748b;
+    --color-accent: #34d399;
+    --color-accent2: #10b981;
+    --color-amber: #fbbf24;
+    --color-danger: #ef4444;
+    --color-indigo: #6366f1;
+    --color-violet: #8b5cf6;
+    --color-cyan: #06b6d4;
+
+    --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(900px 500px at 15% -10%, rgba(16, 185, 129, 0.1), transparent),
+        radial-gradient(800px 500px at 110% 10%, rgba(99, 102, 241, 0.08), transparent),
+        var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e2a44;
+    border-radius: 9px;
+}
+
+/* ── Reusable component classes ─────────────────────────────────────────── */
+@layer components {
+    .card {
+        background: linear-gradient(180deg, var(--color-panel), var(--color-panel2));
+        border: 1px solid var(--color-edge);
+        border-radius: 18px;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid var(--color-edge);
+        background: #0e1830;
+        color: var(--color-ink);
+        padding: 9px 14px;
+        border-radius: 11px;
+        font-weight: 600;
+        font-size: 0.83rem;
+        cursor: pointer;
+        transition: 0.18s;
+        text-decoration: none;
+    }
+    .btn:hover {
+        border-color: var(--color-accent);
+        color: #fff;
+    }
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--color-accent2), var(--color-accent));
+        border: none;
+        color: #04130c;
+    }
+    .btn-primary:hover {
+        filter: brightness(1.08);
+        color: #04130c;
+    }
+    .btn-danger {
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #fca5a5;
+    }
+    .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: var(--color-danger);
+    }
+    .btn-sm {
+        padding: 6px 10px;
+        font-size: 0.74rem;
+        border-radius: 9px;
+    }
+    .field {
+        width: 100%;
+        background: #0a1326;
+        border: 1px solid var(--color-edge);
+        border-radius: 11px;
+        color: var(--color-ink);
+        padding: 11px 13px;
+        font-size: 0.86rem;
+        font-family: inherit;
+        outline: none;
+        transition: 0.18s;
+    }
+    .field:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    }
+    .lbl {
+        display: block;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: var(--color-muted);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .row-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 13px 15px;
+        border: 1px solid var(--color-edge);
+        border-radius: 13px;
+        background: #0b1424;
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

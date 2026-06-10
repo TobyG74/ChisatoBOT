@@ -5,7 +5,10 @@
     "description": "WhatsApp Bot Multi-Device using Baileys",
     "main": "start.js",
     "scripts": {
-        "build": "tsc --build && node scripts/add-js-extensions.cjs",
+        "build": "tsc --build && node scripts/add-js-extensions.cjs && npm run web:build",
+        "build:server": "tsc --build && node scripts/add-js-extensions.cjs",
+        "web:build": "node -e \"require('fs').rmSync('public/assets',{recursive:true,force:true})\" && vite build --config web/vite.config.js",
+        "web:dev": "vite --config web/vite.config.js",
         "start": "node ./dist/auth/connect.js",
         "dev": "npm run build && npm start",
         "prisma:generate": "prisma generate",
@@ -58,6 +61,8 @@
     },
     "devDependencies": {
         "@prisma/client": "^5.22.0",
+        "@sveltejs/vite-plugin-svelte": "^7.1.2",
+        "@tailwindcss/vite": "^4.3.0",
         "@types/cli-color": "^2.0.5",
         "@types/ws": "^8.18.1",
         "@types/yt-search": "^2.10.3",
@@ -67,7 +72,11 @@
         "pm2": "^5.2.0",
         "prisma": "^5.7.0",
         "qrcode-terminal": "^0.12.0",
-        "typescript": "^5.3.3"
+        "svelte": "^5.56.3",
+        "svelte-spa-router": "^5.1.0",
+        "tailwindcss": "^4.3.0",
+        "typescript": "^5.3.3",
+        "vite": "^8.0.16"
     },
     "keywords": [
         "wa-bot",

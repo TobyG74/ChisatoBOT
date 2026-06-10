@@ -1016,7 +1016,7 @@ function drawArtifactCard(
     ctx.fillStyle = "#0d1620";
     ctx.fillText(levelText, lvX + 5, y + pad + 12);
 
-    // ── MAIN STAT ──
+    // MAIN STAT
     // Layout:
     //   ROW 1 (top):  [icon] STAT_NAME                       [+lvl]
     //   ROW 1.5:                                             ★★★★★
@@ -1058,7 +1058,7 @@ function drawArtifactCard(
     ctx.font = `bold ${valFontPx}px ${FONT}`;
     ctx.fillText(a.mainStat.value, mainX, bigY);
 
-    // ── HR separator ──
+    // HR separator
     const hrY = bigY + 8;
     ctx.strokeStyle = "rgba(255,255,255,0.10)";
     ctx.lineWidth = 1;
@@ -1067,7 +1067,6 @@ function drawArtifactCard(
     ctx.lineTo(x + w - pad, hrY);
     ctx.stroke();
 
-    // ── SUBSTATS: 2×2 grid — clean [icon] [name] … [value] (no roll dots) ──
     const subs = a.subStats.slice(0, 4);
     const subStartY = hrY + 6;
     const subAreaH = y + h - subStartY - pad;
