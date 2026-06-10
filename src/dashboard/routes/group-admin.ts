@@ -29,6 +29,38 @@ function getAdmin(request: FastifyRequest): GroupAdminToken {
     return (request as any).admin as GroupAdminToken;
 }
 
+const onOff = (v: boolean): string => (v ? "enabled ✅" : "disabled ❌");
+
+/**
+ * Announce a group-admin change back to the group itself, so other members can
+ * see who changed what (e.g. "admin X enabled Anti-Link"). Best-effort and
+ * mentions the acting admin. Low-frequency, text-only — safe for anti-flood.
+ */
+async function notifyGroupChange(
+    groupId: string,
+    adminPn: string,
+    lines: string[]
+): Promise<void> {
+    if (!lines.length) return;
+    const client = getClientInstance();
+    if (!client) return;
+    const body =
+        `🔧 *Group Setting Updated*\n\n` +
+        `@${adminPn} changed:\n` +
+        lines.map((l) => `• ${l}`).join("\n");
+    try {
+        await (client as any).sendText(groupId, body, null, {
+            mentions: [`${adminPn}@s.whatsapp.net`],
+        });
+    } catch (err) {
+        logger.warn(
+            `Failed to notify group ${groupId} of change: ${
+                err instanceof Error ? err.message : String(err)
+            }`
+        );
+    }
+}
+
 /**
  * Resolve `request.admin` + verify live access to `groupId`. On failure it
  * sends the reply and returns null, so callers just `if (!access) return;`.
@@ -254,31 +286,32 @@ export async function groupAdminRoutes(fastify: FastifyInstance) {
         }
 
         const settings: any = { ...existing.settings };
-        const touched: string[] = [];
+        const changes: string[] = [];
         if (body.antilinkStatus !== undefined) {
             settings.antilink = { ...settings.antilink, status: body.antilinkStatus };
-            touched.push(`antilink=${body.antilinkStatus ? "on" : "off"}`);
+            changes.push(`Anti-Link ${onOff(body.antilinkStatus)}`);
         }
         if (body.antilinkMode !== undefined && (body.antilinkMode === "kick" || body.antilinkMode === "delete")) {
             settings.antilink = { ...settings.antilink, mode: body.antilinkMode };
-            touched.push(`antilinkMode=${body.antilinkMode}`);
+            changes.push(`Anti-Link action → ${body.antilinkMode === "kick" ? "Kick" : "Delete message"}`);
         }
-        if (body.antibot !== undefined) { settings.antibot = body.antibot; touched.push(`antibot=${body.antibot ? "on" : "off"}`); }
-        if (body.antidelete !== undefined) { settings.antidelete = body.antidelete; touched.push(`antidelete=${body.antidelete ? "on" : "off"}`); }
-        if (body.welcome !== undefined) { settings.welcome = body.welcome; touched.push(`welcome=${body.welcome ? "on" : "off"}`); }
-        if (body.leave !== undefined) { settings.leave = body.leave; touched.push(`leave=${body.leave ? "on" : "off"}`); }
-        if (body.notify !== undefined) { settings.notify = body.notify; touched.push(`notify=${body.notify ? "on" : "off"}`); }
-        if (body.mute !== undefined) { settings.mute = body.mute; touched.push(`mute=${body.mute ? "on" : "off"}`); }
+        if (body.antibot !== undefined) { settings.antibot = body.antibot; changes.push(`Anti-Bot ${onOff(body.antibot)}`); }
+        if (body.antidelete !== undefined) { settings.antidelete = body.antidelete; changes.push(`Anti-Delete ${onOff(body.antidelete)}`); }
+        if (body.welcome !== undefined) { settings.welcome = body.welcome; changes.push(`Welcome message ${onOff(body.welcome)}`); }
+        if (body.leave !== undefined) { settings.leave = body.leave; changes.push(`Leave message ${onOff(body.leave)}`); }
+        if (body.notify !== undefined) { settings.notify = body.notify; changes.push(`Admin notify ${onOff(body.notify)}`); }
+        if (body.mute !== undefined) { settings.mute = body.mute; changes.push(`Mute bot ${onOff(body.mute)}`); }
 
         try {
             const group = await Database.group.update({ where: { groupId }, data: { settings } });
-            if (touched.length) {
+            if (changes.length) {
                 await logGroupAction({
                     groupId,
                     actorPn: admin.phoneNumber,
                     action: "setting",
-                    detail: touched.join(", "),
+                    detail: changes.join(", "),
                 });
+                await notifyGroupChange(groupId, admin.phoneNumber, changes);
             }
             return reply.send({ success: true, settings: group.settings });
         } catch (err) {
@@ -299,33 +332,34 @@ export async function groupAdminRoutes(fastify: FastifyInstance) {
         if (!access) return;
         const admin = getAdmin(request);
         const client = getClientInstance()!;
-        const touched: string[] = [];
+        const changes: string[] = [];
 
         try {
             if (body.announce !== undefined) {
                 await (client as any).groupSettingUpdate(groupId, body.announce ? "announcement" : "not_announcement");
                 await Database.group.update({ where: { groupId }, data: { announce: body.announce } }).catch(() => {});
-                touched.push(`announce=${body.announce ? "on" : "off"}`);
+                changes.push(`"Only admins can send messages" ${onOff(body.announce)}`);
             }
             if (body.restrict !== undefined) {
                 await (client as any).groupSettingUpdate(groupId, body.restrict ? "locked" : "unlocked");
                 await Database.group.update({ where: { groupId }, data: { restrict: body.restrict } }).catch(() => {});
-                touched.push(`restrict=${body.restrict ? "on" : "off"}`);
+                changes.push(`"Only admins can edit group info" ${onOff(body.restrict)}`);
             }
             if (body.joinApprovalMode !== undefined) {
                 await (client as any).groupJoinApprovalMode(groupId, body.joinApprovalMode ? "on" : "off");
                 await Database.group.update({ where: { groupId }, data: { joinApprovalMode: body.joinApprovalMode } }).catch(() => {});
-                touched.push(`joinApproval=${body.joinApprovalMode ? "on" : "off"}`);
+                changes.push(`"New member approval" ${onOff(body.joinApprovalMode)}`);
             }
-            if (touched.length) {
+            if (changes.length) {
                 await logGroupAction({
                     groupId,
                     actorPn: admin.phoneNumber,
                     action: "wa-setting",
-                    detail: touched.join(", "),
+                    detail: changes.join(", "),
                 });
+                await notifyGroupChange(groupId, admin.phoneNumber, changes);
             }
-            return reply.send({ success: true, changed: touched });
+            return reply.send({ success: true, changed: changes });
         } catch (err) {
             logger.error("group-admin wa-settings error:", err);
             return reply.status(500).send({ success: false, message: "Failed to update WhatsApp group settings" });

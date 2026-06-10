@@ -1061,7 +1061,7 @@ function parseMemory(memStr) {
     return value * (multipliers[unit] || 1);
 }
 
-// ===== CRUD Functions =====
+// CRUD Functions
 
 // User Modal Functions
 function openUserModal(mode = "create", userData = null) {
@@ -1374,7 +1374,7 @@ window.addEventListener("click", (e) => {
     }
 });
 
-// ===== Toast Helper =====
+// Toast Helper
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -1389,7 +1389,7 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// ===== Settings =====
+// Settings
 let _cachedConfig = null;
 const SETTING_META = [
     { key: 'ownerNotifyOnline', name: 'Owner Notify Online', desc: 'Notifikasi ke owner saat bot online' },

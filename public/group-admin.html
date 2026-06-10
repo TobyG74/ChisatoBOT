@@ -71,68 +71,144 @@
         .gcard{cursor:pointer;transition:.18s}
         .gcard:hover{border-color:var(--accent);transform:translateY(-2px)}
         ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#1e2a44;border-radius:9px}
+
+        /* Login view (mirrors owner/team login.html) */
+        #view-login{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+        .lgv-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+        .lgv-grad{position:absolute;inset:0;background:
+            radial-gradient(ellipse 80% 60% at 20% -5%,rgba(99,102,241,.18),transparent 60%),
+            radial-gradient(ellipse 60% 50% at 85% 110%,rgba(139,92,246,.15),transparent 60%),
+            radial-gradient(ellipse 40% 40% at 50% 50%,rgba(6,182,212,.05),transparent 70%)}
+        .lgv-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(99,102,241,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.04) 1px,transparent 1px);background-size:60px 60px}
+        .lgv-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:lgvFloat 8s ease-in-out infinite}
+        .lgv-orb1{width:400px;height:400px;background:radial-gradient(circle,rgba(99,102,241,.12),transparent 70%);top:-10%;left:-5%}
+        .lgv-orb2{width:300px;height:300px;background:radial-gradient(circle,rgba(139,92,246,.1),transparent 70%);bottom:-5%;right:-5%;animation-delay:-3s}
+        .lgv-orb3{width:200px;height:200px;background:radial-gradient(circle,rgba(6,182,212,.08),transparent 70%);top:40%;right:20%;animation-delay:-5s}
+        @keyframes lgvFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-15px) scale(1.05)}66%{transform:translate(-10px,10px) scale(.95)}}
+        #lgv-particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+        .lgv-wrap{position:relative;z-index:10;width:100%;max-width:460px}
+        .lgv-card{background:rgba(13,22,45,.75);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(99,102,241,.15);border-radius:24px;padding:2.5rem;box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 32px 80px -12px rgba(0,0,0,.6),0 0 60px rgba(99,102,241,.08);animation:lgvCardIn .6s cubic-bezier(.16,1,.3,1) both}
+        @keyframes lgvCardIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .lgv-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:1.4rem}
+        .lgv-ring{position:relative;width:72px;height:72px;margin-bottom:1rem}
+        .lgv-ring::before,.lgv-ring::after{content:'';position:absolute;inset:-3px;border-radius:50%;background:conic-gradient(from 0deg,#6366f1,#8b5cf6,#06b6d4,#6366f1);animation:lgvSpin 4s linear infinite;z-index:0}
+        .lgv-ring::after{filter:blur(6px);opacity:.4}
+        @keyframes lgvSpin{to{transform:rotate(360deg)}}
+        .lgv-ic{position:relative;width:72px;height:72px;border-radius:50%;overflow:hidden;z-index:1;border:2px solid rgba(6,11,24,.9);display:flex;align-items:center;justify-content:center;background:#0a1326;color:#a5b4fc;font-size:1.7rem}
+        .lgv-ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+        .lgv-title{font-size:1.5rem;font-weight:800;text-align:center;letter-spacing:-.03em;margin-bottom:.3rem;background:linear-gradient(135deg,#f0f4ff,#c7d2fe);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+        .lgv-sub{font-size:.875rem;color:#94a3b8;text-align:center}
+        .lgv-tdiv{height:1px;background:linear-gradient(90deg,transparent,rgba(99,102,241,.3),transparent);margin:1.4rem 0}
+        .lgv-label{display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;color:#94a3b8;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em}
+        .lgv-label i{color:#6366f1;font-size:.75rem}
+        .lgv-iwrap{position:relative}
+        .lgv-iprefix{position:absolute;left:.875rem;top:50%;transform:translateY(-50%);color:#4a5678;pointer-events:none}
+        .lgv-input{width:100%;background:rgba(6,11,24,.8);border:1px solid rgba(99,102,241,.15);border-radius:12px;padding:.75rem .875rem .75rem 2.5rem;font-size:.9375rem;font-family:inherit;font-weight:500;color:#f0f4ff;outline:none;transition:.2s}
+        .lgv-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+        .lgv-input::placeholder{color:#4a5678}
+        .lgv-iwrap:focus-within .lgv-iprefix{color:#6366f1}
+        .lgv-btn{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:.8125rem 1rem;font-size:.9375rem;font-family:inherit;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:.18s;text-decoration:none}
+        .lgv-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,.5)}
+        .lgv-btn:disabled{opacity:.65;cursor:not-allowed}
+        .lgv-btn2{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);color:#a5b4fc;border-radius:10px;padding:7px 12px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+        .lgv-btn2:hover{background:rgba(99,102,241,.15)}
+        .lgv-alert{display:none;align-items:flex-start;gap:.6rem;border-radius:12px;padding:.8rem 1rem;font-size:.85rem;line-height:1.5;margin-top:1.1rem}
+        .lgv-alert.show{display:flex}
+        .lgv-alert.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+        .lgv-alert.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac}
+        .lgv-alert i{margin-top:2px}
+        .lgv-hints{list-style:none;padding:0;margin-top:1.2rem;display:flex;flex-direction:column;gap:.6rem}
+        .lgv-hints li{display:flex;gap:.6rem;font-size:.8rem;color:#64748b;line-height:1.5;padding:.6rem .75rem;background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.08);border-radius:10px}
+        .lgv-hints li i{color:#818cf8;margin-top:3px}
+        .lgv-code{display:flex;align-items:center;justify-content:center;gap:12px;background:rgba(6,11,24,.7);border:1px dashed rgba(99,102,241,.45);border-radius:14px;padding:18px;margin-bottom:14px}
+        .lgv-codenum{font-size:2.1rem;font-weight:800;letter-spacing:.3em;color:#a5b4fc}
+        .lgv-foot{display:flex;align-items:center;justify-content:space-between;margin-top:1.4rem;font-size:.75rem;color:#4a5678}
+        .lgv-link{color:#94a3b8;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+        .lgv-link:hover{color:#fff}
+
+        /* Success popup modal */
+        .popup-ov{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:1.5rem;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+        .popup-ov.show{display:flex;animation:lgvCardIn .2s ease both}
+        .popup-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:18px;padding:26px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+        .popup-ic{width:58px;height:58px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+        .popup-ic.ok{background:rgba(16,185,129,.12);color:var(--accent)}
+        .popup-ic.err{background:rgba(239,68,68,.12);color:#fca5a5}
+        .popup-title{font-weight:800;font-size:1.05rem;margin-bottom:6px}
+        .popup-msg{font-size:.85rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
     </style>
 </head>
 <body>
 <div class="wrap">
 
-    <!-- ============ LOGIN VIEW ============ -->
-    <div id="view-login" class="max-w-[440px] mx-auto mt-[6vh]">
-        <div class="text-center mb-6">
-            <div style="width:62px;height:62px;margin:0 auto 14px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent2),var(--accent));font-size:1.6rem;color:#04130c">
-                <i class="fas fa-users-gear"></i>
-            </div>
-            <h1 class="text-[1.5rem] font-extrabold">Group Admin Login</h1>
-            <p class="text-[.86rem] text-[color:var(--muted)] mt-1">Manage groups where you're an admin</p>
+    <!-- LOGIN VIEW -->
+    <div id="view-login">
+        <div class="lgv-bg">
+            <div class="lgv-grad"></div>
+            <div class="lgv-grid"></div>
+            <div class="lgv-orb lgv-orb1"></div>
+            <div class="lgv-orb lgv-orb2"></div>
+            <div class="lgv-orb lgv-orb3"></div>
         </div>
+        <canvas id="lgv-particles"></canvas>
 
-        <div class="card p-6">
-            <!-- step 1: phone -->
-            <div id="step-phone">
-                <label class="label" for="ga-phone">Your WhatsApp Number</label>
-                <input class="input" id="ga-phone" type="tel" placeholder="e.g. 62812xxxxxxx" autocomplete="tel" />
-                <button class="btn btn-primary w-full justify-center mt-4" id="ga-send-btn" onclick="requestOtp()">
-                    <i class="fas fa-paper-plane"></i> Send OTP to WhatsApp
-                </button>
-                <p class="text-[.76rem] text-[color:var(--subtle)] mt-3 leading-relaxed">
-                    <i class="fas fa-shield-halved text-[color:var(--accent)]"></i>
-                    A one-time code is sent to your WhatsApp. Only group admins can log in.
-                </p>
+        <div class="lgv-wrap">
+            <div class="lgv-card">
+                <div class="lgv-logo">
+                    <div class="lgv-ring">
+                        <div class="lgv-ic">
+                            <img src="/images/icon.jpg" alt="ChisatoBot" onerror="this.remove()" />
+                            <i class="fas fa-users-gear"></i>
+                        </div>
+                    </div>
+                    <div class="lgv-title">Group Admin Login</div>
+                    <p class="lgv-sub">Manage groups where you're an admin</p>
+                </div>
+
+                <div class="lgv-tdiv"></div>
+
+                <!-- step 1: phone -->
+                <div id="step-phone">
+                    <label class="lgv-label" for="ga-phone"><i class="fas fa-mobile-screen-button"></i> WhatsApp Number</label>
+                    <div class="lgv-iwrap">
+                        <i class="fas fa-phone lgv-iprefix"></i>
+                        <input class="lgv-input" id="ga-phone" type="tel" placeholder="e.g. 62812xxxxxxx" autocomplete="tel" />
+                    </div>
+                    <button class="lgv-btn" id="ga-send-btn" onclick="requestOtp()" style="margin-top:1.1rem">
+                        <i class="fas fa-key"></i> Generate OTP Code
+                    </button>
+                    <ul class="lgv-hints">
+                        <li><i class="fas fa-shield-halved"></i><span>Only admins of a group the bot is in can sign in.</span></li>
+                        <li><i class="fas fa-paper-plane"></i><span>You prove it's you by sending a one-time code to the bot.</span></li>
+                    </ul>
+                </div>
+
+                <!-- step 2: send code to bot (reverse OTP) -->
+                <div id="step-otp" class="hidden">
+                    <div style="font-size:.84rem;color:#94a3b8;margin-bottom:10px">Send this code <b style="color:#f0f4ff">from your own WhatsApp</b> (+<span id="ga-shown-phone"></span>) to the bot:</div>
+                    <div class="lgv-code">
+                        <span class="lgv-codenum" id="ga-code">······</span>
+                        <button class="lgv-btn2" onclick="copyCode()" title="Copy code"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <a id="ga-wa-link" href="#" target="_blank" class="lgv-btn"><i class="fab fa-whatsapp"></i> Open WhatsApp &amp; send code</a>
+                    <div id="ga-wait" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:1.1rem;font-size:.84rem;color:#94a3b8"><i class="fas fa-spinner spin"></i> Waiting for your message to the bot…</div>
+                    <div style="font-size:.72rem;color:#4a5678;text-align:center;margin-top:8px">Validates sender +<span id="ga-shown-phone2"></span> &amp; the code. Expires in <span id="ga-otp-expiry">5:00</span>.</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.1rem">
+                        <button class="lgv-btn2" onclick="backToPhone()"><i class="fas fa-arrow-left"></i> Change number</button>
+                        <button class="lgv-btn2" id="ga-resend-btn" onclick="requestOtp()">New code</button>
+                    </div>
+                </div>
+
+                <div id="ga-login-msg" class="lgv-alert"></div>
+
+                <div class="lgv-foot">
+                    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span> Server Online</span>
+                    <a href="/login.html" class="lgv-link"><i class="fas fa-crown"></i> Owner / Team</a>
+                </div>
             </div>
-
-            <!-- step 2: send code to bot (reverse OTP) -->
-            <div id="step-otp" class="hidden">
-                <div class="text-[.82rem] text-[color:var(--muted)] mb-2">Send this code <b class="text-[color:var(--text)]">from your own WhatsApp</b> (+<span id="ga-shown-phone"></span>) to the bot's chat:</div>
-                <div style="display:flex;align-items:center;justify-content:center;gap:10px;background:#0a1326;border:1px dashed var(--accent);border-radius:14px;padding:16px;margin-bottom:14px">
-                    <span id="ga-code" class="text-[2rem] font-extrabold tracking-[0.3em] text-[color:var(--accent)]">······</span>
-                    <button class="btn btn-sm" onclick="copyCode()" title="Copy code"><i class="fas fa-copy"></i></button>
-                </div>
-                <a id="ga-wa-link" href="#" target="_blank" class="btn btn-primary w-full justify-center">
-                    <i class="fab fa-whatsapp"></i> Open WhatsApp & send code
-                </a>
-                <div class="flex items-center justify-center gap-2 mt-4 text-[.82rem] text-[color:var(--muted)]" id="ga-wait">
-                    <i class="fas fa-spinner spin"></i> Waiting for your message to the bot…
-                </div>
-                <div class="text-[.72rem] text-[color:var(--subtle)] text-center mt-2">
-                    The bot validates that the message comes from <b>+<span id="ga-shown-phone2"></span></b> and the code matches. Expires in <span id="ga-otp-expiry">5:00</span>.
-                </div>
-                <div class="flex items-center justify-between mt-4">
-                    <button class="btn btn-sm" onclick="backToPhone()"><i class="fas fa-arrow-left"></i> Change number</button>
-                    <button class="btn btn-sm" id="ga-resend-btn" onclick="requestOtp()">Generate new code</button>
-                </div>
-            </div>
-
-            <div id="ga-login-msg" class="hidden mt-4 text-[.8rem] font-medium rounded-xl px-3 py-2.5"></div>
-        </div>
-
-        <div class="text-center mt-5">
-            <a href="/login.html" class="text-[.8rem] text-[color:var(--muted)] hover:text-white">
-                <i class="fas fa-crown"></i> Owner / Team login
-            </a>
         </div>
     </div>
 
-    <!-- ============ DASHBOARD VIEW ============ -->
+    <!-- DASHBOARD VIEW -->
     <div id="view-dash" class="hidden">
         <!-- header -->
         <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
@@ -273,8 +349,18 @@
 
 <div id="toast" class="toast"></div>
 
+<!-- Success / error popup -->
+<div id="popup-ov" class="popup-ov" onclick="if(event.target===this)closePopup()">
+    <div class="popup-card">
+        <div class="popup-ic ok" id="popup-ic"><i class="fas fa-circle-check"></i></div>
+        <div class="popup-title" id="popup-title">Success</div>
+        <div class="popup-msg" id="popup-msg"></div>
+        <button class="btn btn-primary" style="margin:0 auto" onclick="closePopup()">OK</button>
+    </div>
+</div>
+
 <script>
-// ====================== state & helpers ======================
+// state & helpers
 let TOKEN = localStorage.getItem('gaToken');
 let PROFILE = JSON.parse(localStorage.getItem('gaProfile') || 'null');
 let currentGroupId = null, currentGroup = null, currentAccess = null;
@@ -286,6 +372,19 @@ let otpRequestId = null, otpPollTimer = null, otpExpiryTimer = null;
 function toast(msg, type){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+(type||''); clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast '+(type||''),2600); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// Centered success/error popup (clearer than a toast for important confirmations).
+let popupTimer=null;
+function popup(title, msg, type){
+    type = type || 'ok';
+    document.getElementById('popup-ic').className='popup-ic '+type;
+    document.getElementById('popup-ic').innerHTML = '<i class="fas '+(type==='err'?'fa-circle-exclamation':'fa-circle-check')+'"></i>';
+    document.getElementById('popup-title').textContent = title;
+    document.getElementById('popup-msg').textContent = msg || '';
+    document.getElementById('popup-ov').classList.add('show');
+    clearTimeout(popupTimer); popupTimer=setTimeout(closePopup, 3200);
+}
+function closePopup(){ clearTimeout(popupTimer); document.getElementById('popup-ov').classList.remove('show'); }
+
 async function api(path, opts){
     opts = opts || {};
     const headers = Object.assign({ 'Authorization':'Bearer '+TOKEN }, opts.headers||{});
@@ -296,9 +395,10 @@ async function api(path, opts){
 }
 async function apiJson(path, opts){ const r = await api(path, opts); let d={}; try{d=await r.json();}catch{} if(!r.ok) throw new Error(d.message||('HTTP '+r.status)); return d; }
 
-// ====================== auth / login ======================
-function showLoginMsg(msg, type){ const el=document.getElementById('ga-login-msg'); el.textContent=msg; el.className='mt-4 text-[.8rem] font-medium rounded-xl px-3 py-2.5 '+(type==='err'?'text-[#fca5a5]':'text-[#6ee7b7]'); el.style.background= type==='err'?'rgba(239,68,68,.1)':'rgba(16,185,129,.1)'; el.classList.remove('hidden'); }
-function backToPhone(){ stopOtpPolling(); document.getElementById('step-otp').classList.add('hidden'); document.getElementById('step-phone').classList.remove('hidden'); document.getElementById('ga-login-msg').classList.add('hidden'); }
+// auth / login
+function showLoginMsg(msg, type){ const el=document.getElementById('ga-login-msg'); el.innerHTML='<i class="fas '+(type==='err'?'fa-triangle-exclamation':'fa-circle-check')+'"></i><span>'+esc(msg)+'</span>'; el.className='lgv-alert show '+(type==='err'?'err':'ok'); }
+function hideLoginMsg(){ document.getElementById('ga-login-msg').className='lgv-alert'; }
+function backToPhone(){ stopOtpPolling(); document.getElementById('step-otp').classList.add('hidden'); document.getElementById('step-phone').classList.remove('hidden'); hideLoginMsg(); }
 
 function stopOtpPolling(){ clearInterval(otpPollTimer); otpPollTimer=null; clearInterval(otpExpiryTimer); otpExpiryTimer=null; }
 
@@ -329,7 +429,7 @@ async function requestOtp(){
         document.getElementById('ga-shown-phone2').textContent = phone.replace(/^0/,'62');
         document.getElementById('step-phone').classList.add('hidden');
         document.getElementById('step-otp').classList.remove('hidden');
-        document.getElementById('ga-login-msg').classList.add('hidden');
+        hideLoginMsg();
         startOtpExpiry(d.expiresInMs||300000);
         startOtpPolling();
     }catch(e){ showLoginMsg('Network error. Try again.','err'); }
@@ -368,7 +468,7 @@ function logout(){
     backToPhone();
 }
 
-// ====================== dashboard ======================
+// dashboard
 function enterDashboard(){
     document.getElementById('view-login').classList.add('hidden');
     document.getElementById('view-dash').classList.remove('hidden');
@@ -436,9 +536,16 @@ function switchTab(name){
 async function saveProfile(){
     const subject=document.getElementById('ov-name').value.trim();
     const description=document.getElementById('ov-desc').value;
-    try{ const d=await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/profile',{method:'PUT',body:JSON.stringify({subject,description})});
-        toast('Saved: '+(d.changed.join(', ')||'no changes'),'ok'); currentGroup.subject=subject; document.getElementById('gp-name').textContent=subject;
-    }catch(e){ toast(e.message,'err'); }
+    const btn=event&&event.target?event.target.closest('button'):null;
+    let orig; if(btn){ orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner spin"></i> Saving…'; }
+    try{
+        const d=await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/profile',{method:'PUT',body:JSON.stringify({subject,description})});
+        currentGroup.subject=subject; document.getElementById('gp-name').textContent=subject;
+        const changed=(d.changed&&d.changed.length)?d.changed.join(' & '):null;
+        if(changed) popup('Group Updated', 'Successfully changed group '+changed+'.', 'ok');
+        else popup('No Changes', 'Nothing was different to save.', 'ok');
+    }catch(e){ popup('Update Failed', e.message, 'err'); }
+    finally{ if(btn){ btn.disabled=false; btn.innerHTML=orig; } }
 }
 async function saveWa(field,val){
     try{ await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/wa-settings',{method:'PUT',body:JSON.stringify({[field]:val})}); toast('Updated','ok'); }
@@ -450,8 +557,8 @@ function copyLink(){ const v=document.getElementById('ov-link').value; if(!v)ret
 function fileToBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
 async function uploadGroupPic(input){
     const f=input.files[0]; if(!f)return; const st=document.getElementById('ov-pic-status'); st.textContent='Uploading…';
-    try{ const image=await fileToBase64(f); await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/profile-picture',{method:'POST',body:JSON.stringify({image})}); st.textContent='Updated ✓'; toast('Group picture updated','ok'); }
-    catch(e){ st.textContent=''; toast(e.message,'err'); } finally{ input.value=''; }
+    try{ const image=await fileToBase64(f); await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/profile-picture',{method:'POST',body:JSON.stringify({image})}); st.textContent='Updated ✓'; popup('Picture Updated', 'The group profile picture has been changed.', 'ok'); }
+    catch(e){ st.textContent=''; popup('Upload Failed', e.message, 'err'); } finally{ input.value=''; }
 }
 
 // ---- members ----
@@ -514,7 +621,7 @@ async function saveSetting(key,val){
     catch(e){ toast(e.message,'err'); renderSettings(); }
 }
 
-// ====================== welcome/leave builder ======================
+// welcome/leave builder
 const ELEMENTS=[
     {key:'avatar',label:'Avatar',hasSize:true,sizeMin:60,sizeMax:300},
     {key:'title',label:'Title',hasText:true,hasColor:true,hasSize:true,sizeMin:20,sizeMax:90},
@@ -599,12 +706,12 @@ function addHandle(key,label,e){
 function positionHandle(h,e){ const stage=document.getElementById('stage'); h.style.left=(e.x/1024*100)+'%'; h.style.top=(e.y/576*100)+'%'; }
 async function saveLayout(){
     const btn=document.getElementById('bld-save'); const o=btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner spin"></i> Saving…';
-    try{ await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/layout/'+variant,{method:'PUT',body:JSON.stringify({config})}); toast(variant+' layout saved','ok'); }
-    catch(e){ toast(e.message,'err'); } finally{ btn.disabled=false; btn.innerHTML=o; }
+    try{ await apiJson('/api/group-admin/groups/'+encodeURIComponent(currentGroupId)+'/layout/'+variant,{method:'PUT',body:JSON.stringify({config})}); popup('Layout Saved', 'Your '+variant+' image layout has been saved.', 'ok'); }
+    catch(e){ popup('Save Failed', e.message, 'err'); } finally{ btn.disabled=false; btn.innerHTML=o; }
 }
 window.addEventListener('resize',()=>{ if(config && !document.getElementById('tab-builder').classList.contains('hidden')) renderHandles(); });
 
-// ====================== logs ======================
+// logs
 const ACTION_META={login:['fa-right-to-bracket','#a5b4fc'],rename:['fa-pen','#34d399'],desc:['fa-align-left','#34d399'],kick:['fa-user-minus','#fca5a5'],promote:['fa-arrow-up','#fcd34d'],demote:['fa-arrow-down','#fcd34d'],setting:['fa-gear','#94a3b8'],'wa-setting':['fa-lock','#94a3b8'],'profile-picture':['fa-camera','#34d399'],'revoke-link':['fa-link-slash','#fca5a5'],'welcome-config':['fa-image','#34d399'],'leave-config':['fa-image','#fcd34d']};
 function timeAgo(ms){ const s=Math.floor((Date.now()-ms)/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return new Date(ms).toLocaleString(); }
 async function loadLogs(page){
@@ -626,7 +733,27 @@ async function loadLogs(page){
     }catch(e){ if(page===1) list.innerHTML='<div class="text-[#fca5a5]">'+esc(e.message)+'</div>'; }
 }
 
-// ====================== boot ======================
+// login background particles
+(function(){
+    const canvas=document.getElementById('lgv-particles'); if(!canvas) return;
+    const ctx=canvas.getContext('2d'); let W,H,particles=[];
+    function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+    resize(); window.addEventListener('resize',resize);
+    const colors=['rgba(99,102,241,','rgba(139,92,246,','rgba(6,182,212,'];
+    function mk(){ return {x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.3,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,color:colors[Math.floor(Math.random()*colors.length)],a:Math.random()*0.5+0.1,life:Math.random()*Math.PI*2}; }
+    for(let i=0;i<70;i++) particles.push(mk());
+    function draw(){
+        // Skip work when the login view is hidden (dashboard active).
+        if(document.getElementById('view-login').classList.contains('hidden')){ requestAnimationFrame(draw); return; }
+        ctx.clearRect(0,0,W,H);
+        particles.forEach(p=>{ p.life+=0.01; const alpha=p.a*(0.5+0.5*Math.sin(p.life)); ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=p.color+alpha+')'; ctx.fill(); p.x+=p.vx; p.y+=p.vy; if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0; });
+        particles.forEach((p,i)=>{ for(let j=i+1;j<particles.length;j++){ const q=particles[j]; const dx=p.x-q.x,dy=p.y-q.y; const dist=Math.sqrt(dx*dx+dy*dy); if(dist<100){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.strokeStyle='rgba(99,102,241,'+(0.08*(1-dist/100))+')'; ctx.lineWidth=0.5; ctx.stroke(); } } });
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+
+// boot
 (async function boot(){
     document.getElementById('ga-phone')?.addEventListener('keydown',e=>{ if(e.key==='Enter') requestOtp(); });
     if(TOKEN){
