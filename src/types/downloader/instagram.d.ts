@@ -3,6 +3,7 @@ declare type InstagramMediaType = "image" | "video";
 declare type InstagramImageQuality = {
     quality: string;
     url: string;
+    directUrl?: string;
     headers?: Record<string, string>;
 }
 

@@ -182,7 +182,7 @@ export class InstagramScraper {
 
     private parseDownloadItemsLayout(
         $: cheerio.CheerioAPI
-    ): { videoUrl?: string; thumbnail?: string; images?: Array<{ url: string; headers: Record<string, string> }> } {
+    ): { videoUrl?: string; thumbnail?: string; images?: Array<{ url: string; directUrl: string; headers: Record<string, string> }> } {
         const items = $("div.download-items");
         if (items.length === 0) throw new Error("No download-items found");
 
@@ -201,21 +201,18 @@ export class InstagramScraper {
             if (!videoUrl) throw new Error("Could not find video URL in download-items layout");
             return { videoUrl, thumbnail };
         } else {
-            const images: Array<{ url: string; headers: Record<string, string> }> = [];
+            const images: Array<{ url: string; directUrl: string; headers: Record<string, string> }> = [];
             items.each((_, item) => {
                 const btnHref = $(item).find("div.download-items__btn a").first().attr("href") ?? "";
                 if (!btnHref || btnHref.includes(".mp4")) return;
 
-                // Prefer the real Instagram CDN URL extracted from the rapidcdn JWT
                 if (btnHref.includes("d.rapidcdn.app")) {
                     const decoded = this.decodeRapidcdnToken(btnHref);
-                    if (decoded?.url) {
-                        images.push({ url: decoded.url, headers: decoded.headers });
-                        return;
-                    }
+                    images.push({ url: btnHref, directUrl: decoded?.url ?? btnHref, headers: {} });
+                    return;
                 }
 
-                images.push({ url: btnHref, headers: {} });
+                images.push({ url: btnHref, directUrl: btnHref, headers: {} });
             });
             if (images.length === 0) throw new Error("No images found in download-items layout");
             return { images };
@@ -266,7 +263,7 @@ export class InstagramScraper {
         let parsed: {
             videoUrl?: string;
             thumbnail?: string;
-            images?: Array<{ url: string; headers: Record<string, string> } | string>;
+            images?: Array<{ url: string; directUrl?: string; headers: Record<string, string> } | string>;
         };
 
         if ($("table.table").length > 0) {
@@ -292,11 +289,12 @@ export class InstagramScraper {
                 type: "image",
                 images: parsed.images.map((item, i) => {
                     const url = typeof item === "string" ? item : item.url;
+                    const directUrl = typeof item === "string" ? item : item.directUrl ?? item.url;
                     const headers = typeof item === "string" ? {} : item.headers;
                     return {
                         id: `img_${i}`,
-                        defaultUrl: url,
-                        qualities: [{ quality: "Original", url, headers }],
+                        defaultUrl: directUrl,
+                        qualities: [{ quality: "Original", url, directUrl, headers }],
                     };
                 }),
             };

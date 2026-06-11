@@ -155,9 +155,9 @@ export default {
                                     });
                                     imageBuffer = Buffer.from(response.data);
                                 } catch (err: any) {
-                                    console.error(
-                                        `Failed to download image ${index + 1}:`,
-                                        err?.message
+                                    Chisato.logger.error(
+                                        command.name,
+                                        `Failed to download image ${index + 1}: status=${err?.response?.status ?? "?"} ${err?.message || err?.code || "unknown error"}`
                                     );
                                     imageBuffer = undefined;
                                 }
@@ -171,11 +171,11 @@ export default {
                                 buttons: [
                                     builder.button.url({
                                         display: "🖼️ Full Quality",
-                                        url: bestQuality?.url || imageItem.defaultUrl,
+                                        url: bestQuality?.directUrl || bestQuality?.url || imageItem.defaultUrl,
                                     }),
                                     builder.button.copy({
                                         display: "📋 Copy URL",
-                                        code: bestQuality?.url || imageItem.defaultUrl,
+                                        code: bestQuality?.directUrl || bestQuality?.url || imageItem.defaultUrl,
                                     }),
                                 ],
                             };
