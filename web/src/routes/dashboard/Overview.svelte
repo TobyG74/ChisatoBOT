@@ -16,7 +16,6 @@
         { key: "totalParticipants", label: "Participants", icon: "fa-people-group", color: "#38bdf8" },
         { key: "premiumUsers", label: "Premium", icon: "fa-crown", color: "#fbbf24" },
         { key: "bannedUsers", label: "Banned", icon: "fa-ban", color: "#fca5a5" },
-        { key: "activeGroups", label: "Active Groups", icon: "fa-bolt", color: "#34d399" },
     ];
 
     onMount(async () => {
