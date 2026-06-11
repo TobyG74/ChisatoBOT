@@ -7,6 +7,7 @@
     import GaSettings from "./groupadmin/Settings.svelte";
     import GaBuilder from "./groupadmin/Builder.svelte";
     import GaLogs from "./groupadmin/Logs.svelte";
+    import WhatsNew from "../components/WhatsNew.svelte";
 
     let authed = $state(false);
     let view = $state("login"); // login | groups | panel
@@ -230,7 +231,10 @@
                     <div class="text-[.76rem] text-muted">+{me?.phoneNumber} · {me?.groupCount ?? groups.length} group(s)</div>
                 </div>
             </div>
-            <button class="btn btn-danger btn-sm" onclick={doLogout}><i class="fas fa-right-from-bracket"></i> Logout</button>
+            <div class="flex items-center gap-2">
+                <WhatsNew />
+                <button class="btn btn-danger btn-sm" onclick={doLogout}><i class="fas fa-right-from-bracket"></i> Logout</button>
+            </div>
         </div>
 
         {#if view === "groups"}

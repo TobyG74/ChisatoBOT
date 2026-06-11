@@ -8,10 +8,10 @@
     import Groups from "./dashboard/Groups.svelte";
     import Users from "./dashboard/Users.svelte";
     import Logs from "./dashboard/Logs.svelte";
-    import System from "./dashboard/System.svelte";
     import Commands from "./dashboard/Commands.svelte";
     import SettingsView from "./dashboard/Settings.svelte";
     import Security from "./dashboard/Security.svelte";
+    import WhatsNew from "../components/WhatsNew.svelte";
 
     let ready = $state(false);
     let me = $state(null);
@@ -23,7 +23,6 @@
         { key: "groups", icon: "fa-users-rectangle", label: "Groups" },
         { key: "users", icon: "fa-user", label: "Users" },
         { key: "logs", icon: "fa-list", label: "Logs" },
-        { key: "system", icon: "fa-microchip", label: "System" },
         { key: "commands", icon: "fa-terminal", label: "Commands" },
         { key: "settings", icon: "fa-gear", label: "Settings" },
         { key: "security", icon: "fa-shield-halved", label: "Security", owner: true },
@@ -98,6 +97,7 @@
                 <button class="btn btn-sm sm:hidden" onclick={() => (sidebarOpen = !sidebarOpen)} aria-label="Menu"><i class="fas fa-bars"></i></button>
                 <div class="font-bold text-[1.05rem] capitalize">{nav.find((n) => n.key === view)?.label || view}</div>
                 <span class="flex-1"></span>
+                <WhatsNew />
                 <button class="btn btn-danger btn-sm" onclick={doLogout}><i class="fas fa-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span></button>
             </header>
 
@@ -106,7 +106,6 @@
                 {:else if view === "groups"}<Groups {me} />
                 {:else if view === "users"}<Users {me} />
                 {:else if view === "logs"}<Logs />
-                {:else if view === "system"}<System />
                 {:else if view === "commands"}<Commands {me} />
                 {:else if view === "settings"}<SettingsView {me} />
                 {:else if view === "security"}<Security {me} />

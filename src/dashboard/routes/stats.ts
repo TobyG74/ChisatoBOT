@@ -1,7 +1,54 @@
 import { FastifyInstance } from "fastify";
 import { Database } from "../../infrastructure/database";
 import os from "os";
+import fs from "fs";
 import { getLogicalUptimeSeconds } from "../../core/runtime";
+
+// Process CPU% is derived from the delta of process.cpuUsage() between calls,
+// normalised by core count. Module-level state holds the previous sample.
+let _lastCpu = process.cpuUsage();
+let _lastCpuAt = Date.now();
+function processCpuPercent(): number {
+    const now = Date.now();
+    const cur = process.cpuUsage();
+    const elapsedMs = Math.max(1, now - _lastCpuAt);
+    const usedMs = (cur.user - _lastCpu.user + (cur.system - _lastCpu.system)) / 1000;
+    _lastCpu = cur;
+    _lastCpuAt = now;
+    const cores = os.cpus()?.length || 1;
+    const pct = (usedMs / elapsedMs) * 100 / cores;
+    return Math.max(0, Math.min(100, Math.round(pct * 10) / 10));
+}
+
+async function getDiskUsage(): Promise<{
+    totalBytes: number;
+    usedBytes: number;
+    freeBytes: number;
+    total: string;
+    used: string;
+    free: string;
+    pct: number;
+} | null> {
+    try {
+        const st: any = await fs.promises.statfs(process.cwd());
+        const block = st.bsize || 4096;
+        const totalBytes = st.blocks * block;
+        const freeBytes = st.bfree * block;
+        const usedBytes = totalBytes - freeBytes;
+        if (!totalBytes) return null;
+        return {
+            totalBytes,
+            usedBytes,
+            freeBytes,
+            total: formatBytes(totalBytes),
+            used: formatBytes(usedBytes),
+            free: formatBytes(freeBytes),
+            pct: Math.round((usedBytes / totalBytes) * 100),
+        };
+    } catch {
+        return null;
+    }
+}
 
 export async function statsRoutes(fastify: FastifyInstance) {
     // Get overall statistics
@@ -112,7 +159,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // Get memory usage
+    // Get memory / cpu / disk usage
     fastify.get("/system", async (request, reply) => {
         try {
             const uptime = getLogicalUptimeSeconds();
@@ -121,6 +168,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
             const freeMem = os.freemem();
             const usedMem = totalMem - freeMem;
             const memPct = Math.round((usedMem / totalMem) * 100);
+            const disk = await getDiskUsage();
             return {
                 memory: {
                     rss: formatBytes(memoryUsage.rss),
@@ -140,7 +188,8 @@ export async function statsRoutes(fastify: FastifyInstance) {
                     usedMemBytes: usedMem,
                     memPct,
                 },
-                cpu: process.cpuUsage(),
+                disk,
+                cpu: { pct: processCpuPercent(), cores: os.cpus()?.length || 1 },
                 platform: process.platform,
                 nodeVersion: process.version,
                 pid: process.pid,

@@ -4,10 +4,17 @@
         open = false;
         onClose?.();
     }
+    // Render the overlay on <body> so an ancestor with backdrop-filter/transform
+    // (e.g. the dashboard topbar) can't become its containing block and shove
+    // the fixed overlay out of place.
+    function portal(node) {
+        document.body.appendChild(node);
+        return { destroy: () => node.remove() };
+    }
 </script>
 
 {#if open}
-    <div class="ov" onclick={(e) => e.target === e.currentTarget && close()}>
+    <div class="ov" use:portal onclick={(e) => e.target === e.currentTarget && close()}>
         <div class="modal card">
             <div class="head">
                 <div class="t"><i class="fas {icon} text-accent"></i> {title}</div>

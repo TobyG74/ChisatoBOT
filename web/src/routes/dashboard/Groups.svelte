@@ -11,7 +11,9 @@
     let groups = $state([]);
     let page = $state(1);
     let totalPages = $state(1);
+    let total = $state(0);
     let search = $state("");
+    let communityType = $state("");
     let loading = $state(true);
     let syncing = $state(false);
 
@@ -29,9 +31,12 @@
     async function load() {
         loading = true;
         try {
-            const d = await apiJson(`/api/groups/?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
+            const d = await apiJson(
+                `/api/groups/?page=${page}&limit=12&search=${encodeURIComponent(search)}${communityType ? "&communityType=" + communityType : ""}`
+            );
             groups = d.groups || [];
             totalPages = d.pagination?.totalPages || 1;
+            total = d.pagination?.total ?? groups.length;
         } catch (e) {
             toast(e.message, "err");
         } finally {
@@ -45,10 +50,32 @@
             load();
         }, 350);
     }
+    function applyFilter() {
+        page = 1;
+        load();
+    }
     function changePage(p) {
         if (p < 1 || p > totalPages) return;
         page = p;
         load();
+    }
+
+    function groupType(g) {
+        if (g.isCommunity) return { label: "Community", cls: "t-community" };
+        if (g.isCommunityAnnounce) return { label: "Announcement", cls: "t-announce" };
+        return { label: "Group", cls: "t-group" };
+    }
+    const FEATURES = [
+        ["antilink", "fa-link", "Anti-Link"],
+        ["antibot", "fa-robot", "Anti-Bot"],
+        ["antidelete", "fa-trash-can-arrow-up", "Anti-Delete"],
+        ["welcome", "fa-hand-wave", "Welcome"],
+        ["leave", "fa-door-open", "Leave"],
+        ["mute", "fa-volume-xmark", "Mute"],
+    ];
+    function featureOn(g, key) {
+        const s = g.settings || {};
+        return key === "antilink" ? !!s.antilink?.status : !!s[key];
     }
 
     function openEdit(g) {
@@ -67,10 +94,7 @@
     }
     async function saveSettings() {
         try {
-            await apiJson(`/api/groups/${encodeURIComponent(editing.groupId)}/settings`, {
-                method: "PUT",
-                body: JSON.stringify(editSettings),
-            });
+            await apiJson(`/api/groups/${encodeURIComponent(editing.groupId)}/settings`, { method: "PUT", body: JSON.stringify(editSettings) });
             editOpen = false;
             popup("Saved", "Group settings updated.", "ok");
             load();
@@ -128,9 +152,15 @@
         <i class="fas fa-search text-muted"></i>
         <input class="field !border-0 !bg-transparent" placeholder="Search groups…" bind:value={search} oninput={onSearch} />
     </div>
+    <select class="field" style="width:160px" bind:value={communityType} onchange={applyFilter}>
+        <option value="">All types</option>
+        <option value="regular">Group</option>
+        <option value="communityAnnounce">Announcement</option>
+        <option value="community">Community</option>
+    </select>
     {#if isOwner}
         <button class="btn btn-sm" disabled={syncing} onclick={sync}>{#if syncing}<i class="fas fa-spinner spin"></i>{:else}<i class="fas fa-rotate"></i>{/if} Sync</button>
-        <button class="btn btn-primary btn-sm" onclick={() => (joinOpen = true)}><i class="fas fa-plus"></i> Join group</button>
+        <button class="btn btn-primary btn-sm" onclick={() => (joinOpen = true)}><i class="fas fa-plus"></i> Join</button>
     {/if}
 </div>
 
@@ -139,29 +169,57 @@
 {:else if !groups.length}
     <div class="card p-6 text-center text-muted">No groups found.</div>
 {:else}
-    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
-        {#each groups as g (g.groupId)}
-            <div class="card p-4">
-                <div class="flex items-start justify-between gap-2">
-                    <div class="font-bold truncate flex-1">{g.subject}</div>
-                    {#if g.botIsAdmin}<span class="chip" style="background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.32)">Admin</span>{/if}
-                </div>
-                <div class="text-[.76rem] text-muted mt-2"><i class="fas fa-user-group"></i> {g.participantsCount ?? g.size} members</div>
-                <div class="flex gap-2 mt-3">
-                    <button class="btn btn-sm flex-1" onclick={() => openEdit(g)}><i class="fas fa-sliders"></i> Settings</button>
-                    {#if isOwner}<button class="btn btn-sm btn-danger" onclick={() => del(g)}><i class="fas fa-trash"></i></button>{/if}
-                </div>
-            </div>
-        {/each}
+    <div class="card overflow-hidden">
+        <div class="tbl-scroll">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Group</th>
+                        <th class="num">Members</th>
+                        <th>Type</th>
+                        <th>Bot</th>
+                        <th>Features</th>
+                        <th class="right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each groups as g (g.groupId)}
+                        {@const t = groupType(g)}
+                        <tr>
+                            <td><div class="font-semibold truncate max-w-[260px]">{g.subject}</div></td>
+                            <td class="num">{g.participantsCount ?? g.size}</td>
+                            <td><span class="chip {t.cls}">{t.label}</span></td>
+                            <td>
+                                {#if g.botIsAdmin}<span class="chip t-bot">Admin</span>{:else}<span class="text-subtle text-[.74rem]">member</span>{/if}
+                            </td>
+                            <td>
+                                <div class="flex gap-1.5 flex-wrap">
+                                    {#each FEATURES as [key, icon, label] (key)}
+                                        {#if featureOn(g, key)}<i class="fas {icon} feat" title={label}></i>{/if}
+                                    {/each}
+                                </div>
+                            </td>
+                            <td class="right">
+                                <button class="btn btn-sm" onclick={() => openEdit(g)} title="Settings"><i class="fas fa-sliders"></i></button>
+                                {#if isOwner}<button class="btn btn-sm btn-danger" onclick={() => del(g)} title="Delete"><i class="fas fa-trash"></i></button>{/if}
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    {#if totalPages > 1}
-        <div class="flex items-center justify-center gap-2 mt-5">
-            <button class="btn btn-sm" disabled={page <= 1} onclick={() => changePage(page - 1)}><i class="fas fa-chevron-left"></i></button>
-            <span class="text-[.8rem] text-muted">Page {page} / {totalPages}</span>
-            <button class="btn btn-sm" disabled={page >= totalPages} onclick={() => changePage(page + 1)}><i class="fas fa-chevron-right"></i></button>
-        </div>
-    {/if}
+    <div class="flex items-center justify-between mt-4 text-[.8rem] text-muted">
+        <span>{total} groups</span>
+        {#if totalPages > 1}
+            <div class="flex items-center gap-2">
+                <button class="btn btn-sm" disabled={page <= 1} onclick={() => changePage(page - 1)} aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+                <span>Page {page} / {totalPages}</span>
+                <button class="btn btn-sm" disabled={page >= totalPages} onclick={() => changePage(page + 1)} aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        {/if}
+    </div>
 {/if}
 
 <Modal bind:open={editOpen} title={editing?.subject || "Group settings"} icon="fa-sliders">
@@ -178,3 +236,30 @@
     <input class="field mb-3" placeholder="https://chat.whatsapp.com/…" bind:value={joinLink} />
     <button class="btn btn-primary w-full" onclick={join}><i class="fab fa-whatsapp"></i> Join</button>
 </Modal>
+
+<style>
+    .feat {
+        color: var(--color-accent);
+        font-size: 0.82rem;
+    }
+    .t-community {
+        background: rgba(139, 92, 246, 0.12);
+        color: #c4b5fd;
+        border: 1px solid rgba(139, 92, 246, 0.32);
+    }
+    .t-announce {
+        background: rgba(56, 189, 248, 0.12);
+        color: #7dd3fc;
+        border: 1px solid rgba(56, 189, 248, 0.32);
+    }
+    .t-group {
+        background: rgba(148, 163, 184, 0.12);
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+    }
+    .t-bot {
+        background: rgba(16, 185, 129, 0.12);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.32);
+    }
+</style>

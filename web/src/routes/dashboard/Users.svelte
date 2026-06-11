@@ -11,8 +11,10 @@
     let users = $state([]);
     let page = $state(1);
     let totalPages = $state(1);
+    let total = $state(0);
     let search = $state("");
     let role = $state("");
+    let banned = $state("");
     let loading = $state(true);
     let searchTimer = null;
 
@@ -24,9 +26,11 @@
     async function load() {
         loading = true;
         try {
-            const d = await apiJson(`/api/users/?page=${page}&limit=10&search=${encodeURIComponent(search)}${role ? "&role=" + role : ""}`);
+            const qs = `page=${page}&limit=12&search=${encodeURIComponent(search)}${role ? "&role=" + role : ""}${banned ? "&banned=" + banned : ""}`;
+            const d = await apiJson("/api/users/?" + qs);
             users = d.users || [];
             totalPages = d.pagination?.totalPages || 1;
+            total = d.pagination?.total ?? users.length;
         } catch (e) {
             toast(e.message, "err");
         } finally {
@@ -39,6 +43,10 @@
             page = 1;
             load();
         }, 350);
+    }
+    function applyFilter() {
+        page = 1;
+        load();
     }
     function changePage(p) {
         if (p < 1 || p > totalPages) return;
@@ -100,10 +108,15 @@
         <i class="fas fa-search text-muted"></i>
         <input class="field !border-0 !bg-transparent" placeholder="Search users…" bind:value={search} oninput={onSearch} />
     </div>
-    <select class="field" style="width:130px" bind:value={role} onchange={() => { page = 1; load(); }}>
+    <select class="field" style="width:130px" bind:value={role} onchange={applyFilter}>
         <option value="">All roles</option>
         <option value="free">Free</option>
         <option value="premium">Premium</option>
+    </select>
+    <select class="field" style="width:130px" bind:value={banned} onchange={applyFilter}>
+        <option value="">All status</option>
+        <option value="active">Active</option>
+        <option value="banned">Banned</option>
     </select>
     {#if isOwner}<button class="btn btn-primary btn-sm" onclick={openCreate}><i class="fas fa-user-plus"></i> Add</button>{/if}
 </div>
@@ -113,31 +126,52 @@
 {:else if !users.length}
     <div class="card p-6 text-center text-muted">No users found.</div>
 {:else}
-    <div class="flex flex-col gap-2">
-        {#each users as u (u.userId)}
-            <div class="row-item">
-                <div class="min-w-0">
-                    <div class="font-semibold text-[.88rem] flex items-center gap-2">
-                        {u.name || readableNumber(u.userId)}
-                        {#if u.role === "premium"}<span class="chip" style="background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.3)">Premium</span>{/if}
-                        {#if u.isBanned}<span class="chip" style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3)">Banned</span>{/if}
-                    </div>
-                    <div class="text-[.72rem] text-subtle">+{readableNumber(u.userId)} · limit {u.limit}</div>
-                </div>
-                <div class="flex gap-1.5">
-                    <button class="btn btn-sm" onclick={() => openEdit(u)}><i class="fas fa-pen"></i></button>
-                    {#if isOwner}<button class="btn btn-sm btn-danger" onclick={() => del(u)}><i class="fas fa-trash"></i></button>{/if}
-                </div>
-            </div>
-        {/each}
-    </div>
-    {#if totalPages > 1}
-        <div class="flex items-center justify-center gap-2 mt-5">
-            <button class="btn btn-sm" disabled={page <= 1} onclick={() => changePage(page - 1)}><i class="fas fa-chevron-left"></i></button>
-            <span class="text-[.8rem] text-muted">Page {page} / {totalPages}</span>
-            <button class="btn btn-sm" disabled={page >= totalPages} onclick={() => changePage(page + 1)}><i class="fas fa-chevron-right"></i></button>
+    <div class="card overflow-hidden">
+        <div class="tbl-scroll">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Number</th>
+                        <th>Role</th>
+                        <th class="num">Limit</th>
+                        <th>Status</th>
+                        <th class="right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each users as u (u.userId)}
+                        <tr>
+                            <td><div class="font-semibold truncate max-w-[200px]">{u.name || "—"}</div></td>
+                            <td class="text-muted">+{readableNumber(u.userId)}</td>
+                            <td>
+                                {#if u.role === "premium"}<span class="chip s-prem">Premium</span>{:else}<span class="chip s-free">Free</span>{/if}
+                            </td>
+                            <td class="num">{u.limit}</td>
+                            <td>
+                                {#if u.isBanned}<span class="chip s-ban">Banned</span>{:else}<span class="text-subtle text-[.74rem]">active</span>{/if}
+                            </td>
+                            <td class="right">
+                                <button class="btn btn-sm" onclick={() => openEdit(u)} title="Edit"><i class="fas fa-pen"></i></button>
+                                {#if isOwner}<button class="btn btn-sm btn-danger" onclick={() => del(u)} title="Delete"><i class="fas fa-trash"></i></button>{/if}
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
         </div>
-    {/if}
+    </div>
+
+    <div class="flex items-center justify-between mt-4 text-[.8rem] text-muted">
+        <span>{total} users</span>
+        {#if totalPages > 1}
+            <div class="flex items-center gap-2">
+                <button class="btn btn-sm" disabled={page <= 1} onclick={() => changePage(page - 1)} aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+                <span>Page {page} / {totalPages}</span>
+                <button class="btn btn-sm" disabled={page >= totalPages} onclick={() => changePage(page + 1)} aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        {/if}
+    </div>
 {/if}
 
 <Modal bind:open title={creating ? "Add user" : "Edit user"} icon="fa-user">
@@ -163,3 +197,21 @@
     {/if}
     <button class="btn btn-primary w-full mt-4" onclick={save}><i class="fas fa-save"></i> {creating ? "Create" : "Save"}</button>
 </Modal>
+
+<style>
+    .s-prem {
+        background: rgba(251, 191, 36, 0.12);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+    .s-free {
+        background: rgba(148, 163, 184, 0.12);
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+    }
+    .s-ban {
+        background: rgba(239, 68, 68, 0.12);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+</style>

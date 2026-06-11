@@ -17,8 +17,7 @@
     async function load() {
         loading = true;
         try {
-            const d = await apiJson("/api/config/ip");
-            lists = { whitelist: norm(d.whitelist), blacklist: norm(d.blacklist) };
+            applyLists(await apiJson("/api/config/ip"));
         } catch (e) {
             toast(e.message, "err");
         } finally {
@@ -28,12 +27,19 @@
     function norm(arr) {
         return (arr || []).map((e) => (typeof e === "string" ? { ip: e, role: "unknown" } : { ip: e.ip, role: e.role || "unknown" }));
     }
+    // The API returns ipWhitelist/ipBlacklist (falls back to whitelist/blacklist
+    // for safety).
+    function applyLists(d) {
+        lists = {
+            whitelist: norm(d.ipWhitelist ?? d.whitelist),
+            blacklist: norm(d.ipBlacklist ?? d.blacklist),
+        };
+    }
     async function addIp(kind) {
         const { ip, role } = add[kind];
         if (!ip.trim()) return;
         try {
-            const d = await apiJson(`/api/config/ip/${kind}`, { method: "POST", body: JSON.stringify({ ip: ip.trim(), role }) });
-            lists = { whitelist: norm(d.whitelist), blacklist: norm(d.blacklist) };
+            applyLists(await apiJson(`/api/config/ip/${kind}`, { method: "POST", body: JSON.stringify({ ip: ip.trim(), role }) }));
             add[kind] = { ip: "", role: "unknown" };
             toast("Added", "ok");
         } catch (e) {
@@ -42,8 +48,7 @@
     }
     async function removeIp(kind, ip) {
         try {
-            const d = await apiJson(`/api/config/ip/${kind}/${encodeURIComponent(ip)}`, { method: "DELETE" });
-            lists = { whitelist: norm(d.whitelist), blacklist: norm(d.blacklist) };
+            applyLists(await apiJson(`/api/config/ip/${kind}/${encodeURIComponent(ip)}`, { method: "DELETE" }));
         } catch (e) {
             toast(e.message, "err");
         }
@@ -52,8 +57,7 @@
         const order = ["unknown", "owner", "team"];
         const next = order[(order.indexOf(entry.role) + 1) % order.length];
         try {
-            const d = await apiJson(`/api/config/ip/${kind}/${encodeURIComponent(entry.ip)}`, { method: "PUT", body: JSON.stringify({ ip: entry.ip, role: next }) });
-            lists = { whitelist: norm(d.whitelist), blacklist: norm(d.blacklist) };
+            applyLists(await apiJson(`/api/config/ip/${kind}/${encodeURIComponent(entry.ip)}`, { method: "PUT", body: JSON.stringify({ ip: entry.ip, role: next }) }));
         } catch (e) {
             toast(e.message, "err");
         }

@@ -9,15 +9,14 @@ import { ipSecurityService, type IpRole } from "../services/ip-security.service"
 
 const JWT_SECRET = process.env.JWT_SECRET || "chisato-dashboard-secret-key";
 /**
- * Absolute session lifetime — every dashboard login is hard-capped at 24 hours
- * from the moment of approval, regardless of recent activity. After that, the
- * user must sign in again.
+ * Absolute session lifetime — a login stays valid for 30 days from approval,
+ * so reopening the browser/domain doesn't force a re-login.
  */
-const SESSION_ABSOLUTE_TTL_MS = 24 * 60 * 60 * 1000;
-/** Idle (sliding) session timeout — re-login required after 30 minutes of no activity. */
-const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const SESSION_ABSOLUTE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** Idle (sliding) timeout — also 30 days, effectively "remember me". */
+const SESSION_IDLE_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
 /** JWT lifetime mirrors the absolute session lifetime so a stolen token can't outlive the session. */
-const JWT_EXPIRES_IN = "24h";
+const JWT_EXPIRES_IN = "30d";
 const LOGIN_APPROVAL_TTL_MS = 5 * 60 * 1000;
 export const APPROVAL_BUTTON_TTL_MS = 1 * 60 * 1000; // WA button expires after 1 minute
 
