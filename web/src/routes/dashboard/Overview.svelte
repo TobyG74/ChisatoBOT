@@ -6,7 +6,7 @@
     let stats = $state(null);
     let loading = $state(true);
 
-    // ── realtime system info ─────────────────────────────────────────────────
+    // realtime system info
     let sys = $state(null);
     let pollTimer = null;
 
@@ -27,7 +27,7 @@
             loading = false;
         }
         await pollSystem();
-        pollTimer = setInterval(pollSystem, 2000);
+        pollTimer = setInterval(pollSystem, 1000);
     });
     onDestroy(() => clearInterval(pollTimer));
 
