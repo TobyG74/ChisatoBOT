@@ -32,6 +32,12 @@
     let current = $state(null); // { group, access }
     let tab = $state("overview");
 
+    // Join-group (invite the bot into a group you admin) modal state.
+    let joinOpen = $state(false);
+    let joinLink = $state("");
+    let joinBusy = $state(false);
+    let joinMsg = $state(null); // { type: "ok" | "err", text }
+
     onMount(async () => {
         const t = get(token);
         const p = get(profile);
@@ -165,6 +171,45 @@
         loadGroups();
     }
 
+    function openJoin() {
+        joinLink = "";
+        joinMsg = null;
+        joinOpen = true;
+    }
+    function closeJoin() {
+        if (joinBusy) return;
+        joinOpen = false;
+    }
+    async function submitJoin() {
+        const link = joinLink.trim();
+        if (!link) {
+            joinMsg = { type: "err", text: "Paste a WhatsApp group invite link." };
+            return;
+        }
+        joinBusy = true;
+        joinMsg = null;
+        try {
+            const d = await apiJson("/api/group-admin/join-group", {
+                method: "POST",
+                body: JSON.stringify({ inviteLink: link }),
+            });
+            joinMsg = {
+                type: "ok",
+                text: d.alreadyMember
+                    ? `Bot is already in "${d.subject}".`
+                    : `Joined "${d.subject}". Opening your groups…`,
+            };
+            await loadGroups();
+            setTimeout(() => {
+                joinOpen = false;
+            }, 1200);
+        } catch (e) {
+            joinMsg = { type: "err", text: e.message };
+        } finally {
+            joinBusy = false;
+        }
+    }
+
     async function doLogout() {
         await logoutRequest();
         authed = false;
@@ -238,7 +283,10 @@
         </div>
 
         {#if view === "groups"}
-            <div class="text-[.78rem] uppercase tracking-wider text-muted font-bold mb-3">Your Groups</div>
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <div class="text-[.78rem] uppercase tracking-wider text-muted font-bold">Your Groups</div>
+                <button class="btn btn-primary btn-sm" onclick={openJoin}><i class="fab fa-whatsapp"></i> Join Group</button>
+            </div>
             {#if groupsLoading}
                 <div class="text-muted text-sm"><i class="fas fa-spinner spin"></i> Loading…</div>
             {:else if groupsError}
@@ -301,6 +349,56 @@
             {/if}
         {/if}
     </div>
+
+    {#if joinOpen}
+        <!-- ════════ JOIN GROUP MODAL ════════ -->
+        <div class="modal-backdrop" onclick={closeJoin} onkeydown={(e) => e.key === "Escape" && closeJoin()} role="presentation">
+            <div
+                class="modal-panel card p-6"
+                onclick={(e) => e.stopPropagation()}
+                onkeydown={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                tabindex="-1"
+            >
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="hd-ic"><i class="fab fa-whatsapp"></i></div>
+                    <div>
+                        <div class="font-extrabold leading-tight">Invite the bot to a group</div>
+                        <div class="text-[.76rem] text-muted">Paste a WhatsApp invite link of a group you admin</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+
+                <label class="lbl" for="joinlink"><i class="fas fa-link text-accent"></i> Invite link</label>
+                <input
+                    id="joinlink"
+                    class="field"
+                    type="text"
+                    placeholder="https://chat.whatsapp.com/xxxxxxxxxxxxxxxxxxxx"
+                    bind:value={joinLink}
+                    disabled={joinBusy}
+                    onkeydown={(e) => e.key === "Enter" && submitJoin()}
+                />
+
+                <ul class="hints">
+                    <li><i class="fas fa-shield-halved"></i><span>You must be an admin of that group — we verify it before the bot joins.</span></li>
+                    <li><i class="fas fa-user-plus"></i><span>The bot accepts the invite and appears in the group right away.</span></li>
+                </ul>
+
+                {#if joinMsg}
+                    <div class="alert {joinMsg.type}"><i class="fas {joinMsg.type === 'err' ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i><span>{joinMsg.text}</span></div>
+                {/if}
+
+                <div class="flex items-center justify-end gap-2 mt-5">
+                    <button class="btn btn-sm" onclick={closeJoin} disabled={joinBusy}>Cancel</button>
+                    <button class="btn btn-primary btn-sm" onclick={submitJoin} disabled={joinBusy}>
+                        {#if joinBusy}<i class="fas fa-spinner spin"></i> Joining…{:else}<i class="fab fa-whatsapp"></i> Join Group{/if}
+                    </button>
+                </div>
+            </div>
+        </div>
+    {/if}
 {/if}
 
 <style>
@@ -487,5 +585,25 @@
     }
     .warn {
         color: #fcd34d;
+    }
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgba(2, 6, 18, 0.72);
+        backdrop-filter: blur(3px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+    }
+    .modal-panel {
+        width: 100%;
+        max-width: 460px;
+        outline: none;
+    }
+    .modal-panel .lbl {
+        display: block;
+        margin-bottom: 0.4rem;
     }
 </style>

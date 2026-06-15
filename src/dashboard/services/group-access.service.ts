@@ -113,6 +113,31 @@ export function mapParticipants(
     }));
 }
 
+/**
+ * Check whether `phoneNumber` is an admin within arbitrary group metadata — e.g.
+ * the metadata returned by `groupGetInviteInfo` for a group the bot has NOT
+ * joined yet. Used to authorize "add the bot via invite link": a requester may
+ * only bring the bot into a group they themselves administer. Indexes LID
+ * mappings first so participant→phone resolution works on fresh metadata.
+ */
+export function checkAdminInMeta(
+    meta: any,
+    phoneNumber: string
+): { found: boolean; isAdmin: boolean; isSuperAdmin: boolean } {
+    try {
+        indexGroupMetaForLidResolution(meta);
+    } catch {
+        /* best-effort */
+    }
+    for (const p of meta?.participants || []) {
+        if (participantPn(p) === phoneNumber) {
+            const admin = p.admin === "admin" || p.admin === "superadmin";
+            return { found: true, isAdmin: admin, isSuperAdmin: p.admin === "superadmin" };
+        }
+    }
+    return { found: false, isAdmin: false, isSuperAdmin: false };
+}
+
 export type GroupAccessResult = {
     ok: boolean;
     reason?: string;

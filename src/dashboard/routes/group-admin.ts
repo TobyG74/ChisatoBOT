@@ -10,6 +10,7 @@ import {
     resolveMemberJid,
     mapParticipants,
     getBotPhoneNumber,
+    checkAdminInMeta,
     type GroupAccessResult,
 } from "../services/group-access.service";
 import { logGroupAction, getGroupLogs } from "../services/group-audit.service";
@@ -145,6 +146,101 @@ export async function groupAdminRoutes(fastify: FastifyInstance) {
         } catch (err) {
             logger.error("group-admin my-groups error:", err);
             return reply.status(500).send({ success: false, message: "Failed to load groups" });
+        }
+    });
+
+    // ---- Add the bot to a new group via invite link ------------------------
+    // A group admin can invite the bot into a group they administer by pasting
+    // the WhatsApp invite link. We verify (from the invite's own participant
+    // list) that the requester is an admin there before the bot joins, so a
+    // verified number can't push the bot into arbitrary groups.
+    fastify.post("/join-group", async (request, reply) => {
+        const admin = getAdmin(request);
+        if (!admin?.phoneNumber) {
+            return reply.status(401).send({ success: false, message: "Unauthorized" });
+        }
+        const client = getClientInstance();
+        if (!client) {
+            return reply.status(503).send({ success: false, message: "Bot is not connected." });
+        }
+
+        const body = request.body as { inviteLink?: string };
+        const raw = String(body.inviteLink || "").trim();
+        const match = raw.match(/chat\.whatsapp\.com\/([0-9A-Za-z]{20,24})/i);
+        const code = match ? match[1] : /^[0-9A-Za-z]{20,24}$/.test(raw) ? raw : null;
+        if (!code) {
+            return reply.status(400).send({
+                success: false,
+                message: "Invalid invite link. Use https://chat.whatsapp.com/xxxxx",
+            });
+        }
+
+        let info: any;
+        try {
+            info = await (client as any).groupGetInviteInfo(code);
+        } catch (err) {
+            logger.error("group-admin join-group invite-info error:", err);
+            return reply.status(400).send({
+                success: false,
+                message: "Could not read this invite. The link may be invalid, expired, or revoked.",
+            });
+        }
+        if (!info?.id) {
+            return reply.status(400).send({ success: false, message: "Could not resolve the group from this invite." });
+        }
+
+        // Already a member? Don't try to re-join.
+        try {
+            const meta = await (client as any).groupMetadata(info.id);
+            if (meta?.id) {
+                return reply.send({
+                    success: true,
+                    alreadyMember: true,
+                    groupId: info.id,
+                    subject: info.subject || meta.subject || "Unknown",
+                    message: "The bot is already a member of this group.",
+                });
+            }
+        } catch {
+            /* not a member yet — the expected path */
+        }
+
+        // Authorization: requester must be an admin of the target group.
+        const check = checkAdminInMeta(info, admin.phoneNumber);
+        if (!check.isAdmin) {
+            return reply.status(403).send({
+                success: false,
+                message: check.found
+                    ? "You must be an admin of that group to add the bot."
+                    : "Could not verify that you are an admin of that group.",
+            });
+        }
+
+        try {
+            const joinedId = await (client as any).groupAcceptInvite(code);
+            const groupId = joinedId || info.id;
+            await logGroupAction({
+                groupId,
+                actorPn: admin.phoneNumber,
+                action: "join",
+                detail: info.subject || "",
+            });
+            return reply.send({
+                success: true,
+                groupId,
+                subject: info.subject || "Unknown",
+                size: info.size ?? info.participants?.length ?? 0,
+                message: "Bot successfully joined the group.",
+            });
+        } catch (err: any) {
+            logger.error("group-admin join-group error:", err);
+            const m = String(err?.message || "").toLowerCase();
+            let message = "Failed to join the group.";
+            if (m.includes("invalid")) message = "The invite link is invalid or has expired.";
+            else if (m.includes("forbidden")) message = "The bot is not allowed to join this group (possibly banned).";
+            else if (m.includes("gone")) message = "The invite link has been revoked or the group no longer exists.";
+            else if (err?.message) message = err.message;
+            return reply.status(500).send({ success: false, message });
         }
     });
 

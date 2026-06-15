@@ -21,7 +21,8 @@ export type GroupAuditAction =
     | "profile-picture"
     | "revoke-link"
     | "welcome-config"
-    | "leave-config";
+    | "leave-config"
+    | "join";
 
 export type GroupAuditEntry = {
     groupId: string;
