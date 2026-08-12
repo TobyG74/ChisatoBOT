@@ -1,6 +1,9 @@
 import { Client, Database } from "..";
 import { Group as GroupType, Settings } from "@prisma/client";
-import { databaseService } from "../../infrastructure/database/database.service";
+import {
+    cleanParticipants,
+    databaseService,
+} from "../../infrastructure/database/database.service";
 
 export class Group {
     /**
@@ -55,6 +58,9 @@ export class Group {
 
                 (groupData as any).ephemeralDuration =
                     (groupData as any).ephemeralDuration || 0;
+                (groupData as any).participants = cleanParticipants(
+                    (groupData as any).participants
+                );
                 const metadata = await Database.group.upsert({
                     where: { groupId },
                     create: {

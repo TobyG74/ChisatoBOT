@@ -6,6 +6,17 @@ import { logger } from "../../core/logger/logger.service";
 type PrismaUser = Awaited<ReturnType<PrismaClient["user"]["findUnique"]>>;
 type PrismaGroup = Awaited<ReturnType<PrismaClient["group"]["findUnique"]>>;
 
+// Baileys keeps adding fields to participants (username, ...) that the Prisma
+// Participant composite type rejects. Keep only what the schema declares.
+export const cleanParticipants = (participants: any): any[] =>
+    (Array.isArray(participants) ? participants : []).map((p: any) => ({
+        id: p?.id ?? null,
+        admin: p?.admin ?? null,
+        lid: p?.lid ?? null,
+        phoneNumber: p?.phoneNumber ?? null,
+        username: p?.username ?? null,
+    }));
+
 class DatabaseService {
     private static instance: DatabaseService;
     private prisma: PrismaClient;
@@ -277,7 +288,7 @@ class DatabaseService {
             isCommunity: groupData.isCommunity || false,
             isCommunityAnnounce: groupData.isCommunityAnnounce || false,
             memberAddMode: groupData.memberAddMode ?? true,
-            participants: groupData.participants || [],
+            participants: cleanParticipants(groupData.participants),
             ephemeralDuration: groupData.ephemeralDuration || 0,
             settings: {
                 notify: settings.notify ?? false,
@@ -316,7 +327,10 @@ class DatabaseService {
         const cleanData: any = {};
         for (const key in data) {
             if (data[key] !== undefined) {
-                cleanData[key] = data[key];
+                cleanData[key] =
+                    key === "participants"
+                        ? cleanParticipants(data[key])
+                        : data[key];
             }
         }
 
