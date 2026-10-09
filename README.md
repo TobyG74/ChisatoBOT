@@ -91,6 +91,14 @@ OCR_APIKEY=
 
 Rename `.env.example` to `.env`, then fill in the values.
 
+`JWT_SECRET` is required. Generate a unique secret with the following command and paste its output into `.env`:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+Startup fails if the secret is missing, blank, or shorter than 32 bytes. Keep it private; do not use a shared example value. Changing the secret invalidates existing tokens. Sessions created before server-side identity and role binding also require a fresh login.
+
 ## Built With
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-2F6BA3?style=for-the-badge&logo=typescript&logoColor=FFFFFF)

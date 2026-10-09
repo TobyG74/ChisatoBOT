@@ -116,7 +116,8 @@ if [ ! -f ".env" ]; then
         cat > .env << 'EOF'
 DATABASE_URL=mongodb://localhost:27017/chisatobot
 DASHBOARD_PORT=3000
-JWT_SECRET=your-secret-key-change-this
+# Required: generate with node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=
 PROXY=
 OCR_APIKEY=
 EOF

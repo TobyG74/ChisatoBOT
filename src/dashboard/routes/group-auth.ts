@@ -123,12 +123,13 @@ export function tryConsumeLoginOtp(
             const sessionId = `ga:${req.phoneNumber}:${Date.now()}:${crypto
                 .randomBytes(4)
                 .toString("hex")}`;
-            startSession(sessionId);
-            const token = signSessionToken({
+            const payload = {
                 sessionId,
                 phoneNumber: req.phoneNumber,
-                role: "groupadmin",
-            });
+                role: "groupadmin" as const,
+            };
+            startSession(payload);
+            const token = signSessionToken(payload);
             req.status = "verified";
             req.token = token;
             req.admin = {

@@ -7,7 +7,10 @@ import { TemplateBuilder } from "../../libs/interactive/TemplateBuilder";
 import { configService } from "../../core/config/config.service";
 import { ipSecurityService, type IpRole } from "../services/ip-security.service";
 
-const JWT_SECRET = process.env.JWT_SECRET || "chisato-dashboard-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || Buffer.byteLength(JWT_SECRET.trim(), "utf8") < 32) {
+    throw new Error("JWT_SECRET must be set to a cryptographically random secret of at least 32 bytes.");
+}
 /**
  * Absolute session lifetime — a login stays valid for 30 days from approval,
  * so reopening the browser/domain doesn't force a re-login.
@@ -33,7 +36,7 @@ type LoginActionButton = {
 type DashboardTokenPayload = {
     sessionId: string;
     phoneNumber: string;
-    role: AccessRole;
+    role: AccessRole | "groupadmin";
 };
 
 type PhoneAccessConfig = {
@@ -163,6 +166,8 @@ function formatDuration(ms: number): string {
 type SessionRecord = {
     createdAt: number;
     lastActivity: number;
+    phoneNumber: string;
+    role: DashboardTokenPayload["role"];
 };
 
 function isSessionStillValid(record: SessionRecord, now: number = Date.now()): boolean {
@@ -179,18 +184,21 @@ function loadSessionsFromFile(): Map<string, SessionRecord> {
             const map = new Map<string, SessionRecord>();
             for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
                 let record: SessionRecord | null = null;
-                if (typeof v === "number") {
-                    // Legacy format: only the last activity timestamp was stored.
-                    record = { createdAt: v, lastActivity: v };
-                } else if (
+                // Sessions without server-side identity must log in again.
+                if (
                     v &&
                     typeof v === "object" &&
-                    typeof (v as any).createdAt === "number" &&
-                    typeof (v as any).lastActivity === "number"
+                    Number.isFinite((v as any).createdAt) &&
+                    Number.isFinite((v as any).lastActivity) &&
+                    typeof (v as any).phoneNumber === "string" &&
+                    (v as any).phoneNumber.length > 0 &&
+                    ["owner", "team", "groupadmin"].includes((v as any).role)
                 ) {
                     record = {
                         createdAt: (v as any).createdAt,
                         lastActivity: (v as any).lastActivity,
+                        phoneNumber: (v as any).phoneNumber,
+                        role: (v as any).role,
                     };
                 }
                 if (record && isSessionStillValid(record, now)) {
@@ -318,9 +326,14 @@ function cleanupPendingLoginRequests(): void {
     }
 }
 
-export function startSession(sessionId: string): void {
+export function startSession(payload: DashboardTokenPayload): void {
     const now = Date.now();
-    sessionStore.set(sessionId, { createdAt: now, lastActivity: now });
+    sessionStore.set(payload.sessionId, {
+        createdAt: now,
+        lastActivity: now,
+        phoneNumber: payload.phoneNumber,
+        role: payload.role,
+    });
     saveSessionsToFile(sessionStore);
 }
 
@@ -328,8 +341,8 @@ export function startSession(sessionId: string): void {
  * Sign a dashboard session JWT. Shared by the owner/team login flow and the
  * group-admin OTP flow so every token is verifiable by the same middleware.
  */
-export function signSessionToken(payload: Record<string, unknown>): string {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+export function signSessionToken(payload: DashboardTokenPayload): string {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: "HS256" });
 }
 
 /** Remove a session (used on explicit logout from any flow). */
@@ -555,7 +568,7 @@ export async function handleLoginApproval(
     req.decidedBy = actorPhone;
 
     if (decision === "approved") {
-        startSession(req.sessionId);
+        startSession(req);
     }
 
     // Persist IP decision tagged with the requester's role.
@@ -653,15 +666,8 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             const sessionId = `${normalizedPhone}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
-            const token = jwt.sign(
-                {
-                    sessionId,
-                    phoneNumber: normalizedPhone,
-                    role,
-                },
-                JWT_SECRET,
-                { expiresIn: JWT_EXPIRES_IN }
-            );
+            const payload = { sessionId, phoneNumber: normalizedPhone, role };
+            const token = signSessionToken(payload);
 
             // IP whitelist — only auto-approve when the whitelist role matches
             // the login role. Legacy "unknown" entries are accepted for any
@@ -683,7 +689,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     });
                 }
 
-                startSession(sessionId);
+                startSession(payload);
                 // Clear any previous rate limit record for this IP
                 ipRateLimits.delete(requesterIp);
                 saveRateLimitsToFile(ipRateLimits);
@@ -820,7 +826,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         const token = authHeader.substring(7);
 
         try {
-            const decoded = jwt.verify(token, JWT_SECRET) as DashboardTokenPayload;
+            const decoded = verifyToken(token);
 
             if (!decoded?.sessionId || !isSessionActive(decoded.sessionId)) {
                 return reply.status(401).send({
@@ -866,9 +872,22 @@ export async function authRoutes(fastify: FastifyInstance) {
     });
 }
 
-export function verifyToken(token: string): any {
+export function verifyToken(token: string): DashboardTokenPayload | null {
     try {
-        return jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] });
+        if (
+            typeof decoded === "string" ||
+            typeof decoded.sessionId !== "string" ||
+            typeof decoded.phoneNumber !== "string" ||
+            !isSessionActive(decoded.sessionId)
+        ) {
+            return null;
+        }
+        const session = sessionStore.get(decoded.sessionId);
+        if (decoded.phoneNumber !== session.phoneNumber || decoded.role !== session.role) {
+            return null;
+        }
+        return { sessionId: decoded.sessionId, phoneNumber: session.phoneNumber, role: session.role };
     } catch {
         return null;
     }
