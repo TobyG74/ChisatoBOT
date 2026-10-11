@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 import { createCanvas, loadImage, SKRSContext2D } from "@napi-rs/canvas";
 import Wrap from "canvas-text-wrapper";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import sharp from "sharp";
 import webpmux from "node-webpmux";
@@ -17,6 +17,7 @@ const { parse: parseEmoji } = twemojiParser;
 
 const { CanvasTextWrapper } = Wrap;
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export type StickerType = "default" | "full" | "circle" | "rounded" | "crop";
 
@@ -272,13 +273,11 @@ export class StickerGenerator {
                     hex.startsWith("52494646") && buffer.toString("hex", 8, 12) === "57415649"; // AVI
             }
             
-            let stickerBuffer: Buffer;
             if (isVideo) {
-                stickerBuffer = await this.videoToSticker(buffer, type, quality);
-            } else {
-                stickerBuffer = await this.imageToSticker(buffer, type, quality);
+                return await this.videoToSticker(buffer, type, quality, pack, author);
             }
-            
+
+            const stickerBuffer = await this.imageToSticker(buffer, type, quality);
             return await this.addMetadata(stickerBuffer, pack, author);
         } catch (error) {
             throw new Error(`Failed to create sticker: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -339,53 +338,61 @@ export class StickerGenerator {
     private static async videoToSticker(
         buffer: Buffer,
         type: StickerType,
-        quality: number
+        quality: number,
+        pack: string,
+        author: string
     ): Promise<Buffer> {
-        const tempDir = path.join(process.cwd(), "temp");
-        const tempInput = path.join(tempDir, `video_input_${Date.now()}.mp4`);
-        const tempOutput = path.join(tempDir, `sticker_output_${Date.now()}.webp`);
+        const tempDir = fs.mkdtempSync(path.join(process.cwd(), "temp", "video-sticker-"));
+        const tempInput = path.join(tempDir, "input.mp4");
+        const tempOutput = path.join(tempDir, "output.webp");
 
         try {
             fs.writeFileSync(tempInput, buffer);
 
-            // Check video duration
-            const durationCommand = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${tempInput}"`;
-            const { stdout: durationOutput } = await execAsync(durationCommand);
+            const { stdout: durationOutput } = await execFileAsync("ffprobe", [
+                "-v", "error", "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1", tempInput
+            ]);
             const duration = parseFloat(durationOutput.trim());
-
+            if (!Number.isFinite(duration) || duration <= 0) {
+                throw new Error("Unable to determine video duration");
+            }
             if (duration > 10) {
-                // Cleanup temp file
-                if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
                 throw new Error(`Video duration (${duration.toFixed(2)}s) exceeds maximum 10 seconds`);
             }
 
-            let scale = "512:512";
-            let crop = "";
-            let durationLimit = `-t 10`; // Maximum 10 seconds
-
+            let filter = "crop=min(iw\\,ih):min(iw\\,ih),scale=512:512";
             if (type === "circle" || type === "rounded") {
-                crop = "-vf \"crop=min(iw\\,ih):min(iw\\,ih),scale=512:512,format=rgba,geq=lum='p(X,Y)':a='if(gt(abs(W/2-X),W/2)||gt(abs(H/2-Y),H/2),0,255)'\"";
+                filter += ",format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='if(lte(pow(X-W/2,2)+pow(Y-H/2,2),pow(W/2,2)),255,0)'";
             } else if (type === "full") {
-                scale = "512:512:force_original_aspect_ratio=decrease";
-                crop = `-vf "scale=${scale},pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000"`;
-            } else {
-                crop = `-vf "crop=min(iw\\,ih):min(iw\\,ih),scale=512:512"`;
+                filter = "scale=512:512:force_original_aspect_ratio=decrease,format=rgba,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000";
             }
 
-            const command = `ffmpeg -i "${tempInput}" ${durationLimit} ${crop} -vcodec libwebp -lossless 0 -q:v ${quality} -loop 0 -preset default -an -vsync 0 -fs 1M "${tempOutput}"`;
-            
-            await execAsync(command);
-
-            const result = fs.readFileSync(tempOutput);
-
-            if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
-            if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
-
-            return result;
-        } catch (error) {
-            if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
-            if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
-            throw error;
+            const profiles = [[15, quality], [12, Math.min(quality, 40)], [10, Math.min(quality, 30)],
+                [8, Math.min(quality, 20)], [6, Math.min(quality, 10)]];
+            for (const [fps, frameQuality] of profiles) {
+                await execFileAsync("ffmpeg", [
+                    "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-i", tempInput,
+                    "-t", "9.8", "-map", "0:v:0", "-vf", `fps=${fps},${filter}`,
+                    "-frames:v", String(Math.floor(9.8 * fps)),
+                    "-c:v", "libwebp_anim", "-lossless", "0", "-q:v", String(frameQuality),
+                    "-compression_level", "6", "-loop", "0", "-an", tempOutput
+                ]);
+                const result = await this.addMetadata(fs.readFileSync(tempOutput), pack, author);
+                const image = new webpmux.Image();
+                await image.load(result);
+                if (!image.hasAnim || image.frames.length < 2) {
+                    throw new Error("Video did not produce an animated sticker; try a longer video with movement");
+                }
+                const animationDuration = image.frames.reduce((total, frame) => total + frame.delay, 0);
+                if (animationDuration >= 10000) {
+                    throw new Error("Animated sticker duration must be below 10 seconds");
+                }
+                if (result.length < 1000000) return result;
+            }
+            throw new Error("Animated sticker is still above 1 MB after compression; try a shorter video");
+        } finally {
+            fs.rmSync(tempDir, { recursive: true, force: true });
         }
     }
 
@@ -418,7 +425,10 @@ export class StickerGenerator {
             await img.load(buffer);
             img.exif = exif;
 
-            return await img.save(null);
+            const result = await img.save(null);
+            // node-webpmux can drop the VP8X alpha flag when saving animated frames.
+            if (img.hasAnim && img.hasAlpha) result[20] |= 0x10;
+            return result;
         } catch (error) {
             console.error('Failed to add metadata:', error);
             return buffer;

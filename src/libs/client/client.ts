@@ -282,8 +282,11 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                         );
                         this.logger.status(
                             `${reason}`,
-                            "Auto-reconnect STOPPED to avoid deepening the block. Check the number on a phone, wait it out, then restart the bot manually."
+                            "Clearing session automatically — re-login (QR/pairing) required. Use a different number if this one stays blocked."
                         );
+                        await clearState();
+                        tryConnect = 0;
+                        scheduleReconnect(`${reason}`, { backoff: false });
                         break;
 
                     case DisconnectReason.unavailableService:
@@ -685,7 +688,8 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
             });
 
             return this.sendMessage!(jid, {
-                sticker: stickerBuffer
+                sticker: stickerBuffer,
+                isAnimated: Boolean(isVideo)
             }, {
                 quoted
             }) as Promise<WAMessage>;
@@ -713,6 +717,58 @@ export class Client extends (EventEmitter as new () => TypedEventEmitter<Events>
                 jid
             ).trim();
         } else return jid.trim();
+    };
+
+    public sendRichHtml = (
+        jid: string,
+        { title, html, id = "rich-html" }: { title: string; html: string; id?: string }
+    ): Promise<string> => {
+        const responseId = `${id}-${Date.now()}`;
+        const payload = {
+            response_id: responseId,
+            sections: [
+                {
+                    view_model: {
+                        primitive: {
+                            __typename: "GenAIaeacdsnwHtmlPrimitive",
+                            payload: html,
+                            trusted_sources: ["testsource"],
+                        },
+                        __typename: "GenAISingleLayoutViewModel",
+                    },
+                },
+            ],
+        };
+
+        return this.relayMessage!(
+            jid,
+            {
+                messageContextInfo: {
+                    deviceListMetadata: {},
+                    deviceListMetadataVersion: 2,
+                    botMetadata: { messageDisclaimerText: "", botResponseId: responseId },
+                },
+                botForwardedMessage: {
+                    message: {
+                        richResponseMessage: {
+                            messageType: 1,
+                            submessages: [{ messageType: 2, messageText: title }],
+                            unifiedResponse: {
+                                data: Buffer.from(JSON.stringify(payload)),
+                            },
+                            contextInfo: {
+                                forwardingScore: 1,
+                                isForwarded: true,
+                                // ponytail: botJid is a fixed protocol requirement for this message type
+                                forwardedAiBotMessageInfo: { botJid: "867051314767696@bot" },
+                                forwardOrigin: 4,
+                            },
+                        },
+                    },
+                },
+            },
+            {}
+        );
     };
 
     /**
